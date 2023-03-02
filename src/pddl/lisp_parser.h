@@ -3,16 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+#include "errors.h"
 using namespace std;
-
-class ParseError : public std::exception {
-    std::string message;
-
-   public:
-    ParseError(const std::string& msg) : message(msg) {}
-
-    const char* what() const noexcept override { return message.c_str(); }
-};
 
 std::vector<std::string> _tokenize(std::istream& input_file) {
     std::vector<std::string> tokens;
