@@ -89,6 +89,15 @@ class LispIterator {
         }
     }
 
+    T get_word() {
+        auto [vector_ptr, value_ptr] = stack_.top();
+        if (vector_ptr) {
+            throw ParseError("not a word");
+        } else {
+            return *value_ptr;
+        }
+    }
+
     // Return true if the iterator is not at the end of the list
     bool has_next() const { return !stack_.empty(); }
 
