@@ -4,7 +4,8 @@
 #include <sstream>
 #include <vector>
 
-#include "errors.h"
+#include <lisp_iterators.h>
+#include <errors.h>
 using namespace std;
 
 std::vector<std::string> _tokenize(std::istream& input_file) {
@@ -63,3 +64,6 @@ std::vector<std::string> parse_nested_list(std::istream& input_file) {
     return result;
 }
 
+LispIterator parse_lisp_iterator(std::istream& input_file){
+    return LispIterator(parse_lisp_iterator(input_file));
+}
