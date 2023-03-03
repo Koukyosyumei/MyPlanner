@@ -5,13 +5,12 @@
 #include <sstream>
 #include <vector>
 
-#include "lisp_iterators.h"
+//#include "lisp_iterators.h"
 #include "errors.h"
 
-std::vector<std::string> _tokenize(std::istream& input_file) {
+std::vector<std::string> _tokenize(std::vector<std::string> input) {
     std::vector<std::string> tokens;
-    std::string line;
-    while (std::getline(input_file, line)) {
+    for (std::string line : input) {
         // Strip comments.
         line = line.substr(0, line.find(';'));
 
@@ -50,8 +49,8 @@ std::vector<std::string> _parse_list_aux(
     throw ParseError("Missing closing parenthesis");
 }
 
-std::vector<std::string> parse_nested_list(std::istream& input_file) {
-    std::vector<std::string> tokens = _tokenize(input_file);
+std::vector<std::string> parse_nested_list(std::vector<std::string> input) {
+    std::vector<std::string> tokens = _tokenize(input);
     if (tokens.empty() || tokens[0] != "(") {
         throw ParseError("Expected '(', got " +
                          (tokens.empty() ? "nothing" : tokens[0]));
@@ -64,6 +63,6 @@ std::vector<std::string> parse_nested_list(std::istream& input_file) {
     return result;
 }
 
-LispIterator parse_lisp_iterator(std::istream& input_file){
-    return LispIterator(parse_lisp_iterator(input_file));
-}
+//LispIterator parse_lisp_iterator(std::vector<std::string> input){
+//    return LispIterator(parse_nested_list(input));
+//}
