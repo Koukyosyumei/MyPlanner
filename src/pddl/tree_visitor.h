@@ -8,7 +8,7 @@ class Visitable;
 
 class PDDLVisitor {
    public:
-    virtual void visit_domain_def(class DomainDef*) = 0;
+    virtual void visit_domain_def(class DomainDef* node) = 0;
     virtual void visit_problem_def(class ProblemDef*) = 0;
     virtual void visit_predicates_stmt(class PredicatesStmt*) = 0;
     virtual void visit_action_stmt(class ActionStmt*) = 0;
@@ -63,50 +63,5 @@ class Visitable {
     std::function<void(Visitable*)> get_method;
 };
 
-class PredicateInstance;
-class Object;
 
-class DomainDef : public Visitable {
-   public:
-    Visitable* requirements = nullptr;
-    std::vector<class Type*> types;
-    std::vector<class Object*> constants;
-    class PredicatesStmt* predicates = nullptr;
-    std::vector<class ActionStmt*> actions;
-
-    virtual void accept(PDDLVisitor* visitor) override {
-        visitor->visit_domain_def(this);
-    }
-};
-
-class ProblemDef : public Visitable {
-   public:
-    std::vector<class Object*> objects;
-    class InitStmt* init = nullptr;
-    class GoalStmt* goal = nullptr;
-
-    virtual void accept(PDDLVisitor* visitor) override {
-        visitor->visit_problem_def(this);
-    }
-};
-
-class PredicatesStmt : public Visitable {
-   public:
-    std::vector<class Predicate*> predicates;
-
-    virtual void accept(PDDLVisitor* visitor) override {
-        visitor->visit_predicates_stmt(this);
-    }
-};
-
-class ActionStmt : public Visitable {
-   public:
-    std::vector<class Variable*> parameters;
-    class PreconditionStmt* precond = nullptr;
-    class EffectStmt* effect = nullptr;
-
-    virtual void accept(PDDLVisitor* visitor) override {
-        visitor->visit_action_stmt(this);
-    }
-};
 
