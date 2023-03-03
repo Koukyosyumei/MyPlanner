@@ -1,12 +1,12 @@
+#pragma once
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#include <lisp_iterators.h>
-#include <errors.h>
-using namespace std;
+#include "lisp_iterators.h"
+#include "errors.h"
 
 std::vector<std::string> _tokenize(std::istream& input_file) {
     std::vector<std::string> tokens;

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <variant>
@@ -55,7 +56,7 @@ class LispIterator {
         return &std::get<std::vector<LispIterator>>(contents).back() + 1;
     }
 
-    std::vector<LispIterator>::iterator& iterator() {
+    std::vector<LispIterator>::iterator iterator() {
         _raise_if(is_word(), "not a structure");
         return std::get<std::vector<LispIterator>>(contents).begin() + position;
     }
@@ -85,7 +86,7 @@ class LispIterator {
     }
 
     void match(std::string word) {
-        _raise_if(!try_match(word), "expected " + word);
+        _raise_if(!try_match(word), ("expected " + word).c_str());
     }
 
     void match_end() { _raise_if(peek() != nullptr, "expected to be at end"); }

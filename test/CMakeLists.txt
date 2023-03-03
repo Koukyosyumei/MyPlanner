@@ -9,7 +9,7 @@ include(FetchContent)
 #FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-set(TEST_NAME llatvfl-test)
+set(TEST_NAME myplan-test)
 
 file(GLOB testSRC
     "*.cpp"
@@ -17,6 +17,6 @@ file(GLOB testSRC
 set(TEST_RUNNER main.cpp ${testSRC})
 add_executable(${TEST_NAME} ${TEST_RUNNER})
 
-target_link_libraries(${TEST_NAME} gtest gtest_main boost_random boost_serialization pthread llatvfl)
+target_link_libraries(${TEST_NAME} gtest gtest_main pthread myplan)
 
 gtest_discover_tests(${TEST_NAME})
