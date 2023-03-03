@@ -1,15 +1,19 @@
-#include <string>
-#include <iostream>
 #include <cassert>
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <sstream>
+#include <string>
+#include <vector>
 //#include "myplan/pddl/lisp_iterators.h"
-#include "myplan/pddl/lisp_parser.h"
 #include <gtest/gtest.h>
 
-TEST(parser, SimplePDDL){
-    std::string test = "(:parameters )";
-    //parse_lisp_iterator(test);
+#include "myplan/pddl/lisp_parser.h"
+
+TEST(parser, SimplePDDL) {
+    std::string test = "(and (on ?x table) (true) (free ?x))";
+    nested_list<std::string> result = parse_nested_list({test});
+    std::cout << result << std::endl;
+
+    // parse_lisp_iterator(test);
     ASSERT_EQ(1, 1);
 }
