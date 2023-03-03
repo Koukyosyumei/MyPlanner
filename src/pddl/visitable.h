@@ -4,7 +4,14 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "pddl.h"
+
+enum FormulaType {
+    TypeFormula,
+    TypeVariable,
+    TypeConstant
+};
 
 class PDDLVisitor {
    public:
@@ -126,7 +133,7 @@ class Formula : public Visitable {
      */
    public:
     Formula(std::string key, std::vector<Formula> children = {},
-            Type type = TypeFormula)
+            FormulaType type = TypeFormula)
         : _visitorName("visit_formula"),
           key(key),
           children(children),
@@ -135,7 +142,7 @@ class Formula : public Visitable {
     std::string _visitorName;
     std::string key;
     std::vector<Formula> children;
-    Type type;
+    FormulaType type;
 };
 
 class PreconditionStmt : public Visitable {
@@ -160,5 +167,115 @@ class EffectStmt : public Visitable {
 
     std::string _visitorName;
     Formula formula;
+};
+
+class ActionStmt : public Visitable {
+   public:
+    ActionStmt(std::string name, std::vector<std::string> parameters,
+               Formula* precond, Formula* effect) {
+        _visitorName = "visit_action_stmt";
+        this->name = name;
+        this->parameters = parameters;
+        this->precond = precond;
+        this->effect = effect;
+    }
+
+    std::string _visitorName;
+    std::string name;
+    std::vector<std::string> parameters;
+    Formula* precond;
+    Formula* effect;
+};
+
+class PredicatesStmt : public Visitable {
+   public:
+    PredicatesStmt(std::vector<Predicate*> predicates) {
+        _visitorName = "visit_predicates_stmt";
+        this->predicates = predicates;
+    }
+
+    std::string _visitorName;
+    std::vector<Predicate*> predicates;
+};
+
+class DomainDef : public Visitable {
+   public:
+    DomainDef(std::string name, RequirementsStmt* requirements = nullptr,
+              std::vector<Type*> types = {},
+              PredicatesStmt* predicates = nullptr,
+              std::vector<ActionStmt*> actions = {},
+              std::vector<Object*> constants = {}) {
+        _visitorName = "visit_domain_def";
+        this->name = name;
+        this->requirements = requirements;
+        this->types = types;
+        this->predicates = predicates;
+        this->actions = actions;
+        this->constants = constants;
+    }
+
+    std::string _visitorName;
+    std::string name;
+    RequirementsStmt* requirements;
+    std::vector<Type*> types;
+    PredicatesStmt* predicates;
+    std::vector<ActionStmt*> actions;
+    std::vector<Object*> constants;
+};
+
+class ProblemDef : public Visitable {
+   public:
+    ProblemDef(std::string name, std::string domainName,
+               std::vector<Object*> objects = {}, InitStmt* init = nullptr,
+               GoalStmt* goal = nullptr) {
+        _visitorName = "visit_problem_def";
+        this->name = name;
+        this->domainName = domainName;
+        this->objects = objects;
+        this->init = init;
+        this->goal = goal;
+    }
+
+    std::string _visitorName;
+    std::string name;
+    std::string domainName;
+    std::vector<Object*> objects;
+    InitStmt* init;
+    GoalStmt* goal;
+};
+
+class Object : public Visitable {
+   public:
+    Object(std::string name, std::string type) {
+        _visitorName = "visit_object";
+        this->name = name;
+        this->typeName = type;
+    }
+
+    std::string _visitorName;
+    std::string name;
+    std::string typeName;
+};
+
+class InitStmt : public Visitable {
+   public:
+    InitStmt(std::vector<Predicate*> predicates) {
+        _visitorName = "visit_init_stmt";
+        this->predicates = predicates;
+    }
+
+    std::string _visitorName;
+    std::vector<Predicate*> predicates;
+};
+
+class GoalStmt : public Visitable {
+   public:
+    GoalStmt(Formula* formula) {
+        _visitorName = "visit_goal_stmt";
+        this->formula = formula;
+    }
+
+    std::string _visitorName;
+    Formula* formula;
 };
 
