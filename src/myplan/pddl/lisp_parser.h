@@ -40,6 +40,35 @@ struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
             *this = new_vector;
         }
     }
+
+    bool operator==(const nested_list<T>& other) const {
+        // First check if the types are the same
+        if (this->index() != other.index()) {
+            return false;
+        }
+
+        if (std::holds_alternative<T>(*this)) {
+            // If the variant holds a value of type T, compare the values
+            // directly
+            return std::get<T>(*this) == std::get<T>(other);
+        } else {
+            // If the variant holds a vector of nested_lists, recursively
+            // compare the vectors
+            auto* vector_ptr = std::get_if<std::vector<nested_list<T>>>(&*this);
+            auto* other_vector_ptr =
+                std::get_if<std::vector<nested_list<T>>>(&other);
+            if (!vector_ptr || !other_vector_ptr ||
+                vector_ptr->size() != other_vector_ptr->size()) {
+                return false;
+            }
+            for (std::size_t i = 0; i < vector_ptr->size(); ++i) {
+                if ((*vector_ptr)[i] != (*other_vector_ptr)[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
 };
 
 template <typename T>
@@ -93,24 +122,21 @@ std::vector<std::string> _tokenize(std::vector<std::string> input) {
 }
 
 nested_list<std::string> _parse_list_aux(
-    std::vector<std::string>::iterator& it,
+    std::vector<std::string>::iterator& beg,
     const std::vector<std::string>::iterator& end) {
     nested_list<std::string> result;
-    while (it != end) {
+    for (std::vector<std::string>::iterator& it = beg; it != end; ++it) {
         const std::string& token = *it;
-        ++it;
         if (token == ")") {
-            continue;
+            return result;
         } else if (token == "(") {
+            ++it;
             result.push_back(_parse_list_aux(it, end));
         } else {
             result.push_back(token);
         }
     }
-    if (it != end) {
-        throw ParseError("Missing closing parenthesis");
-    }
-    return result;
+    throw ParseError("Missing closing parenthesis");
 }
 
 nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
@@ -121,9 +147,6 @@ nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
     }
     std::vector<std::string>::iterator it = tokens.begin() + 1;
     nested_list<std::string> result = _parse_list_aux(it, tokens.end());
-    if (it != tokens.end()) {
-        throw ParseError("Unexpected token: " + *it);
-    }
     return result;
 }
 

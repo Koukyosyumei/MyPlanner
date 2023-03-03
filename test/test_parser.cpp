@@ -10,9 +10,11 @@
 #include "myplan/pddl/lisp_parser.h"
 
 TEST(parser, SimplePDDL) {
-    std::string test = "(and (on ?x table) (true) (free ?x))";
+    std::string test = " ( and ( on ?x table ) ( true ) ( free ?x ) ) ";
     nested_list<std::string> result = parse_nested_list({test});
+    nested_list<std::string> test_result = {"and", {"on", "?x", "table"}, {"true"}, {"free", "?x"}};
     std::cout << result << std::endl;
+    ASSERT_EQ(result, test_result);
 
     // parse_lisp_iterator(test);
     ASSERT_EQ(1, 1);
