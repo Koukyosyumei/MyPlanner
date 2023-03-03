@@ -5,71 +5,9 @@
 #include <sstream>
 #include <variant>
 #include <vector>
-//#include "lisp_iterators.h"
+
 #include "errors.h"
-
-template <typename T>
-struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
-    using std::variant<std::vector<nested_list<T>>, T>::variant;
-
-    nested_list(std::initializer_list<nested_list> ilist)
-        : std::variant<std::vector<nested_list<T>>, T>(std::in_place_index<0>,
-                                                       ilist) {}
-
-    // Get a pointer to the vector if this nested_list is a vector
-    std::vector<nested_list<T>>* get_vector() {
-        return std::get_if<std::vector<nested_list<T>>>(&*this);
-    }
-
-    // Check if this nested_list is a vector
-    bool is_vector() {
-        return std::holds_alternative<std::vector<nested_list<T>>>(*this);
-    }
-
-    // Add a new element to the end of the vector if this nested_list is a
-    // vector, otherwise replace the current value with a vector containing the
-    // current value and the new element
-    void push_back(const nested_list<T>& new_element) {
-        auto* vector_ptr = std::get_if<std::vector<nested_list<T>>>(&*this);
-        if (vector_ptr) {
-            vector_ptr->push_back(new_element);
-        } else {
-            std::vector<nested_list<T>> new_vector;
-            new_vector.push_back(*this);
-            new_vector.push_back(new_element);
-            *this = new_vector;
-        }
-    }
-
-    bool operator==(const nested_list<T>& other) const {
-        // First check if the types are the same
-        if (this->index() != other.index()) {
-            return false;
-        }
-
-        if (std::holds_alternative<T>(*this)) {
-            // If the variant holds a value of type T, compare the values
-            // directly
-            return std::get<T>(*this) == std::get<T>(other);
-        } else {
-            // If the variant holds a vector of nested_lists, recursively
-            // compare the vectors
-            auto* vector_ptr = std::get_if<std::vector<nested_list<T>>>(&*this);
-            auto* other_vector_ptr =
-                std::get_if<std::vector<nested_list<T>>>(&other);
-            if (!vector_ptr || !other_vector_ptr ||
-                vector_ptr->size() != other_vector_ptr->size()) {
-                return false;
-            }
-            for (std::size_t i = 0; i < vector_ptr->size(); ++i) {
-                if ((*vector_ptr)[i] != (*other_vector_ptr)[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-};
+#include "lisp_iterators.h"
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
@@ -150,6 +88,7 @@ nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
     return result;
 }
 
-// LispIterator parse_lisp_iterator(std::vector<std::string> input){
-//     return LispIterator(parse_nested_list(input));
-// }
+LispIterator<std::string> parse_lisp_iterator(std::vector<std::string> input) {
+    nested_list<std::string> nlist = parse_nested_list(input);
+    return LispIterator<std::string>(nlist);
+}
