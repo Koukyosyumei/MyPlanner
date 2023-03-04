@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <stack>
 #include <variant>
@@ -81,20 +82,20 @@ class LispIterator {
             // If the nested_list is a vector, initialize the stack with the
             // vector and the index of the first element
             T tmp;
-            stack_.push({list.get_vector(), &tmp});
+            stack_.push({list.get_vector(), std::optional<std::size_t>{0}});
         } else {
             // If the nested_list is a value, initialize the stack with a null
             // vector pointer and the value itself
-            stack_.push({nullptr, std::get_if<1>(&list)});
+            stack_.push({nullptr, std::optional<std::size_t>{}});
+            value_ptr_ = std::get_if<1>(&list);
         }
     }
 
     T get_word() {
-        auto [vector_ptr, value_ptr] = stack_.top();
-        if (vector_ptr) {
+        if (stack_.top().first) {
             throw ParseError("not a word");
         } else {
-            return *value_ptr;
+            return *value_ptr_;
         }
     }
 
@@ -109,39 +110,48 @@ class LispIterator {
         }
 
         // Get the top element on the stack
-        auto [vector_ptr, value_ptr] = stack_.top();
+        auto [vector_ptr, index] = stack_.top();
 
         if (vector_ptr) {
             // If the element is a vector, push the next element onto the stack
             auto& vector = *vector_ptr;
-            std::size_t& index = stack_.top().second;
-            if (index < vector.size() - 1) {
-                stack_.push({vector_ptr, index + 1});
-            } else {
+            if (index && index.value() >= vector.size()) {
                 stack_.pop();
+                value_ptr_ = stack_.empty() ? nullptr
+                             : stack_.top().first
+                                 ? nullptr
+                                 : std::get_if<1>(&stack_.top().first->at(
+                                       stack_.top().second.value()));
+                return next();
+            } else {
+                stack_.push({vector_ptr, index ? index.value() + 1 : 1});
+                if (vector[index.value()].is_vector()) {
+                    auto& next_vector = vector[index.value()].get_vector();
+                    if (!next_vector.empty()) {
+                        stack_.push(
+                            {&next_vector, std::optional<std::size_t>{0}});
+                    }
+                }
+                value_ptr_ = vector[index.value()];
+                return *value_ptr_;
             }
-            return vector[index];
         } else {
             // If the element is a value, pop it from the stack
             stack_.pop();
-            if (has_next()) {
-                // If there are more elements on the stack, check if the top
-                // element is a vector and advance it if necessary
-                auto& [next_vector_ptr, next_value_ptr] = stack_.top();
-                if (next_vector_ptr) {
-                    auto& next_vector = *next_vector_ptr;
-                    std::size_t& next_index = stack_.top().second;
-                    if (next_index < next_vector.size() - 1) {
-                        stack_.push({next_vector_ptr, next_index + 1});
-                    }
-                }
-            }
-            return *value_ptr;
+            value_ptr_ = stack_.empty() ? nullptr
+                         : stack_.top().first
+                             ? nullptr
+                             : stack_.top()
+                                   .first->at(stack_.top().second.value())
+                                   .get_if<1>();
+            return *value_ptr_;
         }
     }
 
    private:
     // Stack of nested_list vectors and values
-    std::stack<std::pair<std::vector<nested_list<T>>*, const T*>> stack_;
+    std::stack<std::pair<const std::vector<nested_list<T>>*,
+                         std::optional<std::size_t>>>
+        stack_;
+    const T* value_ptr_;
 };
-

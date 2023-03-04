@@ -110,4 +110,5 @@ class Domain {
     unordered_map<string, Type*> types_;
     vector<Predicate*> predicates_;
     vector<Action*> actions_;
+    std::unordered_map<std::string, Type*> constants_;
 };

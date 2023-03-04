@@ -1,4 +1,5 @@
 #include <functional>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -7,11 +8,9 @@
 
 #include "pddl.h"
 
-enum FormulaType {
-    TypeFormula,
-    TypeVariable,
-    TypeConstant
-};
+enum FormulaType { TypeFormula, TypeVariable, TypeConstant };
+
+class Visitable;
 
 class PDDLVisitor {
    public:
@@ -35,6 +34,82 @@ class PDDLVisitor {
     virtual ~PDDLVisitor() {}
 };
 
+// Get method by name
+std::function<void(PDDLVisitor*, Visitable*)> getMethod(
+    PDDLVisitor* visitor, const std::string& methodName) {
+    static const std::map<std::string, std::function<void(PDDLVisitor*, Visitable*)>>
+        methodMap = {
+            {"visit_domain_def",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_domain_def((DomainDef*)arg);
+             }},
+            {"visit_problem_def",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_problem_def((ProblemDef*)arg);
+             }},
+            {"visit_predicates_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_predicates_stmt((PredicatesStmt*)arg);
+             }},
+            {"visit_action_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_action_stmt((ActionStmt*)arg);
+             }},
+            {"visit_formula",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_formula((Formula*)arg);
+             }},
+            {"visit_type", [](PDDLVisitor* visitor,
+                              Visitable* arg) { visitor->visit_type((Type*)arg); }},
+            {"visit_effect_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_effect_stmt((EffectStmt*)arg);
+             }},
+            {"visit_precondition_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_precondition_stmt((PreconditionStmt*)arg);
+             }},
+            {"visit_requirements_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_requirements_stmt((RequirementsStmt*)arg);
+             }},
+            {"visit_predicate",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_predicate((Predicate*)arg);
+             }},
+            {"visit_variable",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_variable((Variable*)arg);
+             }},
+            {"visit_init_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_init_stmt((InitStmt*)arg);
+             }},
+            {"visit_goal_stmt",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_goal_stmt((GoalStmt*)arg);
+             }},
+            {"visit_predicate_instance",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_predicate_instance((PredicateInstance*)arg);
+             }},
+            {"visit_object",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_object((Object*)arg);
+             }},
+            {"visit_keyword", [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_keyword((Keyword*)arg);
+             }}};
+
+    auto it = methodMap.find(methodName);
+    if (it == methodMap.end()) {
+        throw std::runtime_error("Error: cannot call undefined method: " +
+                                 methodName);
+    }
+
+    return it->second;
+}
+
 class Visitable {
    public:
     Visitable(const std::string& vname = "") : visitor_name_(vname) {}
@@ -43,11 +118,8 @@ class Visitable {
         if (visitor_name_.empty())
             throw std::runtime_error(
                 "Error: visit method of uninitialized visitor called!");
-        auto m = get_method(visitor, visitor_name_);
-        if (!m)
-            throw std::runtime_error("Error: cannot call undefined method: " +
-                                     visitor_name_ + " on visitor");
-        m(this);
+        auto m = getMethod(visitor, visitor_name_);
+        m(visitor, this);
     }
 
     const std::string& get_visitor_name() const { return visitor_name_; }
@@ -55,7 +127,6 @@ class Visitable {
 
    private:
     std::string visitor_name_;
-    std::function<void(Visitable*)> get_method;
 };
 
 class Keyword : public Visitable {

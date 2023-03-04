@@ -9,8 +9,9 @@
 
 #include "myplan/pddl/lisp_iterators.h"
 #include "myplan/pddl/lisp_parser.h"
+#include "myplan/pddl/parser.h"
 
-TEST(parser, SimplePDDL) {
+TEST(parser, NestedList) {
     std::string test = " ( and ( on ?x table ) ( true ) ( free ?x ) ) ";
     nested_list<std::string> result = parse_nested_list({test});
     nested_list<std::string> test_result = {
@@ -18,4 +19,12 @@ TEST(parser, SimplePDDL) {
     ASSERT_EQ(result, test_result);
 
     // parse_lisp_iterator(test);
+}
+
+TEST(parser, KeywordSimple){
+    std::string test = "(:parameters )";
+    auto iter = parse_lisp_iterator({test});
+    iter.next();
+    Keyword key = parse_keyword(iter);
+    ASSERT_EQ(key.name, "parameters");
 }
