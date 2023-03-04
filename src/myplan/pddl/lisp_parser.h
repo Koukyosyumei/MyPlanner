@@ -88,7 +88,7 @@ nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
     return result;
 }
 
-LispIterator<std::string> parse_lisp_iterator(std::vector<std::string> input) {
+LispIterator parse_lisp_iterator(std::vector<std::string> input) {
     nested_list<std::string> nlist = parse_nested_list(input);
-    return LispIterator<std::string>(nlist);
+    return LispIterator(nlist);
 }

@@ -10,21 +10,29 @@
 
 #include "errors.h"
 
+const std::string INVALID_STRING = "<INVALID>";
+
 template <typename T>
 struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
     using std::variant<std::vector<nested_list<T>>, T>::variant;
+    bool isnull;
 
+    nested_list():isnull(true){}
     nested_list(std::initializer_list<nested_list> ilist)
         : std::variant<std::vector<nested_list<T>>, T>(std::in_place_index<0>,
-                                                       ilist) {}
+                                                       ilist), isnull(false) {}
 
     // Get a pointer to the vector if this nested_list is a vector
     std::vector<nested_list<T>>* get_vector() {
         return std::get_if<std::vector<nested_list<T>>>(&*this);
     }
 
+    std::vector<nested_list<T>>* get_vector_const() const {
+        return std::get_if<std::vector<nested_list<T>>>(&*this);
+    }
+
     // Check if this nested_list is a vector
-    bool is_vector() {
+    bool is_vector() const {
         return std::holds_alternative<std::vector<nested_list<T>>>(*this);
     }
 
@@ -73,85 +81,96 @@ struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
     }
 };
 
-template <typename T>
 class LispIterator {
    public:
+    int position;
     // Constructor taking a nested_list<T> as argument
-    LispIterator(nested_list<T>& list) {
-        if (list.is_vector()) {
-            // If the nested_list is a vector, initialize the stack with the
-            // vector and the index of the first element
-            T tmp;
-            stack_.push({list.get_vector(), std::optional<std::size_t>{0}});
-        } else {
-            // If the nested_list is a value, initialize the stack with a null
-            // vector pointer and the value itself
-            stack_.push({nullptr, std::optional<std::size_t>{}});
-            value_ptr_ = std::get_if<1>(&list);
-        }
+    LispIterator(const nested_list<std::string>& contents_)
+        : position(0), contents(contents_) {}
+
+    bool is_word() const {
+        return std::holds_alternative<std::string>(contents);
     }
 
-    T get_word() {
-        if (stack_.top().first) {
+    bool isnull() const {
+        return contents.isnull;
+    }
+
+    bool is_structure() const { return contents.is_vector(); }
+
+    bool empty() const {
+        if (is_word()) {
+            throw ParseError("cannot call empty on word");
+        }
+        return peek().isnull();
+    }
+
+    std::string get_word() const {
+        if (is_structure()) {
             throw ParseError("not a word");
+        }
+        return std::get<std::string>(contents);
+    }
+
+    const LispIterator peek() const {
+        if (is_word()) {
+            throw ParseError("not a structure");
+        }
+        auto* vec = contents.get_vector();
+        if (position == vec->size()) {
+            return LispIterator(nested_list<std::string>());
+        }
+        return LispIterator(vec->at(position));
+    }
+
+    LispIterator next() {
+        const LispIterator result = peek();
+        if (result.isnull()) {
+            throw runtime_error("already at end");
         } else {
-            return *value_ptr_;
+            position++;
+        }
+        LispIterator nonconst_result = result;
+        return nonconst_result;
+    }
+
+    LispIterator operator++() {
+        return next();
+    }
+
+    bool try_match(const std::string& word) {
+        LispIterator next = peek();
+        if (!next.isnull() && next.is_word() && next.get_word() == word) {
+            position++;
+            return true;
+        }
+        return false;
+    }
+
+    void match(const std::string& word) {
+        if (!try_match(word)) {
+            throw ParseError("cannot find the expected word");
         }
     }
 
-    // Return true if the iterator is not at the end of the list
-    bool has_next() const { return !stack_.empty(); }
-
-    // Get the next value in the list and advance the iterator
-    T next() {
-        if (!has_next()) {
-            throw std::runtime_error(
-                "Iterator has reached the end of the list");
+    void match_end() {
+        if (!peek().isnull()) {
+            throw ParseError("expected to be at end");
         }
+    }
 
-        // Get the top element on the stack
-        auto [vector_ptr, index] = stack_.top();
-
-        if (vector_ptr) {
-            // If the element is a vector, push the next element onto the stack
-            auto& vector = *vector_ptr;
-            if (index && index.value() >= vector.size()) {
-                stack_.pop();
-                value_ptr_ = stack_.empty() ? nullptr
-                             : stack_.top().first
-                                 ? nullptr
-                                 : std::get_if<1>(&stack_.top().first->at(
-                                       stack_.top().second.value()));
-                return next();
-            } else {
-                stack_.push({vector_ptr, index ? index.value() + 1 : 1});
-                if (vector[index.value()].is_vector()) {
-                    auto& next_vector = vector[index.value()].get_vector();
-                    if (!next_vector.empty()) {
-                        stack_.push(
-                            {&next_vector, std::optional<std::size_t>{0}});
-                    }
-                }
-                value_ptr_ = vector[index.value()];
-                return *value_ptr_;
+    const std::string peek_tag() const {
+        const LispIterator item = peek();
+        if (!item.isnull() && item.is_structure()) {
+            const LispIterator subitem = item.peek();
+            if (!subitem.isnull() && subitem.is_word()) {
+                return subitem.get_word();
             }
-        } else {
-            // If the element is a value, pop it from the stack
-            stack_.pop();
-            value_ptr_ = stack_.empty() ? nullptr
-                         : stack_.top().first
-                             ? nullptr
-                             : stack_.top()
-                                   .first->at(stack_.top().second.value())
-                                   .get_if<1>();
-            return *value_ptr_;
         }
+        return INVALID_STRING;
     }
 
    private:
-    // Stack of nested_list vectors and values
-    std::stack<std::pair<const std::vector<nested_list<T>>*,
-                         std::optional<std::size_t>>>
-        stack_;
-    const T* value_ptr_;
+    const nested_list<std::string>& contents;
 };
+

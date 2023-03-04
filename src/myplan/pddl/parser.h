@@ -4,7 +4,7 @@
 #include "lisp_iterators.h"
 #include "visitable.h"
 
-Keyword parse_keyword(LispIterator<std::string> iter) {
+Keyword parse_keyword(LispIterator iter) {
     std::string name = iter.get_word();
     if (name.empty()) {
         throw std::invalid_argument("Error empty keyword found");
