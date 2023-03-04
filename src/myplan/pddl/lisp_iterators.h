@@ -15,9 +15,9 @@ const std::string INVALID_STRING = "<INVALID>";
 template <typename T>
 struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
     using std::variant<std::vector<nested_list<T>>, T>::variant;
-    bool isnull;
+    bool isnull=false;
 
-    nested_list() : isnull(true) {}
+    nested_list(bool isnull_) : isnull(isnull_) {}
     nested_list(std::initializer_list<nested_list> ilist)
         : std::variant<std::vector<nested_list<T>>, T>(std::in_place_index<0>,
                                                        ilist),
@@ -106,6 +106,7 @@ std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
 class LispIterator {
    public:
     int position;
+    const nested_list<std::string> contents;
     // Constructor taking a nested_list<T> as argument
     LispIterator(const nested_list<std::string> contents_)
         : position(0), contents(contents_) {
@@ -137,19 +138,14 @@ class LispIterator {
         if (is_word()) {
             throw ParseError("not a structure");
         }
-        std::cout << "start peak" << std::endl;
-        std::cout << contents << std::endl;
         auto* vec = contents.get_vector_const();
-        std::cout << "b- " << position << " " << vec->size() << std::endl;
         if (position == vec->size()) {
-            return LispIterator(nested_list<std::string>());
+            return LispIterator(nested_list<std::string>(true));
         }
-        std::cout << "end peak" << std::endl;
         return LispIterator(vec->at(position));
     }
 
     LispIterator next() {
-        std::cout << "start next" << std::endl;
         const LispIterator result = peek();
         if (result.isnull()) {
             throw runtime_error("already at end");
@@ -157,7 +153,6 @@ class LispIterator {
             position++;
         }
         LispIterator nonconst_result = result;
-        std::cout << "return re" << std::endl;
         return nonconst_result;
     }
 
@@ -194,8 +189,5 @@ class LispIterator {
         }
         return INVALID_STRING;
     }
-
-   private:
-    const nested_list<std::string> contents;
 };
 

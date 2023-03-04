@@ -24,7 +24,6 @@ TEST(parser, NestedList) {
 TEST(parser, KeywordSimple){
     std::string test = " ( :parameters ) ";
     LispIterator iter = parse_lisp_iterator({test});
-    std::cout << "aaa----" << std::endl;
     Keyword key = parse_keyword(iter.next());
     ASSERT_EQ(key.name, "parameters");
 }
