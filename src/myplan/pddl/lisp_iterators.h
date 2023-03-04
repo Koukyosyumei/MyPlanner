@@ -107,10 +107,8 @@ class LispIterator {
    public:
     int position;
     // Constructor taking a nested_list<T> as argument
-    LispIterator(const nested_list<std::string>& contents_)
+    LispIterator(const nested_list<std::string> contents_)
         : position(0), contents(contents_) {
-        std::cout << "init";
-        std::cout << contents_ << std::endl;
     }
 
     bool is_word() const {
@@ -129,7 +127,6 @@ class LispIterator {
     }
 
     std::string get_word() const {
-        std::cout << "bbb" << std::endl;
         if (is_structure()) {
             throw ParseError("not a word");
         }
@@ -140,19 +137,19 @@ class LispIterator {
         if (is_word()) {
             throw ParseError("not a structure");
         }
-        std::cout << "peal!!" << std::endl;
+        std::cout << "start peak" << std::endl;
         std::cout << contents << std::endl;
-        nested_list<std::string> contents_c = contents;
-        std::cout << contents_c << std::endl;
         auto* vec = contents.get_vector_const();
         std::cout << "b- " << position << " " << vec->size() << std::endl;
         if (position == vec->size()) {
             return LispIterator(nested_list<std::string>());
         }
+        std::cout << "end peak" << std::endl;
         return LispIterator(vec->at(position));
     }
 
     LispIterator next() {
+        std::cout << "start next" << std::endl;
         const LispIterator result = peek();
         if (result.isnull()) {
             throw runtime_error("already at end");
@@ -160,6 +157,7 @@ class LispIterator {
             position++;
         }
         LispIterator nonconst_result = result;
+        std::cout << "return re" << std::endl;
         return nonconst_result;
     }
 
@@ -198,6 +196,6 @@ class LispIterator {
     }
 
    private:
-    const nested_list<std::string>& contents;
+    const nested_list<std::string> contents;
 };
 
