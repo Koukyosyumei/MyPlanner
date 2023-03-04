@@ -9,6 +9,7 @@
 #include "errors.h"
 #include "lisp_iterators.h"
 
+/*
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
     if (auto* v = std::get_if<0>(&lst)) {
@@ -29,6 +30,7 @@ std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
     }
     return os;
 }
+*/
 
 std::string replace_str(std::string str, std::string from, std::string to) {
     size_t start_pos = str.find(from);
@@ -90,5 +92,6 @@ nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
 
 LispIterator parse_lisp_iterator(std::vector<std::string> input) {
     nested_list<std::string> nlist = parse_nested_list(input);
+    std::cout << nlist << std::endl;
     return LispIterator(nlist);
 }

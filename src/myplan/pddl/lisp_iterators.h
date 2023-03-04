@@ -17,17 +17,18 @@ struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
     using std::variant<std::vector<nested_list<T>>, T>::variant;
     bool isnull;
 
-    nested_list():isnull(true){}
+    nested_list() : isnull(true) {}
     nested_list(std::initializer_list<nested_list> ilist)
         : std::variant<std::vector<nested_list<T>>, T>(std::in_place_index<0>,
-                                                       ilist), isnull(false) {}
+                                                       ilist),
+          isnull(false) {}
 
     // Get a pointer to the vector if this nested_list is a vector
     std::vector<nested_list<T>>* get_vector() {
         return std::get_if<std::vector<nested_list<T>>>(&*this);
     }
 
-    std::vector<nested_list<T>>* get_vector_const() const {
+    const std::vector<nested_list<T>>* get_vector_const() const {
         return std::get_if<std::vector<nested_list<T>>>(&*this);
     }
 
@@ -81,20 +82,42 @@ struct nested_list : std::variant<std::vector<nested_list<T>>, T> {
     }
 };
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
+    if (auto* v = std::get_if<0>(&lst)) {
+        os << '{';
+        bool first = true;
+        for (const auto& child : *v) {
+            if (first)
+                first = false;
+            else
+                os << ", ";
+            os << child;
+        }
+        os << '}';
+    } else if (auto* e = std::get_if<1>(&lst)) {
+        os << *e;
+    } else {
+        os << "<valueless by exception>";
+    }
+    return os;
+}
+
 class LispIterator {
    public:
     int position;
     // Constructor taking a nested_list<T> as argument
     LispIterator(const nested_list<std::string>& contents_)
-        : position(0), contents(contents_) {}
+        : position(0), contents(contents_) {
+        std::cout << "init";
+        std::cout << contents_ << std::endl;
+    }
 
     bool is_word() const {
         return std::holds_alternative<std::string>(contents);
     }
 
-    bool isnull() const {
-        return contents.isnull;
-    }
+    bool isnull() const { return contents.isnull; }
 
     bool is_structure() const { return contents.is_vector(); }
 
@@ -106,6 +129,7 @@ class LispIterator {
     }
 
     std::string get_word() const {
+        std::cout << "bbb" << std::endl;
         if (is_structure()) {
             throw ParseError("not a word");
         }
@@ -116,7 +140,12 @@ class LispIterator {
         if (is_word()) {
             throw ParseError("not a structure");
         }
-        auto* vec = contents.get_vector();
+        std::cout << "peal!!" << std::endl;
+        std::cout << contents << std::endl;
+        nested_list<std::string> contents_c = contents;
+        std::cout << contents_c << std::endl;
+        auto* vec = contents.get_vector_const();
+        std::cout << "b- " << position << " " << vec->size() << std::endl;
         if (position == vec->size()) {
             return LispIterator(nested_list<std::string>());
         }
@@ -134,9 +163,7 @@ class LispIterator {
         return nonconst_result;
     }
 
-    LispIterator operator++() {
-        return next();
-    }
+    LispIterator operator++() { return next(); }
 
     bool try_match(const std::string& word) {
         LispIterator next = peek();
