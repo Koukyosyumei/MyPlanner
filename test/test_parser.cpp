@@ -34,3 +34,14 @@ TEST(parser, KeywordComplex){
     Keyword key = parse_keyword(iter.next());
     ASSERT_EQ(key.name, "name");
 }
+
+TEST(parser, KeywordList){
+    std::string test = "(:name :parameters :foo )";
+    std::vector<std::string> test_names = {"name", "parameters", "foo"};
+    LispIterator iter = parse_lisp_iterator({test});
+    std::vector<Keyword> keys = parse_keyword_list(iter);
+    ASSERT_EQ(iter.empty(), true); 
+    for (int i = 0; i < keys.size(); i++){
+        ASSERT_EQ(keys[i].name, test_names[i]);
+    }
+}
