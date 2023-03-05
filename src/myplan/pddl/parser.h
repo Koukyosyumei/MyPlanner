@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "lisp_iterators.h"
@@ -24,13 +25,16 @@ std::vector<std::string> parse_string_helper_list(LispIterator& iter) {
     return result;
 }
 
-std::vector<Type> _parse_type_helper(LispIterator& iter, Type type_class) {
-    std::vector<Type> result, tmpList;
+template <typename T>
+std::vector<T> _parse_type_helper(LispIterator& iter) {
+    std::vector<T> result;
+    std::vector<std::string> tmpList;
     while (!iter.empty()) {
         std::string var = iter.next().get_word();
         size_t count_var_0 =
             std::count(reserved.begin(), reserved.end(), var[0]);
-        if (type_class != Variable && !var.empty() && count_var_0) {
+        if (!(std::is_same<T, Variable>::value) && !var.empty() &&
+            count_var_0) {
             throw runtime_error(
                 "Error type must not begin with reserved char!");
         } else if (var == "-") {
@@ -44,36 +48,35 @@ std::vector<Type> _parse_type_helper(LispIterator& iter, Type type_class) {
                 std::vector<std::string> tlist =
                     parse_string_helper_list(types_iter);
                 while (!tmpList.empty()) {
-                    result.push_back(type_class(tmpList.back(), tlist));
+                    result.push_back(T(tmpList.back(), tlist));
                     tmpList.pop_back();
                 }
             } else {
                 std::string ctype = iter.next().get_word();
                 while (!tmpList.empty()) {
-                    if (type_class == Variable) {
+                    if (std::is_same<T, Variable>::value) {
                         result.push_back(
-                            type_class(tmpList.back(), vector<string>{ctype}));
+                            T(tmpList.back(), vector<string>{ctype}));
                     } else {
-                        result.push_back(type_class(tmpList.back(), ctype));
+                        result.push_back(T(tmpList.back(), ctype));
                     }
                     tmpList.pop_back();
                 }
             }
         } else if (!var.empty()) {
-            if (type_class == Variable) {
+            if (std::is_same<T, Variable>::value) {
                 if (var[0] != '?') {
                     throw runtime_error(
                         "Error variables must start with a \"?\"");
                 }
-                tmpList.insert(tmpList.begin(),
-                               type_class(var, vector<string>()));
+                tmpList.insert(tmpList.begin(), var);
             } else {
-                tmpList.insert(tmpList.begin(), type_class(var, ""));
+                tmpList.insert(tmpList.begin(), var);
             }
         }
     }
-    while (!tmpList.empty()) {
-        result.push_back(type_class(tmpList.back(), ""));
+    while (tmpList.size() != 0) {
+        result.push_back(T(tmpList.back(), ""));
         tmpList.pop_back();
     }
     return result;
@@ -113,6 +116,45 @@ Variable parse_variable(LispIterator iter) {
     return Variable(name);
 }
 
+std::vector<Variable> parse_typed_var_list(LispIterator iter) {
+    return _parse_type_helper<Variable>(iter);
+}
+
+std::vector<Variable> parse_parameters(LispIterator iter){
+    if (!iter.try_match(":parameters")){
+        throw invalid_argument("Error keyword \":parameters\" required before parameter list!");
+    }
+    return parse_typed_var_list(iter.next());
+}
+
+RequirementsStmt parse_requirements_stmt(LispIterator iter){
+    if (!iter.try_match(":requirements")){
+        throw invalid_argument("Error requirements list must contain keyword :requirements");
+    }
+    std::vector<Keyword> keywords = parse_keyword_list(iter);
+    return RequirementsStmt(keywords);
+}
+
+template <typename T>
+std::vector<T> _parse_type_with_error(LispIterator& iter, std::string keyword) {
+    if (!iter.try_match(keyword)){
+        throw invalid_argument("Error keyword" + keyword + " required before type");
+    }
+    return _parse_type_helper<T>(iter);
+}
+
+std::vector<Type> parse_types_stmt(LispIterator& iter){
+    return _parse_type_with_error<Type>(iter, ":types");
+}
+
+std::vector<Object> parse_objects_stmt(LispIterator& iter){
+    return _parse_type_with_error<Object>(iter, ":objects");
+}
+
+std::vector<Object> parse_constants_stmt(LispIterator& iter){
+    return _parse_type_with_error<Object>(iter, ":constants");
+}
+
 DomainStmt _parse_domain_helper(LispIterator iter, std::string keyword) {
     if (!iter.try_match(keyword)) {
         throw runtime_error(
@@ -130,9 +172,18 @@ DomainStmt parse_problem_domain_stmt(LispIterator it) {
     return _parse_domain_helper(it, ":domain");
 }
 
-Predicate parse_predicate(LispIterator iter){
+PredicateVar parse_predicate(LispIterator iter) {
     std::string name = parse_name(iter, "predicate");
+    std::vector<Variable> params = parse_typed_var_list(iter);
+    return PredicateVar(name, params);
+}
 
+std::vector<PredicateVar> parse_predicate_list(LispIterator iter) {
+    std::vector<PredicateVar> result;
+    while (!iter.peek().isnull()) {
+        result.push_back(parse_predicate(iter.next()));
+    }
+    return result;
 }
 
 PredicateInstance parse_predicate_instance(LispIterator iter) {
@@ -153,7 +204,7 @@ std::vector<PredicateInstance> parse_predicate_instance_list(
     return result;
 }
 
-Formula parse_formula(LispIterator& iter) {
+Formula parse_formula(LispIterator iter) {
     /*
      * Parse a Formula recursively
      * Note: This parses formulas recursively !!
@@ -171,8 +222,10 @@ Formula parse_formula(LispIterator& iter) {
             throw std::invalid_argument(
                 "Error: Formula must not start with reserved char!");
         }
-        std::vector<Formula> children =
-            parse_list_template<parse_formula>(iter);
+        std::vector<Formula> children;
+        while (!iter.peek().isnull()){
+            children.push_back(parse_formula(iter.next()));
+        }
         return Formula(key, children, type);
     } else {
         // non nested formula
@@ -180,7 +233,7 @@ Formula parse_formula(LispIterator& iter) {
         std::vector<Formula> children;
         FormulaType type;
         if (key[0] == '?') {
-            key = parse_variable(iter);
+            key = parse_variable(iter).name;
             type = FormulaType::TypeVariable;
         } else {
             type = FormulaType::TypeConstant;
@@ -197,8 +250,7 @@ PreconditionStmt _parse_precondition_or_effect(
      * Returns a PreconditionStmt or EffectStmt instance.
      */
     if (!iter.try_match(keyword)) {
-        throw std::invalid_argument("Error: " + typeinfo(*type).name() +
-                                    " must start with \"" + keyword +
+        throw std::invalid_argument("Error: must start with \"" + keyword +
                                     "\" keyword");
     }
     Formula cond = parse_formula(iter.next());
@@ -244,7 +296,7 @@ PredicatesStmt parse_predicates_stmt(LispIterator& iter) {
             "Error predicate definition must start with \":predicates\" "
             "keyword!");
     }
-    std::vector<Predicate> predicates = parse_predicate_list(iter);
+    std::vector<PredicateVar> predicates = parse_predicate_list(iter);
     return PredicatesStmt(predicates);
 }
 

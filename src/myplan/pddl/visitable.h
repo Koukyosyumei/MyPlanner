@@ -37,7 +37,8 @@ class PDDLVisitor {
 // Get method by name
 std::function<void(PDDLVisitor*, Visitable*)> getMethod(
     PDDLVisitor* visitor, const std::string& methodName) {
-    static const std::map<std::string, std::function<void(PDDLVisitor*, Visitable*)>>
+    static const std::map<std::string,
+                          std::function<void(PDDLVisitor*, Visitable*)>>
         methodMap = {
             {"visit_domain_def",
              [](PDDLVisitor* visitor, Visitable* arg) {
@@ -59,8 +60,10 @@ std::function<void(PDDLVisitor*, Visitable*)> getMethod(
              [](PDDLVisitor* visitor, Visitable* arg) {
                  visitor->visit_formula((Formula*)arg);
              }},
-            {"visit_type", [](PDDLVisitor* visitor,
-                              Visitable* arg) { visitor->visit_type((Type*)arg); }},
+            {"visit_type",
+             [](PDDLVisitor* visitor, Visitable* arg) {
+                 visitor->visit_type((Type*)arg);
+             }},
             {"visit_effect_stmt",
              [](PDDLVisitor* visitor, Visitable* arg) {
                  visitor->visit_effect_stmt((EffectStmt*)arg);
@@ -155,6 +158,16 @@ class Variable : public Visitable {
     std::string name;
     bool typed;
     std::vector<Type> types;
+};
+
+class PredicateVar: public Visitable {
+   public:
+    PredicateVar(std::string name, std::vector<Variable> parameters = {})
+        : _visitorName("visit_predicate"), name(name), parameters(parameters) {}
+
+    std::string _visitorName;
+    std::string name;
+    std::vector<Variable> parameters;
 };
 
 class PredicateInstance : public Visitable {
@@ -260,13 +273,13 @@ class ActionStmt : public Visitable {
 
 class PredicatesStmt : public Visitable {
    public:
-    PredicatesStmt(std::vector<Predicate*> predicates) {
+    PredicatesStmt(std::vector<PredicateVar*> predicates) {
         _visitorName = "visit_predicates_stmt";
         this->predicates = predicates;
     }
 
     std::string _visitorName;
-    std::vector<Predicate*> predicates;
+    std::vector<PredicateVar*> predicates;
 };
 
 class DomainDef : public Visitable {
