@@ -82,33 +82,33 @@ class Action {
 
 class Domain {
    public:
-    Domain(string name, unordered_map<string, Type> types,
-           vector<Predicate> predicates, vector<Action> actions,
-           unordered_map<string, Type> constants = {})
-        : name_(name),
-          types_(types),
-          predicates_(predicates),
-          actions_(actions),
-          constants_(constants) {}
-    string getName() const { return name_; }
-    void setName(string name) { name_ = name; }
-    unordered_map<string, Type> getTypes() const { return types_; }
-    void setTypes(unordered_map<string, Type> types) { types_ = types; }
-    vector<Predicate> getPredicates() const { return predicates_; }
+    Domain(string name_, unordered_map<string, Type> types_,
+           vector<Predicate> predicates_, vector<Action> actions_,
+           unordered_map<string, Type> constants_ = {})
+        : name(name_),
+          types(types_),
+          predicates(predicates_),
+          actions(actions_),
+          constants(constants_) {}
+    string getName() const { return name; }
+    void setName(string name) { name = name; }
+    unordered_map<string, Type> getTypes() const { return types; }
+    void setTypes(unordered_map<string, Type> types) { types = types; }
+    vector<Predicate> getPredicates() const { return predicates; }
     void setPredicates(vector<Predicate> predicates) {
-        predicates_ = predicates;
+        predicates = predicates;
     }
-    vector<Action> getActions() const { return actions_; }
-    void setActions(vector<Action> actions) { actions_ = actions; }
-    unordered_map<string, Type> getConstants() const { return constants_; }
+    vector<Action> getActions() const { return actions; }
+    void setActions(vector<Action> actions) { actions = actions; }
+    unordered_map<string, Type> getConstants() const { return constants; }
     void setConstants(unordered_map<string, Type> constants) {
-        constants_ = constants;
+        constants = constants;
     }
 
    private:
-    string name_;
-    unordered_map<string, Type> types_;
-    vector<Predicate> predicates_;
-    vector<Action> actions_;
-    std::unordered_map<std::string, Type> constants_;
+    string name;
+    unordered_map<string, Type> types;
+    vector<Predicate> predicates;
+    vector<Action> actions;
+    std::unordered_map<std::string, Type> constants;
 };

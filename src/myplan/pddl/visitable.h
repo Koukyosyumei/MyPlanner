@@ -160,7 +160,7 @@ class Variable : public Visitable {
     std::vector<Type> types;
 };
 
-class PredicateVar: public Visitable {
+class PredicateVar : public Visitable {
    public:
     PredicateVar(std::string name, std::vector<Variable> parameters = {})
         : _visitorName("visit_predicate"), name(name), parameters(parameters) {}
@@ -263,10 +263,19 @@ class ActionStmt : public Visitable {
         this->precond = precond;
         this->effect = effect;
     }
+    ActionStmt(std::string name, std::vector<Variable> parameters,
+               Formula* precond, Formula* effect) {
+        _visitorName = "visit_action_stmt";
+        this->name = name;
+        this->parameters_var = parameters;
+        this->precond = precond;
+        this->effect = effect;
+    }
 
     std::string _visitorName;
     std::string name;
     std::vector<std::string> parameters;
+    std::vector<Variable> parameters_var;
     Formula* precond;
     Formula* effect;
 };

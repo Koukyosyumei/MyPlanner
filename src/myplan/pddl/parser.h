@@ -282,7 +282,7 @@ ActionStmt parse_action_stmt(LispIterator& iter) {
     }
     std::string name = parse_name(iter, "action");
     // call parsers to parse parameters, precondition, effect
-    Parameters param = ters(iter);
+    std::vector<Variable> param = parse_parameters(iter);
     PreconditionStmt pre = parse_precondition_stmt(iter);
     EffectStmt eff = parse_effect_stmt(iter);
     return ActionStmt(name, param, pre, eff);
