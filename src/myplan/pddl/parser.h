@@ -251,9 +251,8 @@ Formula parse_formula(LispIterator iter) {
     }
 }
 
-PreconditionStmt _parse_precondition_or_effect(
-    LispIterator& iter, std::string keyword,
-    PreconditionStmt (*type)(Formula)) {
+template <typename T>
+T _parse_precondition_or_effect(LispIterator& iter, std::string keyword) {
     /*
      * Parse an action precondition or effect
      * Returns a PreconditionStmt or EffectStmt instance.
@@ -263,16 +262,15 @@ PreconditionStmt _parse_precondition_or_effect(
                                     "\" keyword");
     }
     Formula cond = parse_formula(iter.next());
-    return (*type)(cond);
+    return T(cond);
 }
 
 PreconditionStmt parse_precondition_stmt(LispIterator& it) {
-    return _parse_precondition_or_effect(it, ":precondition",
-                                         &PreconditionStmt::make);
+    return _parse_precondition_or_effect<PreconditionStmt>(it, ":precondition");
 }
 
 EffectStmt parse_effect_stmt(LispIterator& it) {
-    return _parse_precondition_or_effect(it, ":effect", &EffectStmt::make);
+    return _parse_precondition_or_effect<EffectStmt>(it, ":effect");
 }
 
 ActionStmt parse_action_stmt(LispIterator& iter) {
