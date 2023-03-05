@@ -25,7 +25,7 @@ std::vector<std::string> parse_string_helper_list(LispIterator& iter) {
     return result;
 }
 
-std::vector<Variable> parse_parameters(LispIterator iter);
+// std::vector<Variable> parse_parameters(LispIterator iter);
 
 template <typename T>
 std::vector<T> _parse_type_helper(LispIterator& iter) {
@@ -34,7 +34,7 @@ std::vector<T> _parse_type_helper(LispIterator& iter) {
     while (!iter.empty()) {
         std::string var = iter.next().get_word();
         size_t count_var_0 =
-            std::count(reserved.begin(), reserved.end(), var[0]);
+            std::count(reserved.begin(), reserved.end(), var.substr(0, 1));
         if (!(std::is_same<T, Variable>::value) && !var.empty() &&
             count_var_0) {
             throw runtime_error(
@@ -126,7 +126,7 @@ std::vector<Variable> parse_typed_var_list(LispIterator iter) {
     return _parse_type_helper<Variable>(iter);
 }
 
-std::vector<Variable> ters(LispIterator iter) {
+std::vector<Variable> parse_parameters(LispIterator iter) {
     if (!iter.try_match(":parameters")) {
         throw invalid_argument(
             "Error keyword \":parameters\" required before parameter list!");
@@ -226,7 +226,7 @@ Formula parse_formula(LispIterator iter) {
         std::string key = iter.peek().get_word();
         iter.next();
         size_t count_key_0 =
-            std::count(reserved.begin(), reserved.end(), key[0]);
+            std::count(reserved.begin(), reserved.end(), key.substr(0, 1));
         if (count_key_0) {
             throw std::invalid_argument(
                 "Error: Formula must not start with reserved char!");
