@@ -25,6 +25,8 @@ std::vector<std::string> parse_string_helper_list(LispIterator& iter) {
     return result;
 }
 
+std::vector<Variable> parse_parameters(LispIterator iter);
+
 template <typename T>
 std::vector<T> _parse_type_helper(LispIterator& iter) {
     std::vector<T> result;
