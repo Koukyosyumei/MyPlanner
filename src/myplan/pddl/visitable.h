@@ -330,15 +330,15 @@ class ProblemDef : public Visitable {
 
 class Object : public Visitable {
    public:
-    Object(std::string name, std::string type) {
+    Object(std::string name, Type* type) {
         _visitorName = "visit_object";
         this->name = name;
-        this->typeName = type;
+        this->type = type;
     }
 
     std::string _visitorName;
     std::string name;
-    std::string typeName;
+    Type* type;
 };
 
 class InitStmt : public Visitable {
