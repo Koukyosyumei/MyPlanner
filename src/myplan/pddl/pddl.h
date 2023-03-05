@@ -82,9 +82,9 @@ class Action {
 
 class Domain {
    public:
-    Domain(string name, unordered_map<string, Type*> types,
-           vector<Predicate*> predicates, vector<Action*> actions,
-           unordered_map<string, Type*> constants = {})
+    Domain(string name, unordered_map<string, Type> types,
+           vector<Predicate> predicates, vector<Action> actions,
+           unordered_map<string, Type> constants = {})
         : name_(name),
           types_(types),
           predicates_(predicates),
@@ -92,23 +92,23 @@ class Domain {
           constants_(constants) {}
     string getName() const { return name_; }
     void setName(string name) { name_ = name; }
-    unordered_map<string, Type*> getTypes() const { return types_; }
-    void setTypes(unordered_map<string, Type*> types) { types_ = types; }
-    vector<Predicate*> getPredicates() const { return predicates_; }
-    void setPredicates(vector<Predicate*> predicates) {
+    unordered_map<string, Type> getTypes() const { return types_; }
+    void setTypes(unordered_map<string, Type> types) { types_ = types; }
+    vector<Predicate> getPredicates() const { return predicates_; }
+    void setPredicates(vector<Predicate> predicates) {
         predicates_ = predicates;
     }
-    vector<Action*> getActions() const { return actions_; }
-    void setActions(vector<Action*> actions) { actions_ = actions; }
-    unordered_map<string, Type*> getConstants() const { return constants_; }
-    void setConstants(unordered_map<string, Type*> constants) {
+    vector<Action> getActions() const { return actions_; }
+    void setActions(vector<Action> actions) { actions_ = actions; }
+    unordered_map<string, Type> getConstants() const { return constants_; }
+    void setConstants(unordered_map<string, Type> constants) {
         constants_ = constants;
     }
 
    private:
     string name_;
-    unordered_map<string, Type*> types_;
-    vector<Predicate*> predicates_;
-    vector<Action*> actions_;
-    std::unordered_map<std::string, Type*> constants_;
+    unordered_map<string, Type> types_;
+    vector<Predicate> predicates_;
+    vector<Action> actions_;
+    std::unordered_map<std::string, Type> constants_;
 };

@@ -120,16 +120,18 @@ std::vector<Variable> parse_typed_var_list(LispIterator iter) {
     return _parse_type_helper<Variable>(iter);
 }
 
-std::vector<Variable> parse_parameters(LispIterator iter){
-    if (!iter.try_match(":parameters")){
-        throw invalid_argument("Error keyword \":parameters\" required before parameter list!");
+std::vector<Variable> ters(LispIterator iter) {
+    if (!iter.try_match(":parameters")) {
+        throw invalid_argument(
+            "Error keyword \":parameters\" required before parameter list!");
     }
     return parse_typed_var_list(iter.next());
 }
 
-RequirementsStmt parse_requirements_stmt(LispIterator iter){
-    if (!iter.try_match(":requirements")){
-        throw invalid_argument("Error requirements list must contain keyword :requirements");
+RequirementsStmt parse_requirements_stmt(LispIterator iter) {
+    if (!iter.try_match(":requirements")) {
+        throw invalid_argument(
+            "Error requirements list must contain keyword :requirements");
     }
     std::vector<Keyword> keywords = parse_keyword_list(iter);
     return RequirementsStmt(keywords);
@@ -137,21 +139,22 @@ RequirementsStmt parse_requirements_stmt(LispIterator iter){
 
 template <typename T>
 std::vector<T> _parse_type_with_error(LispIterator& iter, std::string keyword) {
-    if (!iter.try_match(keyword)){
-        throw invalid_argument("Error keyword" + keyword + " required before type");
+    if (!iter.try_match(keyword)) {
+        throw invalid_argument("Error keyword" + keyword +
+                               " required before type");
     }
     return _parse_type_helper<T>(iter);
 }
 
-std::vector<Type> parse_types_stmt(LispIterator& iter){
+std::vector<Type> parse_types_stmt(LispIterator& iter) {
     return _parse_type_with_error<Type>(iter, ":types");
 }
 
-std::vector<Object> parse_objects_stmt(LispIterator& iter){
+std::vector<Object> parse_objects_stmt(LispIterator& iter) {
     return _parse_type_with_error<Object>(iter, ":objects");
 }
 
-std::vector<Object> parse_constants_stmt(LispIterator& iter){
+std::vector<Object> parse_constants_stmt(LispIterator& iter) {
     return _parse_type_with_error<Object>(iter, ":constants");
 }
 
@@ -223,7 +226,7 @@ Formula parse_formula(LispIterator iter) {
                 "Error: Formula must not start with reserved char!");
         }
         std::vector<Formula> children;
-        while (!iter.peek().isnull()){
+        while (!iter.peek().isnull()) {
             children.push_back(parse_formula(iter.next()));
         }
         return Formula(key, children, type);
@@ -279,7 +282,7 @@ ActionStmt parse_action_stmt(LispIterator& iter) {
     }
     std::string name = parse_name(iter, "action");
     // call parsers to parse parameters, precondition, effect
-    Parameters param = parse_parameters(iter);
+    Parameters param = ters(iter);
     PreconditionStmt pre = parse_precondition_stmt(iter);
     EffectStmt eff = parse_effect_stmt(iter);
     return ActionStmt(name, param, pre, eff);
@@ -318,14 +321,14 @@ DomainDef parse_domain_def(LispIterator& iter) {
             RequirementsStmt req = parse_requirements_stmt(next_iter);
             domain.requirements = req;
         } else if (key.name == "types") {
-            TypesStmt types = parse_types_stmt(next_iter);
+            std::vector<Type> types = parse_types_stmt(next_iter);
             domain.types = types;
         } else if (key.name == "predicates") {
             PredicatesStmt pred = parse_predicates_stmt(next_iter);
             domain.predicates = pred;
         } else if (key.name == "constants") {
-            ConstantsStmt const = parse_constants_stmt(next_iter);
-            domain.constants = const;
+            std::vector<Object> cst = parse_constants_stmt(next_iter);
+            domain.constants = cst;
         } else if (key.name == "action") {
             ActionStmt action = parse_action_stmt(next_iter);
             domain.actions.push_back(action);
@@ -349,6 +352,26 @@ DomainDef parse_domain_def(LispIterator& iter) {
 
     iter.match_end();
     return domain;
+}
+
+InitStmt parse_init_stmt(LispIterator& iter) {
+    if (!iter.try_match(":init")) {
+        throw std::runtime_error(
+            "Error found invalid keyword when parsing InitStmt");
+    }
+
+    std::vector<PredicateInstance> preds = parse_predicate_instance_list(iter);
+    return InitStmt(preds);
+}
+
+GoalStmt parse_goal_stmt(LispIterator& iter) {
+    if (!iter.try_match(":goal")) {
+        throw std::runtime_error(
+            "Error found invalid keyword when parsing GoalStmt");
+    }
+
+    Formula f = parse_formula(iter);
+    return GoalStmt(f);
 }
 
 std::string parse_problem_name(LispIterator& iter) {
@@ -385,25 +408,5 @@ ProblemDef parse_problem_def(LispIterator& iter) {
 
     // create new ProblemDef instance
     return ProblemDef(probname, dom.name, objects, init, goal);
-}
-
-InitStmt parse_init_stmt(LispIterator& iter) {
-    if (!iter.try_match(":init")) {
-        throw std::runtime_error(
-            "Error found invalid keyword when parsing InitStmt");
-    }
-
-    std::vector<PredicateInstance> preds = parse_predicate_instance_list(iter);
-    return InitStmt(preds);
-}
-
-GoalStmt parse_goal_stmt(LispIterator& iter) {
-    if (!iter.try_match(":goal")) {
-        throw std::runtime_error(
-            "Error found invalid keyword when parsing GoalStmt");
-    }
-
-    Formula f = parse_formula(iter);
-    return GoalStmt(f);
 }
 
