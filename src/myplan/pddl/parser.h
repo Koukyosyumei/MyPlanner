@@ -287,7 +287,7 @@ ActionStmt parse_action_stmt(LispIterator& iter) {
     std::vector<Variable> param = parse_parameters(iter);
     PreconditionStmt pre = parse_precondition_stmt(iter);
     EffectStmt eff = parse_effect_stmt(iter);
-    return ActionStmt(name, param, pre, eff);
+    return ActionStmt(name, param, &pre, &eff);
 }
 
 PredicatesStmt parse_predicates_stmt(LispIterator& iter) {
@@ -321,13 +321,13 @@ DomainDef parse_domain_def(LispIterator& iter) {
         Keyword key = parse_keyword(next_iter.peek());
         if (key.name == "requirements") {
             RequirementsStmt req = parse_requirements_stmt(next_iter);
-            domain.requirements = req;
+            domain.requirements = &req;
         } else if (key.name == "types") {
             std::vector<Type> types = parse_types_stmt(next_iter);
             domain.types = types;
         } else if (key.name == "predicates") {
             PredicatesStmt pred = parse_predicates_stmt(next_iter);
-            domain.predicates = pred;
+            domain.predicates = &pred;
         } else if (key.name == "constants") {
             std::vector<Object> cst = parse_constants_stmt(next_iter);
             domain.constants = cst;
@@ -373,7 +373,7 @@ GoalStmt parse_goal_stmt(LispIterator& iter) {
     }
 
     Formula f = parse_formula(iter);
-    return GoalStmt(f);
+    return GoalStmt(&f);
 }
 
 std::string parse_problem_name(LispIterator& iter) {
@@ -394,10 +394,10 @@ ProblemDef parse_problem_def(LispIterator& iter) {
 
     // parse problem name and corresponding domain name
     std::string probname = parse_problem_name(iter);
-    ProblemDomainStmt dom = parse_problem_domain_stmt(iter);
+    DomainStmt dom = parse_problem_domain_stmt(iter);
 
     // parse all object definitions
-    std::unordered_map<std::string, std::string> objects;
+    std::vector<Object> objects;
     if (iter.peek_tag() == ":objects") {
         objects = parse_objects_stmt(iter);
     }
@@ -409,6 +409,6 @@ ProblemDef parse_problem_def(LispIterator& iter) {
     iter.match_end();
 
     // create new ProblemDef instance
-    return ProblemDef(probname, dom.name, objects, init, goal);
+    return ProblemDef(probname, dom.name, objects, &init, &goal);
 }
 

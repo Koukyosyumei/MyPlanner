@@ -253,51 +253,42 @@ class EffectStmt : public Visitable {
     Formula formula;
 };
 
+class PredicatesStmt : public Visitable {
+   public:
+    PredicatesStmt(std::vector<PredicateVar> predicates) {
+        _visitorName = "visit_predicates_stmt";
+        this->predicates = predicates;
+    }
+
+    std::string _visitorName;
+    std::vector<PredicateVar> predicates;
+};
+
 class ActionStmt : public Visitable {
    public:
-    ActionStmt(std::string name, std::vector<std::string> parameters,
-               Formula* precond, Formula* effect) {
-        _visitorName = "visit_action_stmt";
+    ActionStmt(std::string name, std::vector<Variable> parameters,
+               PreconditionStmt* precond, EffectStmt* effect) {
+        this->_visitorName = "visit_action_stmt";
         this->name = name;
         this->parameters = parameters;
-        this->precond = precond;
-        this->effect = effect;
-    }
-    ActionStmt(std::string name, std::vector<Variable> parameters,
-               Formula* precond, Formula* effect) {
-        _visitorName = "visit_action_stmt";
-        this->name = name;
-        this->parameters_var = parameters;
         this->precond = precond;
         this->effect = effect;
     }
 
     std::string _visitorName;
     std::string name;
-    std::vector<std::string> parameters;
-    std::vector<Variable> parameters_var;
-    Formula* precond;
-    Formula* effect;
-};
-
-class PredicatesStmt : public Visitable {
-   public:
-    PredicatesStmt(std::vector<PredicateVar*> predicates) {
-        _visitorName = "visit_predicates_stmt";
-        this->predicates = predicates;
-    }
-
-    std::string _visitorName;
-    std::vector<PredicateVar*> predicates;
+    std::vector<Variable> parameters;
+    PreconditionStmt* precond;
+    EffectStmt* effect;
 };
 
 class DomainDef : public Visitable {
    public:
     DomainDef(std::string name, RequirementsStmt* requirements = nullptr,
-              std::vector<Type*> types = {},
+              std::vector<Type> types = {},
               PredicatesStmt* predicates = nullptr,
-              std::vector<ActionStmt*> actions = {},
-              std::vector<Object*> constants = {}) {
+              std::vector<ActionStmt> actions = {},
+              std::vector<Object> constants = {}) {
         _visitorName = "visit_domain_def";
         this->name = name;
         this->requirements = requirements;
@@ -310,16 +301,16 @@ class DomainDef : public Visitable {
     std::string _visitorName;
     std::string name;
     RequirementsStmt* requirements;
-    std::vector<Type*> types;
+    std::vector<Type> types;
     PredicatesStmt* predicates;
-    std::vector<ActionStmt*> actions;
-    std::vector<Object*> constants;
+    std::vector<ActionStmt> actions;
+    std::vector<Object> constants;
 };
 
 class ProblemDef : public Visitable {
    public:
     ProblemDef(std::string name, std::string domainName,
-               std::vector<Object*> objects = {}, InitStmt* init = nullptr,
+               std::vector<Object> objects = {}, InitStmt* init = nullptr,
                GoalStmt* goal = nullptr) {
         _visitorName = "visit_problem_def";
         this->name = name;
@@ -332,7 +323,7 @@ class ProblemDef : public Visitable {
     std::string _visitorName;
     std::string name;
     std::string domainName;
-    std::vector<Object*> objects;
+    std::vector<Object> objects;
     InitStmt* init;
     GoalStmt* goal;
 };
@@ -352,13 +343,13 @@ class Object : public Visitable {
 
 class InitStmt : public Visitable {
    public:
-    InitStmt(std::vector<Predicate*> predicates) {
+    InitStmt(std::vector<PredicateInstance> predicates) {
         _visitorName = "visit_init_stmt";
         this->predicates = predicates;
     }
 
     std::string _visitorName;
-    std::vector<Predicate*> predicates;
+    std::vector<PredicateInstance> predicates;
 };
 
 class GoalStmt : public Visitable {
