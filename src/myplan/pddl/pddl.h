@@ -9,6 +9,12 @@ using namespace std;
 
 class Type {
    public:
+    Type(string name, std::vector<Type> parents) : name_(name) {
+        transform(name_.begin(), name_.end(), name_.begin(), ::tolower);
+        if (parents.size() > 0) {
+            parent_ = &parents[0];
+        }
+    }
     Type(string name, Type* parent) : name_(name), parent_(parent) {
         transform(name_.begin(), name_.end(), name_.begin(), ::tolower);
     }
@@ -17,7 +23,6 @@ class Type {
     Type* getParent() const { return parent_; }
     void setParent(Type* parent) { parent_ = parent; }
 
-   private:
     string name_;
     Type* parent_;
 };

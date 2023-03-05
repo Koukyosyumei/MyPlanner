@@ -153,6 +153,12 @@ class Variable : public Visitable {
           name(name),
           typed(!types.empty()),
           types(types) {}
+    Variable(std::string name, Type* type)
+        : _visitorName("visit_variable"), name(name), typed(!types.empty()) {
+        if (type != nullptr) {
+            this->types = {*type};
+        }
+    }
 
     std::string _visitorName;
     std::string name;
@@ -330,6 +336,13 @@ class ProblemDef : public Visitable {
 
 class Object : public Visitable {
    public:
+    Object(std::string name, std::vector<Type> types) {
+        _visitorName = "visit_object";
+        this->name = name;
+        if (types.size() > 0) {
+            this->type = &types[0];
+        }
+    }
     Object(std::string name, Type* type) {
         _visitorName = "visit_object";
         this->name = name;
