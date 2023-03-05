@@ -134,7 +134,7 @@ std::vector<Variable> parse_parameters(LispIterator iter) {
     return parse_typed_var_list(iter.next());
 }
 
-RequirementsStmt parse_requirements_stmt(LispIterator iter) {
+RequirementsStmt parse_requirements_stmt(LispIterator& iter) {
     if (!iter.try_match(":requirements")) {
         throw invalid_argument(
             "Error requirements list must contain keyword :requirements");
