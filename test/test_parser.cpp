@@ -80,3 +80,42 @@ TEST(parser_pddl_simple, Parameters) {
     ASSERT_EQ(typed_cnt, 3);
 }
 
+TEST(parser_pddl_simple, Types) {
+    std::string test = "(:types block plane key)";
+    std::vector<std::string> test_names = {"block", "plane", "key"};
+    LispIterator iter = parse_lisp_iterator({test});
+    std::vector<Type> tlist = parse_types_stmt(iter);
+    for (int i = 0; i < tlist.size(); i++) {
+        ASSERT_EQ(tlist[i].name_, test_names[i]);
+    }
+}
+
+TEST(parser_pddl_simple, DomainStatement) {
+    std::string test = "(domain supertest-23-v0)";
+    LispIterator iter = parse_lisp_iterator({test});
+    DomainStmt dom = parse_domain_stmt(iter);
+    ASSERT_EQ(dom.name, "supertest-23-v0");
+}
+
+TEST(parser_pddl_simple, Predicate) {
+    std::string test = "(on ?x ?y)";
+    LispIterator iter = parse_lisp_iterator({test});
+    PredicateVar pred = parse_predicate(iter);
+    ASSERT_EQ(pred.name, "on");
+    ASSERT_EQ(pred.parameters[0].name, "?x");
+    ASSERT_EQ(pred.parameters[1].name, "?y");
+}
+
+TEST(parser_pddl_simple, PredicateMixed) {
+    std::string test = "(on ?x - block ?y)";
+    LispIterator iter = parse_lisp_iterator({test});
+    PredicateVar pred = parse_predicate(iter);
+    ASSERT_EQ(pred.name, "on");
+    ASSERT_EQ(pred.parameters[0].name, "?x");
+    ASSERT_EQ(pred.parameters[1].name, "?y");
+    for (Variable x : pred.parameters) {
+        if (x.types.size() != 0) {
+            ASSERT_EQ(x.types[0].name_, "block");
+        }
+    }
+}

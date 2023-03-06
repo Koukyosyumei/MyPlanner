@@ -7,7 +7,7 @@
 #include "parser_common.h"
 #include "visitable.h"
 
-std::string parse_name(LispIterator iter, std::string father) {
+std::string parse_name(LispIterator& iter, std::string father) {
     if (!iter.peek().is_word()) {
         throw std::runtime_error(
             "Error predicate statement must conta a name!");
