@@ -39,7 +39,7 @@ std::ostream& operator<<(std::ostream& os, const nested_list<T>& lst) {
 //    return str;
 //}
 
-std::string replace_str(std::string str, const std::string& from, const std::string& to) {
+inline std::string replace_str(std::string str, const std::string& from, const std::string& to) {
     size_t start_pos = 0;
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
         str.replace(start_pos, from.length(), to);
@@ -49,7 +49,7 @@ std::string replace_str(std::string str, const std::string& from, const std::str
 }
 
 
-std::vector<std::string> _tokenize(std::vector<std::string> input) {
+inline std::vector<std::string> _tokenize(std::vector<std::string> input) {
     std::vector<std::string> tokens;
     for (std::string line : input) {
         // Strip comments.
@@ -71,7 +71,7 @@ std::vector<std::string> _tokenize(std::vector<std::string> input) {
     return tokens;
 }
 
-nested_list<std::string> _parse_list_aux(
+inline nested_list<std::string> _parse_list_aux(
     std::vector<std::string>::iterator& beg,
     const std::vector<std::string>::iterator& end) {
     nested_list<std::string> result;
@@ -89,7 +89,7 @@ nested_list<std::string> _parse_list_aux(
     throw ParseError("Missing closing parenthesis");
 }
 
-nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
+inline nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
     std::vector<std::string> tokens = _tokenize(input);
     if (tokens.empty() || tokens[0] != "(") {
         throw ParseError("Expected '(', got " +
@@ -100,7 +100,7 @@ nested_list<std::string> parse_nested_list(std::vector<std::string> input) {
     return result;
 }
 
-LispIterator parse_lisp_iterator(std::vector<std::string> input) {
+inline LispIterator parse_lisp_iterator(std::vector<std::string> input) {
     nested_list<std::string> nlist = parse_nested_list(input);
     return LispIterator(nlist);
 }

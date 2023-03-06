@@ -1,3 +1,4 @@
+#pragma once
 #include <functional>
 #include <map>
 #include <memory>
@@ -35,7 +36,7 @@ class PDDLVisitor {
 };
 
 // Get method by name
-std::function<void(PDDLVisitor*, Visitable*)> getMethod(
+inline std::function<void(PDDLVisitor*, Visitable*)> getMethod(
     PDDLVisitor* visitor, const std::string& methodName) {
     static const std::map<std::string,
                           std::function<void(PDDLVisitor*, Visitable*)>>
