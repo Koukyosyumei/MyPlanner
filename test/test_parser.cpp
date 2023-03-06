@@ -119,3 +119,42 @@ TEST(parser_pddl_simple, PredicateMixed) {
         }
     }
 }
+
+TEST(parser_pddl_simple, PredicateList) {
+    std::string test = "((on ?x - block ?y) (put ?x ?z) (true))";
+    std::vector<std::string> test_names = {"on", "put", "true"};
+    LispIterator iter = parse_lisp_iterator({test});
+    std::vector<PredicateVar> predlist = parse_predicate_list(iter);
+    for (int i = 0; i < predlist.size(); i++) {
+        ASSERT_EQ(test_names[i], predlist[i].name);
+    }
+}
+
+TEST(parser_pddl_simple, Formula) {
+    std::string test = "(and (on ?x table) (true) (free ?x))";
+    LispIterator iter = parse_lisp_iterator({test});
+    Formula formula = parse_formula(iter);
+    ASSERT_EQ(formula.key, "and");
+    std::vector<std::string> children = {"on", "true", "free"};
+    for (int i = 0; i < formula.children.size(); i++) {
+        ASSERT_EQ(formula.children[i].key, children[i]);
+    }
+
+    for (auto c : formula.children[0].children) {
+        if (c.type == TypeVariable) {
+            ASSERT_EQ(c.key, "?x");
+        }
+    }
+    for (auto c : formula.children[0].children) {
+        if (c.type == TypeConstant) {
+            ASSERT_EQ(c.key, "table");
+        }
+    }
+    for (auto c : formula.children[2].children) {
+        if (c.type == TypeVariable) {
+            ASSERT_EQ(c.key, "?x");
+        }
+    }
+
+    ASSERT_EQ(formula.children[1].children.size(), 0);
+}
