@@ -23,15 +23,15 @@ TEST(parser_pddl_simple, NestedList) {
 
 TEST(parser_pddl_simple, KeywordSimple) {
     std::string test = "(:parameters )";
-    LispIterator iter = parse_lisp_iterator({test});
-    Keyword key = parse_keyword(iter.next());
+    LispIterator next_iter = parse_lisp_iterator({test}).next();
+    Keyword key = parse_keyword(next_iter);
     ASSERT_EQ(key.name, "parameters");
 }
 
 TEST(parser_pddl_simple, KeywordComplex) {
     std::string test = " ( :name)";
-    LispIterator iter = parse_lisp_iterator({test});
-    Keyword key = parse_keyword(iter.next());
+    LispIterator next_iter = parse_lisp_iterator({test}).next();
+    Keyword key = parse_keyword(next_iter);
     ASSERT_EQ(key.name, "name");
 }
 
@@ -48,8 +48,8 @@ TEST(parser_pddl_simple, Requirements) {
 
 TEST(parser_pddl_simple, VariableNoTyping) {
     std::string test = " ( ?x)";
-    LispIterator iter = parse_lisp_iterator({test});
-    Variable key = parse_variable(iter.next());
+    LispIterator next_iter = parse_lisp_iterator({test}).next();
+    Variable key = parse_variable(next_iter);
     ASSERT_EQ(key.name, "?x");
     ASSERT_EQ(key.typed, false);
     ASSERT_EQ(key.types.size(), 0);

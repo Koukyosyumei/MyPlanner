@@ -16,14 +16,15 @@ inline std::string parse_name(LispIterator& iter, std::string father) {
     return iter.next().get_word();
 }
 
-inline std::string _parse_string_helper(LispIterator iter) {
+inline std::string _parse_string_helper(LispIterator& iter) {
     return iter.get_word();
 }
 
 inline std::vector<std::string> parse_string_helper_list(LispIterator& iter) {
     std::vector<std::string> result;
     while (!iter.peek().isnull()) {
-        result.push_back(_parse_string_helper(iter.next()));
+        LispIterator next_iter = iter.next();
+        result.push_back(_parse_string_helper(next_iter));
     }
     return result;
 }
@@ -91,7 +92,7 @@ inline std::vector<T> _parse_type_helper(LispIterator& iter) {
     return result;
 }
 
-inline Keyword parse_keyword(LispIterator iter) {
+inline Keyword parse_keyword(LispIterator& iter) {
     std::string name = iter.get_word();
     if (name.empty()) {
         throw std::invalid_argument("Error empty keyword found");
@@ -108,12 +109,13 @@ inline Keyword parse_keyword(LispIterator iter) {
 inline std::vector<Keyword> parse_keyword_list(LispIterator& iter) {
     std::vector<Keyword> result;
     while (!iter.peek().isnull()) {
-        result.push_back(parse_keyword(iter.next()));
+        LispIterator next_iter = iter.next();
+        result.push_back(parse_keyword(next_iter));
     }
     return result;
 }
 
-inline Variable parse_variable(LispIterator iter) {
+inline Variable parse_variable(LispIterator& iter) {
     std::string name = iter.get_word();
     if (name == "") {
         throw runtime_error("Error empty variale found");
@@ -125,16 +127,17 @@ inline Variable parse_variable(LispIterator iter) {
     return Variable(name);
 }
 
-inline std::vector<Variable> parse_typed_var_list(LispIterator iter) {
+inline std::vector<Variable> parse_typed_var_list(LispIterator& iter) {
     return _parse_type_helper<Variable>(iter);
 }
 
-inline std::vector<Variable> parse_parameters(LispIterator iter) {
+inline std::vector<Variable> parse_parameters(LispIterator& iter) {
     if (!iter.try_match(":parameters")) {
         throw invalid_argument(
             "Error keyword \":parameters\" required before parameter list!");
     }
-    return parse_typed_var_list(iter.next());
+    LispIterator next_iter = iter.next();
+    return parse_typed_var_list(next_iter);
 }
 
 inline RequirementsStmt parse_requirements_stmt(LispIterator& iter) {
@@ -168,7 +171,8 @@ inline std::vector<Object> parse_constants_stmt(LispIterator& iter) {
     return _parse_type_with_error<Object>(iter, ":constants");
 }
 
-inline DomainStmt _parse_domain_helper(LispIterator iter, std::string keyword) {
+inline DomainStmt _parse_domain_helper(LispIterator& iter,
+                                       std::string keyword) {
     if (!iter.try_match(keyword)) {
         throw runtime_error(
             "Error domain statement must be present before \"\"domain name!");
@@ -177,33 +181,35 @@ inline DomainStmt _parse_domain_helper(LispIterator iter, std::string keyword) {
     return DomainStmt(name);
 }
 
-inline DomainStmt parse_domain_stmt(LispIterator it) {
+inline DomainStmt parse_domain_stmt(LispIterator& it) {
     return _parse_domain_helper(it, "domain");
 }
 
-inline DomainStmt parse_problem_domain_stmt(LispIterator it) {
+inline DomainStmt parse_problem_domain_stmt(LispIterator& it) {
     return _parse_domain_helper(it, ":domain");
 }
 
-inline PredicateVar parse_predicate(LispIterator iter) {
+inline PredicateVar parse_predicate(LispIterator& iter) {
     std::string name = parse_name(iter, "predicate");
     std::vector<Variable> params = parse_typed_var_list(iter);
     return PredicateVar(name, params);
 }
 
-inline std::vector<PredicateVar> parse_predicate_list(LispIterator iter) {
+inline std::vector<PredicateVar> parse_predicate_list(LispIterator& iter) {
     std::vector<PredicateVar> result;
     while (!iter.peek().isnull()) {
-        result.push_back(parse_predicate(iter.next()));
+        LispIterator next_iter = iter.next();
+        result.push_back(parse_predicate(next_iter));
     }
     return result;
 }
 
-inline PredicateInstance parse_predicate_instance(LispIterator iter) {
+inline PredicateInstance parse_predicate_instance(LispIterator& iter) {
     std::string name = parse_name(iter, "domain");
     std::vector<std::string> params;
     while (!iter.peek().isnull()) {
-        params.push_back(_parse_string_helper(iter.next()));
+        LispIterator next_iter = iter.next();
+        params.push_back(_parse_string_helper(next_iter));
     }
     return PredicateInstance(name, params);
 }
@@ -212,12 +218,13 @@ inline std::vector<PredicateInstance> parse_predicate_instance_list(
     LispIterator& iter) {
     std::vector<PredicateInstance> result;
     while (!iter.peek().isnull()) {
-        result.push_back(parse_predicate_instance(iter.next()));
+        LispIterator next_iter = iter.next();
+        result.push_back(parse_predicate_instance(next_iter));
     }
     return result;
 }
 
-inline Formula parse_formula(LispIterator iter) {
+inline Formula parse_formula(LispIterator& iter) {
     /*
      * Parse a Formula recursively
      * Note: This parses formulas recursively !!
@@ -237,7 +244,8 @@ inline Formula parse_formula(LispIterator iter) {
         }
         std::vector<Formula> children;
         while (!iter.peek().isnull()) {
-            children.push_back(parse_formula(iter.next()));
+            LispIterator next_iter = iter.next();
+            children.push_back(parse_formula(next_iter));
         }
         return Formula(key, children, type);
     } else {
@@ -266,7 +274,8 @@ inline T _parse_precondition_or_effect(LispIterator& iter,
         throw std::invalid_argument("Error: must start with \"" + keyword +
                                     "\" keyword");
     }
-    Formula cond = parse_formula(iter.next());
+    LispIterator next_iter = iter.next();
+    Formula cond = parse_formula(next_iter);
     return T(cond);
 }
 
@@ -320,12 +329,14 @@ inline DomainDef parse_domain_def(LispIterator& iter) {
             "\"define\"");
     }
 
-    DomainStmt dom = parse_domain_stmt(iter.next());
+    LispIterator next_iter = iter.next();
+    DomainStmt dom = parse_domain_stmt(next_iter);
     DomainDef domain(dom.name);
 
     while (!iter.empty()) {
         LispIterator next_iter = iter.next();
-        Keyword key = parse_keyword(next_iter.peek());
+        LispIterator next_iter_peek = next_iter.peek();
+        Keyword key = parse_keyword(next_iter_peek);
         if (key.name == "requirements") {
             RequirementsStmt req = parse_requirements_stmt(next_iter);
             domain.requirements = &req;
@@ -350,7 +361,8 @@ inline DomainDef parse_domain_def(LispIterator& iter) {
 
     while (!iter.empty()) {
         LispIterator next_iter = iter.next();
-        Keyword key = parse_keyword(next_iter.peek());
+        LispIterator next_iter_peek = next_iter.peek();
+        Keyword key = parse_keyword(next_iter_peek);
         if (key.name != "action") {
             throw std::invalid_argument(
                 "Error: Found invalid keyword while parsing actions");
