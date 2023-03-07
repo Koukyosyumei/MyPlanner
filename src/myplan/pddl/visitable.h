@@ -292,25 +292,25 @@ class ActionStmt : public Visitable {
 
 class DomainDef : public Visitable {
    public:
-    DomainDef(std::string name, RequirementsStmt* requirements = nullptr,
+    DomainDef(std::string name,
+              RequirementsStmt requirements = RequirementsStmt(),
               std::vector<Type> types = {},
-              PredicatesStmt* predicates = nullptr,
+              PredicatesStmt predicates = PredicatesStmt({}),
               std::vector<ActionStmt> actions = {},
-              std::vector<Object> constants = {}) {
-        _visitorName = "visit_domain_def";
-        this->name = name;
-        this->requirements = requirements;
-        this->types = types;
-        this->predicates = predicates;
-        this->actions = actions;
-        this->constants = constants;
-    }
+              std::vector<Object> constants = {})
+        : _visitorName("visit_domain_def"),
+          name(name),
+          types(types),
+          requirements(requirements),
+          predicates(predicates),
+          actions(actions),
+          constants(constants) {}
 
     std::string _visitorName;
     std::string name;
-    RequirementsStmt* requirements;
+    RequirementsStmt requirements;
     std::vector<Type> types;
-    PredicatesStmt* predicates;
+    PredicatesStmt predicates;
     std::vector<ActionStmt> actions;
     std::vector<Object> constants;
 };

@@ -330,13 +330,13 @@ inline DomainDef parse_domain_def(LispIterator& iter) {
         Keyword key = parse_keyword(next_iter_peek);
         if (key.name == "requirements") {
             RequirementsStmt req = parse_requirements_stmt(next_iter);
-            domain.requirements = &req;
+            domain.requirements = req;
         } else if (key.name == "types") {
             std::vector<Type> types = parse_types_stmt(next_iter);
             domain.types = types;
         } else if (key.name == "predicates") {
             PredicatesStmt pred = parse_predicates_stmt(next_iter);
-            domain.predicates = &pred;
+            domain.predicates = pred;
         } else if (key.name == "constants") {
             std::vector<Object> cst = parse_constants_stmt(next_iter);
             domain.constants = cst;

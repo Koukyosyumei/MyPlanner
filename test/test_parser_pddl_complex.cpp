@@ -151,7 +151,8 @@ TEST(parser_pddl_complex, DomainDef) {
         "                  (clear ?x)",
         "                  (handempty)",
         "                  (on ?x ?y)))",
-        " (:action unstack',' :parameters (?x - block ?y - block)",
+        " (:action unstack",
+        "            :parameters (?x - block ?y - block)",
         "            :precondition (and (on ?x ?y) (clear ?x) (handempty))",
         "            :effect",
         "            (and (holding ?x)",
@@ -160,15 +161,33 @@ TEST(parser_pddl_complex, DomainDef) {
         "                  (not (handempty))",
         "                  (not (on ?x ?y)))))"};
 
-    // LispIterator iter = parse_lisp_iterator(test);
-    // DomainDef dom = parse_domain_def(iter);
+    LispIterator iter = parse_lisp_iterator(test);
+    DomainDef dom = parse_domain_def(iter);
 
-    // ASSERT_EQ(dom.name, "blocks");
-    // ASSERT_EQ(dom.requirements->keywords[0].name, "strips");
-    // ASSERT_EQ(dom.requirements->keywords[1].name, "typing");
-    // ASSERT_EQ(dom.types[0].name, "block");
+    ASSERT_EQ(dom.name, "blocks");
+    ASSERT_EQ(dom.requirements.keywords[0].name, "strips");
+    ASSERT_EQ(dom.requirements.keywords[1].name, "typing");
+    ASSERT_EQ(dom.types[0].name, "block");
 
-    // Formula pred = dom.predicates;
-    // std::vector<std::string> test_names_1 = {"on", "ontable", "clear",
-    //                                         "handempty", "holding"};
+    PredicatesStmt pred = dom.predicates;
+    std::vector<std::string> test_names_1 = {"on", "ontable", "clear",
+                                             "handempty", "holding"};
+    for (int i = 0; i < pred.predicates.size(); i++) {
+        ASSERT_EQ(pred.predicates[i].name, test_names_1[i]);
+        if (pred.predicates[i].parameters.size() != 0) {
+            ASSERT_EQ(pred.predicates[i].parameters[0].name, "?x");
+            ASSERT_EQ(pred.predicates[i].parameters[0].types[0], "block");
+        }
+        if (pred.predicates[i].parameters.size() > 1) {
+            ASSERT_EQ(pred.predicates[i].parameters[1].types[0], "block");
+        }
+    }
+    ASSERT_EQ(dom.actions.size(), 4);
+    ActionStmt action = dom.actions[3];
+    ASSERT_EQ(action.name, "unstack");
+    ASSERT_EQ(action.parameters[0].name, "?x");
+    ASSERT_EQ(action.parameters[0].types[0], "block");
+    ASSERT_EQ(action.parameters[1].name, "?y");
+    ASSERT_EQ(action.parameters[1].types[0], "block");
+
 }
