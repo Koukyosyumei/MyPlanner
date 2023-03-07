@@ -155,7 +155,9 @@ class Variable : public Visitable {
           typed(!types_.empty()),
           types(types_) {}
     Variable(std::string name_, std::string type_ = "<NULL>")
-        : _visitorName("visit_variable"), name(name_), typed(type_ != "<NULL>") {
+        : _visitorName("visit_variable"),
+          name(name_),
+          typed(type_ != "<NULL>") {
         if (type_ != "<NULL>") {
             this->types = {type_};
         }
@@ -274,19 +276,18 @@ class PredicatesStmt : public Visitable {
 class ActionStmt : public Visitable {
    public:
     ActionStmt(std::string name, std::vector<Variable> parameters,
-               PreconditionStmt* precond, EffectStmt* effect) {
+               PreconditionStmt precond, EffectStmt effect)
+        : precond(precond), effect(effect) {
         this->_visitorName = "visit_action_stmt";
         this->name = name;
         this->parameters = parameters;
-        this->precond = precond;
-        this->effect = effect;
     }
 
     std::string _visitorName;
     std::string name;
     std::vector<Variable> parameters;
-    PreconditionStmt* precond;
-    EffectStmt* effect;
+    PreconditionStmt precond;
+    EffectStmt effect;
 };
 
 class DomainDef : public Visitable {
