@@ -53,23 +53,14 @@ inline std::vector<T> _parse_type_helper(LispIterator& iter) {
                 }
                 std::vector<std::string> tlist =
                     parse_string_helper_list(types_iter);
-                std::vector<Type> typelist;
-                for (std::string t : tlist) {
-                    typelist.push_back(Type(t, nullptr));
-                }
                 while (!tmpList.empty()) {
-                    result.push_back(T(tmpList.back(), typelist));
+                    result.push_back(T(tmpList.back(), tlist));
                     tmpList.pop_back();
                 }
             } else {
                 std::string ctype = iter.next().get_word();
-                Type type_ctype = Type(ctype, nullptr);
                 while (!tmpList.empty()) {
-                    // if (std::is_same<T, Variable>::value) {
-                    //     result.push_back(T(tmpList.back(), {type_ctype}));
-                    // } else {
-                    result.push_back(T(tmpList.back(), &type_ctype));
-                    //}
+                    result.push_back(T(tmpList.back(), ctype));
                     tmpList.pop_back();
                 }
             }
@@ -86,7 +77,7 @@ inline std::vector<T> _parse_type_helper(LispIterator& iter) {
         }
     }
     while (tmpList.size() != 0) {
-        result.push_back(T(tmpList.back(), nullptr));
+        result.push_back(T(tmpList.back(), "<NULL>"));
         tmpList.pop_back();
     }
     return result;
@@ -124,7 +115,7 @@ inline Variable parse_variable(LispIterator& iter) {
     if (name[0] != '?') {
         throw runtime_error("Error variables must start with a '?'");
     }
-    return Variable(name);
+    return Variable(name, "<NULL>");
 }
 
 inline std::vector<Variable> parse_typed_var_list(LispIterator& iter) {

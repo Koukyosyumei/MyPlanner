@@ -24,4 +24,8 @@ TEST(parser_pddl_comple, Action) {
 
     LispIterator iter = parse_lisp_iterator(test);
     ActionStmt action = parse_action_stmt(iter);
+    ASSERT_EQ(action.name, "pick-up");
+    ASSERT_EQ(action.parameters[0].name, "?x");
+    ASSERT_EQ(action.parameters[0].types[0], "block");
 }
+

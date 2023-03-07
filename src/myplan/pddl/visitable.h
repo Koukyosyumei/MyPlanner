@@ -149,22 +149,22 @@ class Variable : public Visitable {
      * This class represents the AST node for a PDDL variable.
      */
    public:
-    Variable(std::string name, std::vector<Type> types = {})
+    Variable(std::string name_, std::vector<std::string> types_ = {})
         : _visitorName("visit_variable"),
-          name(name),
-          typed(!types.empty()),
-          types(types) {}
-    Variable(std::string name, Type* type)
-        : _visitorName("visit_variable"), name(name), typed(!types.empty()) {
-        if (type != nullptr) {
-            this->types = {*type};
+          name(name_),
+          typed(!types_.empty()),
+          types(types_) {}
+    Variable(std::string name_, std::string type_ = "<NULL>")
+        : _visitorName("visit_variable"), name(name_), typed(type_ != "<NULL>") {
+        if (type_ != "<NULL>") {
+            this->types = {type_};
         }
     }
 
     std::string _visitorName;
     std::string name;
     bool typed;
-    std::vector<Type> types;
+    std::vector<std::string> types;
 };
 
 class PredicateVar : public Visitable {
@@ -337,14 +337,14 @@ class ProblemDef : public Visitable {
 
 class Object : public Visitable {
    public:
-    Object(std::string name, std::vector<Type> types) {
+    Object(std::string name, std::vector<std::string> types) {
         _visitorName = "visit_object";
         this->name = name;
         if (types.size() > 0) {
-            this->type = &types[0];
+            this->type = types[0];
         }
     }
-    Object(std::string name, Type* type) {
+    Object(std::string name, std::string type) {
         _visitorName = "visit_object";
         this->name = name;
         this->type = type;
@@ -352,7 +352,7 @@ class Object : public Visitable {
 
     std::string _visitorName;
     std::string name;
-    Type* type;
+    std::string type;
 };
 
 class InitStmt : public Visitable {

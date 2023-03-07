@@ -62,7 +62,7 @@ TEST(parser_pddl_simple, VariableTyping) {
     ASSERT_EQ(vlist.size(), 1);
     ASSERT_EQ(vlist[0].name, "?x");
     ASSERT_EQ(vlist[0].typed, true);
-    ASSERT_EQ(vlist[0].types[0].name_, "block");
+    ASSERT_EQ(vlist[0].types[0], "block");
 }
 
 TEST(parser_pddl_simple, Parameters) {
@@ -86,7 +86,7 @@ TEST(parser_pddl_simple, Types) {
     LispIterator iter = parse_lisp_iterator({test});
     std::vector<Type> tlist = parse_types_stmt(iter);
     for (int i = 0; i < tlist.size(); i++) {
-        ASSERT_EQ(tlist[i].name_, test_names[i]);
+        ASSERT_EQ(tlist[i].name, test_names[i]);
     }
 }
 
@@ -115,7 +115,7 @@ TEST(parser_pddl_simple, PredicateMixed) {
     ASSERT_EQ(pred.parameters[1].name, "?y");
     for (Variable x : pred.parameters) {
         if (x.types.size() != 0) {
-            ASSERT_EQ(x.types[0].name_, "block");
+            ASSERT_EQ(x.types[0], "block");
         }
     }
 }

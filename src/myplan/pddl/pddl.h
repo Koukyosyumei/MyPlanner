@@ -10,22 +10,18 @@ using namespace std;
 
 class Type {
    public:
-    Type(string name, std::vector<Type> parents) : name_(name) {
-        transform(name_.begin(), name_.end(), name_.begin(), ::tolower);
-        if (parents.size() > 0) {
-            parent_ = &parents[0];
+    Type(string name_, std::vector<string> parents_) : name(name_) {
+        transform(name.begin(), name.end(), name.begin(), ::tolower);
+        if (parents_.size() > 0) {
+            parent = parents_[0];
         }
     }
-    Type(string name, Type* parent) : name_(name), parent_(parent) {
-        transform(name_.begin(), name_.end(), name_.begin(), ::tolower);
+    Type(string name_, string parent_) : name(name_), parent(parent_) {
+        transform(name.begin(), name.end(), name.begin(), ::tolower);
     }
-    string getName() const { return name_; }
-    void setName(string name) { name_ = name; }
-    Type* getParent() const { return parent_; }
-    void setParent(Type* parent) { parent_ = parent; }
 
-    string name_;
-    Type* parent_;
+    string name;
+    string parent;
 };
 
 class Predicate {
