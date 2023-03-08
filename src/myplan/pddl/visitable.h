@@ -369,12 +369,10 @@ class InitStmt : public Visitable {
 
 class GoalStmt : public Visitable {
    public:
-    GoalStmt(Formula* formula) {
-        _visitorName = "visit_goal_stmt";
-        this->formula = formula;
-    }
+    GoalStmt(Formula formula)
+        : _visitorName("visit_goal_stmt"), formula(formula) {}
 
     std::string _visitorName;
-    Formula* formula;
+    Formula formula;
 };
 

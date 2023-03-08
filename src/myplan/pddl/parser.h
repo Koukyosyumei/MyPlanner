@@ -383,7 +383,7 @@ inline GoalStmt parse_goal_stmt(LispIterator& iter) {
     }
 
     Formula f = parse_formula(iter);
-    return GoalStmt(&f);
+    return GoalStmt(f);
 }
 
 inline std::string parse_problem_name(LispIterator& iter) {
