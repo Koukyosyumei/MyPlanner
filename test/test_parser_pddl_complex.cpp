@@ -356,4 +356,11 @@ TEST(parser_pddl_complex, ProblemDef) {
     ProblemDef prob = parse_problem_def(iter);
     ASSERT_EQ(prob.name, "logistics-4-1");
     ASSERT_EQ(prob.domainName, "logistics");
+    std::vector<std::string> test_objects = {
+        "apn1", "apt2",  "apt1",  "pos2",  "pos1",  "cit2",  "cit1", "tru2",
+        "tru1", "obj23", "obj22", "obj21", "obj13", "obj12", "obj11"};
+    for (int i = 0; i < prob.objects.size(); i++) {
+        ASSERT_EQ(prob.objects[i].name, test_objects[i]);
+    }
+    ASSERT_EQ(prob.init.predicates.size(), 13);
 }
