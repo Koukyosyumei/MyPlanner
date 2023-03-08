@@ -382,7 +382,8 @@ inline GoalStmt parse_goal_stmt(LispIterator& iter) {
             "Error found invalid keyword when parsing GoalStmt");
     }
 
-    Formula f = parse_formula(iter);
+    LispIterator next_iter = iter.next();
+    Formula f = parse_formula(next_iter);
     return GoalStmt(f);
 }
 

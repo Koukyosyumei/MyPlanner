@@ -273,3 +273,31 @@ TEST(parser_pddl_complex, InitStmt) {
         }
     }
 }
+
+TEST(parser_pddl_complex, GoalStmt) {
+    std::vector<std::string> test = {
+        "(:goal (AND (ON D C) (ON C B) (ON B A)))"};
+    LispIterator iter = parse_lisp_iterator(test);
+
+    GoalStmt goal = parse_goal_stmt(iter);
+    Formula f = goal.formula;
+    ASSERT_EQ(f.key, "and");
+    std::vector<std::string> test_key_1 = {"on", "on", "on"};
+    std::vector<std::string> test_key_2 = {"d", "c", "b"};
+    std::vector<std::string> test_key_3 = {"c", "b", "a"};
+    for (int i = 0; i < f.children.size(); i++) {
+        ASSERT_EQ(f.children[i].key, test_key_1[i]);
+    }
+
+    std::vector<std::string> c2_0;
+    std::vector<std::string> c2_1;
+    std::vector<std::vector<Formula>> children;
+    for (int i = 0; i < f.children.size(); i++) {
+        ASSERT_EQ(f.children[i].key, test_key_1[i]);
+        children.push_back(f.children[i].children);
+    }
+    for (int i = 0; i < children.size(); i++) {
+        ASSERT_EQ(children[i][0].key, test_key_2[i]);
+        ASSERT_EQ(children[i][1].key, test_key_3[i]);
+    }
+}
