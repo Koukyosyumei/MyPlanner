@@ -419,6 +419,6 @@ inline ProblemDef parse_problem_def(LispIterator& iter) {
     iter.match_end();
 
     // create new ProblemDef instance
-    return ProblemDef(probname, dom.name, objects, &init, &goal);
+    return ProblemDef(probname, dom.name, objects, init, goal);
 }
 

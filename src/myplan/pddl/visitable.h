@@ -315,25 +315,43 @@ class DomainDef : public Visitable {
     std::vector<Object> constants;
 };
 
+class InitStmt : public Visitable {
+   public:
+    InitStmt(std::vector<PredicateInstance> predicates) {
+        _visitorName = "visit_init_stmt";
+        this->predicates = predicates;
+    }
+
+    std::string _visitorName;
+    std::vector<PredicateInstance> predicates;
+};
+
+class GoalStmt : public Visitable {
+   public:
+    GoalStmt(Formula formula)
+        : _visitorName("visit_goal_stmt"), formula(formula) {}
+
+    std::string _visitorName;
+    Formula formula;
+};
+
 class ProblemDef : public Visitable {
    public:
     ProblemDef(std::string name, std::string domainName,
-               std::vector<Object> objects = {}, InitStmt* init = nullptr,
-               GoalStmt* goal = nullptr) {
-        _visitorName = "visit_problem_def";
-        this->name = name;
-        this->domainName = domainName;
-        this->objects = objects;
-        this->init = init;
-        this->goal = goal;
-    }
+               std::vector<Object> objects, InitStmt init, GoalStmt goal)
+        : _visitorName("visit_problem_def"),
+          name(name),
+          domainName(domainName),
+          objects(objects),
+          init(init),
+          goal(goal) {}
 
     std::string _visitorName;
     std::string name;
     std::string domainName;
     std::vector<Object> objects;
-    InitStmt* init;
-    GoalStmt* goal;
+    InitStmt init;
+    GoalStmt goal;
 };
 
 class Object : public Visitable {
@@ -354,25 +372,5 @@ class Object : public Visitable {
     std::string _visitorName;
     std::string name;
     std::string type;
-};
-
-class InitStmt : public Visitable {
-   public:
-    InitStmt(std::vector<PredicateInstance> predicates) {
-        _visitorName = "visit_init_stmt";
-        this->predicates = predicates;
-    }
-
-    std::string _visitorName;
-    std::vector<PredicateInstance> predicates;
-};
-
-class GoalStmt : public Visitable {
-   public:
-    GoalStmt(Formula formula)
-        : _visitorName("visit_goal_stmt"), formula(formula) {}
-
-    std::string _visitorName;
-    Formula formula;
 };
 
