@@ -404,17 +404,22 @@ inline ProblemDef parse_problem_def(LispIterator& iter) {
     }
 
     // parse problem name and corresponding domain name
-    std::string probname = parse_problem_name(iter);
-    DomainStmt dom = parse_problem_domain_stmt(iter);
+    LispIterator next_iter_1 = iter.next();
+    std::string probname = parse_problem_name(next_iter_1);
+    LispIterator next_iter_2 = iter.next();
+    DomainStmt dom = parse_problem_domain_stmt(next_iter_2);
 
     // parse all object definitions
     std::vector<Object> objects;
     if (iter.peek_tag() == ":objects") {
-        objects = parse_objects_stmt(iter);
+        LispIterator next_iter_3 = iter.next();
+        objects = parse_objects_stmt(next_iter_3);
     }
 
-    InitStmt init = parse_init_stmt(iter);
-    GoalStmt goal = parse_goal_stmt(iter);
+    LispIterator next_iter_4 = iter.next();
+    InitStmt init = parse_init_stmt(next_iter_4);
+    LispIterator next_iter_5 = iter.next();
+    GoalStmt goal = parse_goal_stmt(next_iter_5);
 
     // assert end is reached
     iter.match_end();

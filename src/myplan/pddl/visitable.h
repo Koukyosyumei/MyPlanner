@@ -360,17 +360,17 @@ class Object : public Visitable {
         _visitorName = "visit_object";
         this->name = name;
         if (types.size() > 0) {
-            this->type = types[0];
+            this->typeName = types[0];
         }
     }
     Object(std::string name, std::string type) {
         _visitorName = "visit_object";
         this->name = name;
-        this->type = type;
+        this->typeName = type;
     }
 
     std::string _visitorName;
     std::string name;
-    std::string type;
+    std::string typeName;
 };
 

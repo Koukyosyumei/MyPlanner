@@ -301,3 +301,59 @@ TEST(parser_pddl_complex, GoalStmt) {
         ASSERT_EQ(children[i][1].key, test_key_3[i]);
     }
 }
+
+TEST(parser_pddl_complex, Constants) {
+    std::string test =
+        "(:constants north south - direction light medium heavy - airplanetype "
+        "seg_pp_0_60 seg_ppdoor_0_40 seg_tww1_0_200 seg_twe1_0_200 "
+        "seg_tww2_0_50 seg_tww3_0_50 seg_tww4_0_50 seg_rww_0_50 seg_rwtw1_0_10 "
+        "seg_rw_0_400 seg_rwe_0_50 seg_twe4_0_50 seg_rwte1_0_10 seg_twe3_0_50 "
+        "seg_twe2_0_50 seg_rwte2_0_10 seg_rwtw2_0_10 - segment airplane_CFBEG "
+        "- airplane)";
+    LispIterator iter = parse_lisp_iterator({test});
+    std::vector<Object> constants = parse_constants_stmt(iter);
+    std::vector<std::string> nameList = {
+        "north",          "south",          "light",           "medium",
+        "heavy",          "seg_pp_0_60",    "seg_ppdoor_0_40", "seg_tww1_0_200",
+        "seg_twe1_0_200", "seg_tww2_0_50",  "seg_tww3_0_50",   "seg_tww4_0_50",
+        "seg_rww_0_50",   "seg_rwtw1_0_10", "seg_rw_0_400",    "seg_rwe_0_50",
+        "seg_twe4_0_50",  "seg_rwte1_0_10", "seg_twe3_0_50",   "seg_twe2_0_50",
+        "seg_rwte2_0_10", "seg_rwtw2_0_10", "airplane_CFBEG"};
+    for (int i = 0; i < constants.size(); i++) {
+        std::string tmp_name = nameList[i];
+        std::transform(tmp_name.begin(), tmp_name.end(), tmp_name.begin(),
+                       ::tolower);
+        ASSERT_EQ(constants[i].name, tmp_name);
+    }
+    std::vector<std::string> typeList = {"direction", "direction",
+                                         "airplanetype", "airplanetype",
+                                         "airplanetype"};
+    for (int i = 0; i < 5; i++) {
+        ASSERT_EQ(constants[i].typeName, typeList[i]);
+    }
+}
+
+TEST(parser_pddl_complex, ProblemDef) {
+    std::vector<std::string> test = {
+        "(define (problem logistics-4-1)",
+        "(:domain logistics)",
+        "(:objects",
+        "  apn1 - airplane",
+        "  apt2 apt1 - airport",
+        "  pos2 pos1 - location",
+        "  cit2 cit1 - city",
+        "  tru2 tru1 - truck",
+        "  obj23 obj22 obj21 obj13 obj12 obj11 - package)",
+        "(:init (at apn1 apt2) (at tru1 pos1) (at obj11 pos1)",
+        " (at obj12 pos1) (at obj13 pos1) (at tru2 pos2) (at obj21 pos2)",
+        " (at obj22 pos2) (at obj23 pos2) (in-city pos1 cit1) (in-city apt1 "
+        "cit1)",
+        " (in-city pos2 cit2) (in-city apt2 cit2))",
+        "(:goal (and (at obj12 apt2) (at obj13 apt1) (at obj21 apt2)",
+        "            (at obj11 pos2)))",
+        ")    "};
+    LispIterator iter = parse_lisp_iterator(test);
+    ProblemDef prob = parse_problem_def(iter);
+    ASSERT_EQ(prob.name, "logistics-4-1");
+    ASSERT_EQ(prob.domainName, "logistics");
+}
