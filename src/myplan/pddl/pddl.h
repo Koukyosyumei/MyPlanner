@@ -10,13 +10,15 @@ using namespace std;
 
 class Type {
    public:
-    Type(string name_, std::vector<string> parents_) : name(name_) {
+    Type(string name_ = "<NULL>", std::vector<string> parents_ = {"<NULL>"})
+        : name(name_) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
         if (parents_.size() > 0) {
             parent = parents_[0];
         }
     }
-    Type(string name_, string parent_) : name(name_), parent(parent_) {
+    Type(string name_ = "<NULL>", string parent_ = "<NULL>")
+        : name(name_), parent(parent_) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
     }
 
@@ -103,4 +105,22 @@ class Domain {
     vector<Predicate> predicates;
     vector<Action> actions;
     std::unordered_map<std::string, Type> constants;
+};
+
+class Problem {
+   public:
+    Problem(std::string name, Domain domain,
+            std::unordered_map<std::string, Type> objects,
+            std::vector<Predicate> init, std::vector<Predicate> goal)
+        : name(name),
+          domain(domain),
+          objects(objects),
+          init(init),
+          goal(goal) {}
+
+    std::string name;
+    Domain domain;
+    std::unordered_map<std::string, Type> objects;
+    std::vector<Predicate> init;
+    std::vector<Predicate> goal;
 };

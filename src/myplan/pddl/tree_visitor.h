@@ -345,17 +345,15 @@ class TraversePDDLDomain : public PDDLVisitor {
 class TraversePDDLProblem : public PDDLVisitor {
    private:
     Domain _domain;
+    Problem _problemDef;
     std::unordered_map<void*, std::string> _nodeHash;
-    std::unordered_map<std::string, void*> _objects;
-    ProblemDef* _problemDef;
+    std::unordered_map<PredicateInstance, Predicate> _predicateHash;
+    std::unordered_map<InitStmt, std::vector<Predicate>> _initHash;
+    std::unordered_map<GoalStmt, std::vector<Predicate>> _goalHash;
+    std::unordered_map<std::string, Type> _objects;
 
    public:
-    TraversePDDLProblem(Domain domain)
-        : _domain(domain), _problemDef(nullptr) {}
-
-    std::string get_in(void* node) { return _nodeHash[node]; }
-    void set_in(void* node, std::string val) { _nodeHash[node] = val; }
-    ProblemDef* get_problem() { return _problemDef; }
+    TraversePDDLProblem(Domain& domain) : _domain(domain) {}
 
     void visit_problem_def(ProblemDef* node) {
         // Check whether the in the problem file referenced domain name matches
@@ -368,31 +366,32 @@ class TraversePDDLProblem : public PDDLVisitor {
                 _domain.name);
         }
         // Apply to all object definitions.
-        for (auto o : node->objects) {
+        for (Object& o : node->objects) {
             o->accept(this);
         }
 
         // Apply to the initial state definition.
-        node->init->accept(this);
-        auto init_list = get_in(node->init);
+        node->init.accept(this);
+        std::vector<Predicate> init_list = _initHash[node->init];
 
         // Apply to the goal state definition.
-        node->goal->accept(this);
-        auto goal_list = get_in(node->goal);
+        node->goal.accept(this);
+        std::vector<Predicate> goal_list = _goalHash[node->goal];
 
         // Create the problem data structure.
-        _problemDef = new PDDLProblem(node->name, _domain, _objects, init_list,
-                                      goal_list);
+        _problemDef =
+            Problem(node->name, _domain, _objects, init_list, goal_list);
     }
+
     void visit_object(Object* node) {
-        const PDDLType* type_def = nullptr;
+        Type type_def;
         // Check for multiple definition of objects.
         if (_objects.find(node->name) != _objects.end()) {
             throw std::runtime_error(
                 "Error multiple defines of object with name " + node->name);
         }
         // Untyped objects get the standard type 'object'.
-        if (node->typeName == nullptr) {
+        if (node->typeName == "<NULL>") {
             type_def = _domain.types["object"];
         } else {
             // Check whether used type was introduced in domain file.
@@ -405,15 +404,16 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
         _objects[node->name] = type_def;
     }
+
     void visit_init_stmt(InitStmt* node) {
-        std::vector<std::string> initList;
+        std::vector<Predicate> initList;
         // Apply to all predicates in the statement.
-        for (auto p : node->predicates) {
+        for (PredicateInstance& p : node->predicates) {
             p->accept(this);
-            std::string pred = get_in(p);
+            Predicate pred = _predicateHash[p];
             initList.push_back(pred);
         }
-        set_in(node, initList);
+        _initHash[*node] = initList;
     }
     void add_goal(std::vector<Predicate>& goal, Formula& c) {
         /* Helper function for visit_goal_stmt.
@@ -451,25 +451,17 @@ class TraversePDDLProblem : public PDDLVisitor {
         goal.emplace_back(c.key, signature);
     }
 
-    void visit_goal_stmt(GoalStmt& node) {
+    void visit_goal_stmt(GoalStmt* node) {
         /* Visits a PDDL-problem goal state statement. */
 
-        Formula& formula = node.formula;
+        Formula& formula = node->formula;
         std::vector<Predicate> goal;
 
         // For now we only allow 'and' in the goal.
         if (formula.key == "and") {
-            for (pddl::Formula& c : formula.children) {
-                if (!std::holds_alternative<std::string>(c.key)) {
-                    throw SemanticError(
-                        "Error predicate with non str key: " +
-                        std::accumulate(
-                            formula.children.begin(), formula.children.end(),
-                            std::string(""),
-                            [](std::string& s,
-                               const pddl::Formula& f) -> std::string& {
-                                return s += f.key.name + " ";
-                            }));
+            for (Formula& c : formula.children) {
+                if (c.key == "<NULL>") {
+                    throw SemanticError("Error predicate with non str key: ");
                 }
                 // Call helper.
                 add_goal(goal, c);
@@ -485,14 +477,14 @@ class TraversePDDLProblem : public PDDLVisitor {
             add_goal(goal, formula);
         }
 
-        this->set_in(node, goal);
+        _goalHash[*node] = goal;
     }
 
     void visit_predicate_instance(PredicateInstance* node) {
         std::vector<pair<std::string, std::string>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
-            std::string o_type;
+            Type o_type;
             // Check whether predicate was introduced in objects or domain
             // constants.
             if (!(_objects.count(o) || _domain.constants.count(o))) {
@@ -506,6 +498,6 @@ class TraversePDDLProblem : public PDDLVisitor {
             }
             signature.emplace_back(o, o_type);
         }
-        set_in(node, Predicate(node->name, signature));
+        _predicateHash[*node] = Predicate(node->name, signature);
     }
 };
