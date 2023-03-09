@@ -24,7 +24,7 @@ class PDDLVisitor {
     virtual void visit_effect_stmt(class EffectStmt*) = 0;
     virtual void visit_precondition_stmt(class PreconditionStmt*) = 0;
     virtual void visit_requirements_stmt(class RequirementsStmt*) = 0;
-    virtual void visit_predicate(class Predicate*) = 0;
+    virtual void visit_predicate(class PredicateVar*) = 0;
     virtual void visit_variable(class Variable*) = 0;
     virtual void visit_init_stmt(class InitStmt*) = 0;
     virtual void visit_goal_stmt(class GoalStmt*) = 0;
@@ -79,7 +79,7 @@ inline std::function<void(PDDLVisitor*, Visitable*)> getMethod(
              }},
             {"visit_predicate",
              [](PDDLVisitor* visitor, Visitable* arg) {
-                 visitor->visit_predicate((Predicate*)arg);
+                 visitor->visit_predicate((PredicateVar*)arg);
              }},
             {"visit_variable",
              [](PDDLVisitor* visitor, Visitable* arg) {
@@ -118,7 +118,7 @@ class Visitable {
    public:
     Visitable(const std::string& vname = "") : visitor_name_(vname) {}
 
-    virtual void accept(PDDLVisitor* visitor) {
+    void accept(PDDLVisitor* visitor) {
         if (visitor_name_.empty())
             throw std::runtime_error(
                 "Error: visit method of uninitialized visitor called!");
@@ -225,7 +225,7 @@ class Formula : public Visitable {
      * as it can be specified for preconditions and effects.
      */
    public:
-    Formula(std::string key, std::vector<Formula> children = {},
+    Formula(std::string key = "<NULL>", std::vector<Formula> children = {},
             FormulaType type = TypeFormula)
         : _visitorName("visit_formula"),
           key(key),

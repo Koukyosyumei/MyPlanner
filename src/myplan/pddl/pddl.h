@@ -26,60 +26,51 @@ class Type {
 
 class Predicate {
    public:
-    Predicate(string name, vector<pair<string, vector<Type*>>> signature)
-        : name_(name), signature_(signature) {}
-    string getName() const { return name_; }
-    void setName(string name) { name_ = name; }
-    vector<pair<string, vector<Type*>>> getSignature() const {
-        return signature_;
-    }
-    void setSignature(vector<pair<string, vector<Type*>>> signature) {
-        signature_ = signature;
-    }
+    Predicate(string name, vector<pair<string, vector<Type>>> signature)
+        : name(name), signature(signature) {}
 
-   private:
-    string name_;
-    vector<pair<string, vector<Type*>>> signature_;
+    string name;
+    vector<pair<string, vector<Type>>> signature;
 };
 
 class Effect {
    public:
-    void addToAddList(Predicate* pred) { addlist_.insert(pred); }
-    void addToDelList(Predicate* pred) { dellist_.insert(pred); }
+    Effect(){};
+    void addToAddList(Predicate& pred) { addlist.insert(pred); }
+    void addToDelList(Predicate& pred) { dellist.insert(pred); }
 
-   private:
-    set<Predicate*> addlist_;
-    set<Predicate*> dellist_;
+    set<Predicate> addlist;
+    set<Predicate> dellist;
 };
 
 class Action {
    public:
-    Action(string name, vector<pair<string, vector<Type*>>> signature,
-           vector<Predicate*> precondition, Effect* effect)
+    Action(string name, vector<pair<string, vector<Type>>> signature,
+           vector<Predicate> precondition, Effect effect)
         : name_(name),
           signature_(signature),
           precondition_(precondition),
           effect_(effect) {}
     string getName() const { return name_; }
     void setName(string name) { name_ = name; }
-    vector<pair<string, vector<Type*>>> getSignature() const {
+    vector<pair<string, vector<Type>>> getSignature() const {
         return signature_;
     }
-    void setSignature(vector<pair<string, vector<Type*>>> signature) {
+    void setSignature(vector<pair<string, vector<Type>>> signature) {
         signature_ = signature;
     }
-    vector<Predicate*> getPrecondition() const { return precondition_; }
-    void setPrecondition(vector<Predicate*> precondition) {
+    vector<Predicate> getPrecondition() const { return precondition_; }
+    void setPrecondition(vector<Predicate> precondition) {
         precondition_ = precondition;
     }
-    Effect* getEffect() const { return effect_; }
-    void setEffect(Effect* effect) { effect_ = effect; }
+    Effect getEffect() const { return effect_; }
+    void setEffect(Effect effect) { effect_ = effect; }
 
    private:
     string name_;
-    vector<pair<string, vector<Type*>>> signature_;
-    vector<Predicate*> precondition_;
-    Effect* effect_;
+    vector<pair<string, vector<Type>>> signature_;
+    vector<Predicate> precondition_;
+    Effect effect_;
 };
 
 class Domain {
@@ -107,7 +98,6 @@ class Domain {
         constants = constants;
     }
 
-   private:
     string name;
     unordered_map<string, Type> types;
     vector<Predicate> predicates;

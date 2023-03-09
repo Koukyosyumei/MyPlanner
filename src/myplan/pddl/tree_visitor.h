@@ -1,4 +1,5 @@
 #pragma once
+#include <any>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -19,18 +20,25 @@ class SemanticError : public exception {
 
 class TraversePDDLDomain : public PDDLVisitor {
    public:
-    std::unordered_map<Visitable*, std::string> _nodeHash;
-    std::unordered_map<std::string, Type*> _types;
-    std::unordered_map<std::string, Predicate*> _predicates;
-    std::unordered_map<std::string, Action*> _actions;
-    std::unordered_map<std::string, std::vector<Object>*> _constants;
+    std::unordered_map<void*, std::string> _nodeHash;
+    std::unordered_map<Type, Type> _typeHash;
+    std::unordered_map<PredicateVar, Predicate> _predicateHash;
+    std::unordered_map<Variable, pair<std::string, vector<Type>>> _variableHash;
+    std::unordered_map<PreconditionStmt, std::vector<Predicate>> _precondHash;
+    std::unordered_map<EffectStmt, Effect> _effectHash;
+    std::unordered_map<ActionStmt, Action> _actionstmtHash;
+
+    std::unordered_map<std::string, Type> _types;
+    std::unordered_map<std::string, Predicate> _predicates;
+    std::unordered_map<std::string, Action> _actions;
+    std::unordered_map<std::string, Type> _constants;
     std::set<std::string> _requirements;
     Domain* domain = nullptr;
-    Type* _objectType = new Type("object", nullptr);
+    Type _objectType = Type("object", nullptr);
 
-    std::string get_in(Visitable* node) { return _nodeHash[node]; }
+    std::string get_in(void* node) { return _nodeHash[node]; }
 
-    void set_in(Node* node, std::string val) { _nodeHash[node] = val; }
+    void set_in(void* node, std::string val) { _nodeHash[node] = val; }
 
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
@@ -40,13 +48,13 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
 
         if (node->types.size() != 0) {
-            for (Type* t : *(node->types)) {
-                if (t->name == "object") {
+            for (Type& t : node->types) {
+                if (t.name == "object") {
                     explicitObjectDef = true;
                 }
-                t->accept(this);
-                Type* type = static_cast<Type*>(get_in(t));
-                _types[type->name] = type;
+                t.accept(this);
+                Type type = _typeHash[t];
+                _types[type.name] = type;
             }
         }
 
@@ -58,30 +66,36 @@ class TraversePDDLDomain : public PDDLVisitor {
             if (kv.first == "object") {
                 continue;
             }
-            Type* t = kv.second;
+            Type* t = &kv.second;
             if (_types.find(t->parent) == _types.end()) {
                 throw SemanticError("Error unknown parent type: " + t->parent);
             }
-            t->parent = _types[t->parent];
+            t->parent = _types[t->parent].name;
         }
 
         node->predicates.accept(this);
 
         if (node->actions.size() != 0) {
-            for (Action* a : *(node->actions)) {
+            for (int i = 0; i < node->actions.size(); i++) {
+                ActionStmt* a = &node->actions[i];
                 a->accept(this);
-                Action* action = static_cast<Action*>(get_in(a));
-                if (_actions.find(action->name) != _actions.end()) {
+                std::string action_name = get_in(a);
+                if (_actions.find(action_name) != _actions.end()) {
                     throw SemanticError("Error: action with name " +
-                                        action->name +
+                                        action_name +
                                         " has already been defined");
                 }
-                _actions[action->name] = action;
+                std::vector<pair<std::string, std::vector<Type>>> tmp_sig;
+                std::vector<Predicate> tmp_pred;
+                Effect tmp_effect;
+                _actions[action_name] =
+                    Action(action_name, tmp_sig, tmp_pred, tmp_effect);
             }
         }
 
         if (node->constants.size() != 0) {
-            for (Constant* c : *(node->constants)) {
+            for (int i = 0; i < node->constants.size(); i++) {
+                Object* c = &node->constants[i];
                 c->accept(this);
             }
         }
@@ -108,18 +122,18 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_type(Type* node) override {
         if (node->parent == "<NULL>") {
-            set_in(node, new Type(node->name, "object"));
+            _typeHash[*node] = Type(node->name, "object");
         } else {
-            set_in(node, new Type(node->name, node->parent));
+            _typeHash[*node] = Type(node->name, node->parent);
         }
     }
 
     void visit_requirements_stmt(RequirementsStmt* node) {
         /* Visits a PDDL requirement statement. */
         /* Visit all requirement keywords... */
-        for (auto& k : node->keywords) {
-            k->accept(*this);
-            auto requirementName = get_in(k);
+        for (Keyword& k : node->keywords) {
+            k.accept(this);
+            std::string requirementName = get_in(&k);
             /* ... and add them to the requirement list. */
             _requirements.insert(requirementName);
         }
@@ -134,43 +148,44 @@ class TraversePDDLDomain : public PDDLVisitor {
     void visit_predicates_stmt(PredicatesStmt* node) {
         /* Visits a PDDL predicate statement. */
         /* Visit all predicates in the predicate statement. */
-        for (auto& p : node->predicates) {
-            p->accept(*this);
-            auto predicate = get_in(p);
+        for (PredicateVar& p : node->predicates) {
+            p.accept(this);
+            Predicate predicate = _predicateHash[p];
             /* Check for duplicate predicate definitions. */
-            if (_predicates.count(predicate->name)) {
+            if (_predicates.count(predicate.name)) {
                 throw SemanticError("Error predicate with name " +
-                                    predicate->name +
+                                    predicate.name +
                                     " has already been defined");
             }
             /* Add to predicate list. */
-            _predicates[predicate->name] = predicate;
+            _predicates[predicate.name] = predicate;
         }
     }
 
-    void visit_predicate(Predicate* node) {
+    void visit_predicate(PredicateVar* node) {
         /* Visits a PDDL predicate. */
-        auto signature = vector<pair<string, vector<string>>>();
+        std::vector<pair<std::string, std::vector<Type>>> signature;
         /* Visit all predicate parameters. */
-        for (auto& v : node->parameters) {
-            v->accept(*this);
-            auto signatureTuple = get_in(v);
+        for (Variable& v : node->parameters) {
+            v.accept(this);
+            pair<std::string, std::vector<Type>> signatureTuple =
+                _variableHash[v];
             /* Append each parameter to the predicate signature. */
             signature.emplace_back(signatureTuple);
         }
         /* Create new PDDL predicate and store it in node. */
-        set_in(node, make_shared<pddl::Predicate>(node->name, signature));
+        _predicateHash[*node] = Predicate(node->name, signature);
     }
 
     void visit_variable(Variable* node) {
         /* Visits a PDDL variable. */
         /* If there is no type given, it's always of type 'object'. */
         if (!node->typed) {
-            set_in(node,
-                   make_pair(node->name, vector<string>{_types["object"]}));
+            std::vector<Type> typelist = {_types["object"]};
+            _variableHash[*node] = make_pair(node->name, typelist);
         } else {
             /* Visit all type declarations of the variable. */
-            auto typelist = vector<string>();
+            std::vector<Type> typelist;
             for (auto& t : node->types) {
                 /* Check whether they have been defined. */
                 if (!_types.count(t)) {
@@ -180,44 +195,45 @@ class TraversePDDLDomain : public PDDLVisitor {
                 typelist.emplace_back(_types[t]);
             }
             /* Store variable information (var_name, tuple(types)) in node. */
-            set_in(node, make_pair(node->name, typelist));
+            _variableHash[*node] = make_pair(node->name, typelist);
         }
     }
 
     void visit_action_stmt(ActionStmt* node) {
         /* Visits a PDDL action statement. */
-        auto signature = vector<pair<string, vector<string>>>();
+        std::vector<pair<std::string, std::vector<Type>>> signature;
         /* Visit all parameters and create signature. */
-        for (auto& v : node->parameters) {
-            v->accept(*this);
-            auto signatureTuple = get_in(v);
+        for (Variable& v : node->parameters) {
+            v.accept(this);
+            pair<std::string, std::vector<Type>> signatureTuple =
+                _variableHash[v];
             signature.emplace_back(signatureTuple);
         }
         /* Visit the precondition statement. */
-        node->precond->accept(*this);
-        auto precond = get_in(node->precond);
+        node->precond.accept(this);
+        std::vector<Predicate> precond = _precondHash[node->precond];
         /* Visit the effect statement. */
-        node->effect->accept(*this);
-        auto effect = get_in(node->effect);
+        node->effect.accept(this);
+        Effect effect = _effectHash[node->effect];
         /* Create new PDDL action and store in node. */
-        set_in(node, make_shared<pddl::Action>(node->name, signature, precond,
-                                               effect));
+        _actionstmtHash[*node] = Action(node->name, signature, precond, effect);
     }
 
     void add_precond(std::vector<Predicate>& precond, Formula& c) {
         Predicate preDef = _predicates[c.key];
-        std::vector<pair<std::string, vector<Type*>>> signature;
+        std::vector<pair<std::string, vector<Type>>> signature;
         int count = 0;
-        if (c.children.size()) != (preDef.signature.size()) {
-                throw SemanticError(
-                    "Error: wrong number of arguments for "
-                    "predicate " +
-                    c.key +
-                    " in precondition of "
-                    "action");
-            }
+        if (c.children.size() != preDef.signature.size()) {
+            throw SemanticError(
+                "Error: wrong number of arguments for "
+                "predicate " +
+                c.key +
+                " in precondition of "
+                "action");
+        }
         for (Formula v : c.children) {
-            signature.push_back({v.key, predDef.signature[count][1]});
+            signature.push_back(
+                make_pair(v.key, preDef.signature[count].second));
             count++;
         }
 
@@ -226,26 +242,18 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_precondition_stmt(PreconditionStmt* node) {
         // Visits a PDDL precondition statement.
-        std::vector<std::shared_ptr<Predicate>> precond;
-        auto formula = node->formula;
+        std::vector<Predicate> precond;
+        Formula& formula = node->formula;
         // For now we only allow 'and' in the precondition.
-        if (formula->key == "and") {
+        if (formula.key == "and") {
             // Apply to all predicates in precondition.
-            for (auto& c : formula->children) {
-                if (!std::holds_alternative<std::string>(c->key)) {
-                    throw SemanticError(
-                        "Error predicate with non str key: " +
-                        std::accumulate(formula->children.begin(),
-                                        formula->children.end(), std::string(),
-                                        [](std::string& acc, const auto& c2) {
-                                            return acc + c2->key.name + " ";
-                                        }));
+            for (auto& c : formula.children) {
+                if (c.key == "<NULL>") {
+                    throw SemanticError("Error predicate with non str key");
                 }
                 // Check whether predicate was defined.
-                if (_predicates.find(std::get<std::string>(c->key)) ==
-                    _predicates.end()) {
-                    throw SemanticError("Error unknown predicate " +
-                                        std::get<std::string>(c->key) +
+                if (_predicates.find(c.key) == _predicates.end()) {
+                    throw SemanticError("Error unknown predicate " + c.key +
                                         " used in precondition of action");
                 }
                 // Call helper.
@@ -253,23 +261,23 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
         } else {
             // If not 'and' we only allow a single predicate in precondition.
-            if (_predicates.find(formula->key) == _predicates.end()) {
+            if (_predicates.find(formula.key) == _predicates.end()) {
                 throw SemanticError(
                     "Error: predicate in precondition is not in CNF");
             }
             // Call helper.
             add_precond(precond, formula);
         }
-        set_in(node, precond);
+        _precondHash[*node] = precond;
     }
 
     void visit_effect_stmt(EffectStmt* node) {
         // Visits a PDDL effect statement.
-        Formula formula = node.formula;
+        Formula& formula = node->formula;
         Effect effect;
         // For now we only allow 'and' in the effect.
         if (formula.key == "and") {
-            for (Node c : formula.children) {
+            for (Formula& c : formula.children) {
                 // Call helper.
                 add_effect(effect, c);
             }
@@ -278,7 +286,7 @@ class TraversePDDLDomain : public PDDLVisitor {
             add_effect(effect, formula);
         }
         // Store effect in node.
-        set_in(node, effect);
+        _effectHash[*node] = effect;
     }
 
     void add_effect(Effect& effect, Formula& c) {
@@ -300,18 +308,17 @@ class TraversePDDLDomain : public PDDLVisitor {
             nextPredicate = c;
         }
         // Check whether predicate was defined previously.
-        if (effect._predicates.find(nextPredicate.key) ==
-            effect._predicates.end()) {
+        if (_predicates.find(nextPredicate.key) == _predicates.end()) {
             throw SemanticError("Error: unknown predicate " +
                                 nextPredicate.key +
                                 " used in effect of action");
         }
-        if (nextPredicate == nullptr) {
+        if (nextPredicate.key == "<NULL>") {
             throw SemanticError(
                 "Error: NoneType predicate used in effect of action");
         }
-        PredDef predDef = effect._predicates[nextPredicate.key];
-        std::vector<std::pair<std::string, std::string>> signature;
+        Predicate predDef = _predicates[nextPredicate.key];
+        std::vector<std::pair<std::string, std::vector<Type>>> signature;
         int count = 0;
         // Check whether predicate is used with the correct signature.
         if (nextPredicate.children.size() != predDef.signature.size()) {
@@ -320,39 +327,34 @@ class TraversePDDLDomain : public PDDLVisitor {
                 nextPredicate.key + " in effect of action");
         }
         // Apply to all parameters.
-        for (Node v : nextPredicate.children) {
-            if (isinstance(v.key, Variable)) {
-                signature.push_back(std::make_pair(
-                    v.key.name, predDef.signature[count].second));
-            } else {
-                signature.push_back(
-                    std::make_pair(v.key, predDef.signature[count].second));
-            }
+        for (Formula& v : nextPredicate.children) {
+            signature.push_back(
+                std::make_pair(v.key, predDef.signature[count].second));
             count++;
         }
 
         // Add a new effect to the positive or negative effects respectively.
         if (isNegative) {
-            effect.dellist.add(Predicate(nextPredicate.key, signature));
+            effect.dellist.insert(Predicate(nextPredicate.key, signature));
         } else {
-            effect.addlist.add(Predicate(nextPredicate.key, signature));
+            effect.addlist.insert(Predicate(nextPredicate.key, signature));
         }
     }
 };
 
 class TraversePDDLProblem : public PDDLVisitor {
    private:
-    PDDLDomain _domain;
-    std::unordered_map<Visitable*, std::string> _nodeHash;
-    std::unordered_map<std::string, const Visitable*> _objects;
+    Domain _domain;
+    std::unordered_map<void*, std::string> _nodeHash;
+    std::unordered_map<std::string, void*> _objects;
     ProblemDef* _problemDef;
 
    public:
-    TraversePDDLProblem(PDDLDomain domain)
+    TraversePDDLProblem(Domain domain)
         : _domain(domain), _problemDef(nullptr) {}
 
-    std::string get_in(Visitable* node) { return _nodeHash[node]; }
-    void set_in(Visitable* node, std::string val) { _nodeHash[node] = val; }
+    std::string get_in(void* node) { return _nodeHash[node]; }
+    void set_in(void* node, std::string val) { _nodeHash[node] = val; }
     ProblemDef* get_problem() { return _problemDef; }
 
     void visit_problem_def(ProblemDef* node) {
@@ -404,16 +406,16 @@ class TraversePDDLProblem : public PDDLVisitor {
         _objects[node->name] = type_def;
     }
     void visit_init_stmt(InitStmt* node) {
-        std::vector<const PDDLPredicate*> initList;
+        std::vector<std::string> initList;
         // Apply to all predicates in the statement.
         for (auto p : node->predicates) {
             p->accept(this);
-            auto pred = get_in(p);
+            std::string pred = get_in(p);
             initList.push_back(pred);
         }
         set_in(node, initList);
     }
-    void add_goal(std::vector<pddl::Predicate>& goal, pddl::Formula& c) {
+    void add_goal(std::vector<Predicate>& goal, Formula& c) {
         /* Helper function for visit_goal_stmt.
          * Arguments:
          * - goal: a list of goals
@@ -428,8 +430,8 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
 
         // Get predicate from the domain data structure.
-        pddl::PredicateDef& predDef = this->_domain.predicates[c.key];
-        std::vector<std::pair<std::string, pddl::Type>> signature;
+        PredicateDef& predDef = this->_domain.predicates[c.key];
+        std::vector<std::pair<std::string, Type>> signature;
         size_t count = 0;
 
         // Check whether the predicate uses the correct signature.
@@ -440,7 +442,7 @@ class TraversePDDLProblem : public PDDLVisitor {
                 c.key + " in goal");
         }
 
-        for (pddl::Formula& v : c.children) {
+        for (Formula& v : c.children) {
             signature.emplace_back(v.key, predDef.signature[count].second);
             count++;
         }
@@ -486,11 +488,11 @@ class TraversePDDLProblem : public PDDLVisitor {
         this->set_in(node, goal);
     }
 
-    void visit_predicate_instance(Node* node) {
-        vector<pair<string, string>> signature;
+    void visit_predicate_instance(PredicateInstance* node) {
+        std::vector<pair<std::string, std::string>> signature;
         // Visit all parameters.
-        for (string o : node->parameters) {
-            string o_type;
+        for (std::string o : node->parameters) {
+            std::string o_type;
             // Check whether predicate was introduced in objects or domain
             // constants.
             if (!(_objects.count(o) || _domain.constants.count(o))) {
