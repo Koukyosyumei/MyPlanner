@@ -428,3 +428,19 @@ inline ProblemDef parse_problem_def(LispIterator& iter) {
     return ProblemDef(probname, dom.name, objects, init, goal);
 }
 
+struct Parser {
+    std::string domFile;
+    std::string probFile;
+    std::string domInput = "";
+    std::string probInput = "";
+
+    Parser(std::string domFile_, std::string probFile_ = "") {
+        domFile = domFile_;
+        probFile = probFile_;
+    }
+
+    LispIterator _read_input(std::vector<std::string> source) {
+        LispIterator result = parse_lisp_iterator(source);
+        return result;
+    }
+};
