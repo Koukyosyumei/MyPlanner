@@ -7,6 +7,7 @@
 #include "lisp_iterators.h"
 #include "parser_common.h"
 #include "visitable.h"
+#include "tree_visitor.h"
 
 inline std::string parse_name(LispIterator& iter, std::string father) {
     if (!iter.peek().is_word()) {
@@ -442,5 +443,13 @@ struct Parser {
     LispIterator _read_input(std::vector<std::string> source) {
         LispIterator result = parse_lisp_iterator(source);
         return result;
+    }
+
+    DomainDef parse_domain(bool read_from_file = false) {
+        LispIterator iter = _read_input({domInput});
+        DomainDef domAST = parse_domain_def(iter);
+        TraversePDDLDomain visitor = TraversePDDLDomain();
+        domAST.accept(&visitor);
+        return visitor.domain;
     }
 };
