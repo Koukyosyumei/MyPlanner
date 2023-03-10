@@ -68,6 +68,7 @@ class Action {
 
 class Domain {
    public:
+    Domain(){};
     Domain(string name_, unordered_map<string, Type> types_,
            vector<Predicate> predicates_, vector<Action> actions_,
            unordered_map<string, Type> constants_ = {})
@@ -88,6 +89,7 @@ class Domain {
 
 class Problem {
    public:
+    Problem(){};
     Problem(std::string name, Domain domain,
             std::unordered_map<std::string, Type> objects,
             std::vector<Predicate> init, std::vector<Predicate> goal)

@@ -116,21 +116,17 @@ inline std::function<void(PDDLVisitor*, Visitable*)> getMethod(
 
 class Visitable {
    public:
-    Visitable(const std::string& vname = "") : visitor_name_(vname) {}
+    std::string _visitorName;
+    Visitable(const std::string vname = "") : _visitorName(vname) {}
 
     void accept(PDDLVisitor* visitor) {
-        if (visitor_name_.empty())
+        std::cout << "given name is: " << _visitorName << std::endl;
+        if (_visitorName.empty())
             throw std::runtime_error(
                 "Error: visit method of uninitialized visitor called!");
-        auto m = getMethod(visitor, visitor_name_);
+        auto m = getMethod(visitor, _visitorName);
         m(visitor, this);
     }
-
-    const std::string& get_visitor_name() const { return visitor_name_; }
-    void set_visitor_name(const std::string& vname) { visitor_name_ = vname; }
-
-   private:
-    std::string visitor_name_;
 };
 
 class Keyword : public Visitable {
@@ -138,9 +134,8 @@ class Keyword : public Visitable {
      * This class represents the AST node for a PDDL keyword.
      */
    public:
-    Keyword(std::string name) : _visitorName("visit_keyword"), name(name) {}
+    Keyword(std::string name) : name(name) { _visitorName = "visit_keyword"; }
 
-    std::string _visitorName;
     std::string name;
 };
 inline bool operator==(const Keyword& lhs, const Keyword& rhs) {
@@ -153,20 +148,17 @@ class Variable : public Visitable {
      */
    public:
     Variable(std::string name_, std::vector<std::string> types_ = {})
-        : _visitorName("visit_variable"),
-          name(name_),
-          typed(!types_.empty()),
-          types(types_) {}
+        : name(name_), typed(!types_.empty()), types(types_) {
+        _visitorName = "visit_variable";
+    }
     Variable(std::string name_, std::string type_ = "<NULL>")
-        : _visitorName("visit_variable"),
-          name(name_),
-          typed(type_ != "<NULL>") {
+        : name(name_), typed(type_ != "<NULL>") {
         if (type_ != "<NULL>") {
             this->types = {type_};
         }
+        _visitorName = "visit_variable";
     }
 
-    std::string _visitorName;
     std::string name;
     bool typed;
     std::vector<std::string> types;
@@ -179,9 +171,10 @@ inline bool operator==(const Variable& lhs, const Variable& rhs) {
 class PredicateVar : public Visitable {
    public:
     PredicateVar(std::string name, std::vector<Variable> parameters = {})
-        : _visitorName("visit_predicate"), name(name), parameters(parameters) {}
+        : name(name), parameters(parameters) {
+        _visitorName = "visit_predicate";
+    }
 
-    std::string _visitorName;
     std::string name;
     std::vector<Variable> parameters;
 };
@@ -196,15 +189,15 @@ class PredicateInstance : public Visitable {
    public:
     PredicateInstance(std::string name,
                       std::vector<std::string> parameters = {})
-        : _visitorName("visit_predicate_instance"),
-          name(name),
-          parameters(parameters) {}
+        : name(name), parameters(parameters) {
+        _visitorName = "visit_predicate_instance";
+    }
 
-    std::string _visitorName;
     std::string name;
     std::vector<std::string> parameters;
 };
-inline bool operator==(const PredicateInstance& lhs, const PredicateInstance& rhs) {
+inline bool operator==(const PredicateInstance& lhs,
+                       const PredicateInstance& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name;
 }
 
@@ -213,10 +206,10 @@ class RequirementsStmt : public Visitable {
      * This class represents the AST node for a PDDL requirements statement.
      */
    public:
-    RequirementsStmt(std::vector<Keyword> keywords = {})
-        : _visitorName("visit_requirements_stmt"), keywords(keywords) {}
+    RequirementsStmt(std::vector<Keyword> keywords = {}) : keywords(keywords) {
+        _visitorName = "visit_requirements_stmt";
+    }
 
-    std::string _visitorName;
     std::vector<Keyword> keywords;
 };
 
@@ -225,10 +218,10 @@ class DomainStmt : public Visitable {
      * This class represents the AST node for a PDDL domain statement.
      */
    public:
-    DomainStmt(std::string name)
-        : _visitorName("visit_domain_stmt"), name(name) {}
+    DomainStmt(std::string name) : name(name) {
+        _visitorName = "visit_domain_stmt";
+    }
 
-    std::string _visitorName;
     std::string name;
 };
 
@@ -240,12 +233,10 @@ class Formula : public Visitable {
    public:
     Formula(std::string key = "<NULL>", std::vector<Formula> children = {},
             FormulaType type = TypeFormula)
-        : _visitorName("visit_formula"),
-          key(key),
-          children(children),
-          type(type) {}
+        : key(key), children(children), type(type) {
+        _visitorName = "visit_formula";
+    }
 
-    std::string _visitorName;
     std::string key;
     std::vector<Formula> children;
     FormulaType type;
@@ -260,13 +251,14 @@ class PreconditionStmt : public Visitable {
      * This class represents the AST node for a PDDL action precondition.
      */
    public:
-    PreconditionStmt(Formula formula)
-        : _visitorName("visit_precondition_stmt"), formula(formula) {}
+    PreconditionStmt(Formula formula) : formula(formula) {
+        _visitorName = "visit_precondition_stmt";
+    }
 
-    std::string _visitorName;
     Formula formula;
 };
-inline bool operator==(const PreconditionStmt& lhs, const PreconditionStmt& rhs) {
+inline bool operator==(const PreconditionStmt& lhs,
+                       const PreconditionStmt& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.formula == rhs.formula;
 }
 
@@ -275,10 +267,10 @@ class EffectStmt : public Visitable {
      * This class represents the AST node for a PDDL action effect.
      */
    public:
-    EffectStmt(Formula formula)
-        : _visitorName("visit_effect_stmt"), formula(formula) {}
+    EffectStmt(Formula formula) : formula(formula) {
+        _visitorName = "visit_effect_stmt";
+    }
 
-    std::string _visitorName;
     Formula formula;
 };
 inline bool operator==(const EffectStmt& lhs, const EffectStmt& rhs) {
@@ -288,11 +280,10 @@ inline bool operator==(const EffectStmt& lhs, const EffectStmt& rhs) {
 class PredicatesStmt : public Visitable {
    public:
     PredicatesStmt(std::vector<PredicateVar> predicates) {
-        _visitorName = "visit_predicates_stmt";
+        this->_visitorName = "visit_predicates_stmt";
         this->predicates = predicates;
     }
 
-    std::string _visitorName;
     std::vector<PredicateVar> predicates;
 };
 
@@ -306,7 +297,6 @@ class ActionStmt : public Visitable {
         this->parameters = parameters;
     }
 
-    std::string _visitorName;
     std::string name;
     std::vector<Variable> parameters;
     PreconditionStmt precond;
@@ -325,15 +315,15 @@ class DomainDef : public Visitable {
               PredicatesStmt predicates = PredicatesStmt({}),
               std::vector<ActionStmt> actions = {},
               std::vector<Object> constants = {})
-        : _visitorName("visit_domain_def"),
-          name(name),
+        : name(name),
           types(types),
           requirements(requirements),
           predicates(predicates),
           actions(actions),
-          constants(constants) {}
+          constants(constants) {
+        _visitorName = "visit_domain_def";
+    }
 
-    std::string _visitorName;
     std::string name;
     RequirementsStmt requirements;
     std::vector<Type> types;
@@ -345,11 +335,10 @@ class DomainDef : public Visitable {
 class InitStmt : public Visitable {
    public:
     InitStmt(std::vector<PredicateInstance> predicates) {
-        _visitorName = "visit_init_stmt";
+        this->_visitorName = "visit_init_stmt";
         this->predicates = predicates;
     }
 
-    std::string _visitorName;
     std::vector<PredicateInstance> predicates;
 };
 
@@ -370,10 +359,10 @@ inline bool operator==(const InitStmt& lhs, const InitStmt& rhs) {
 
 class GoalStmt : public Visitable {
    public:
-    GoalStmt(Formula formula)
-        : _visitorName("visit_goal_stmt"), formula(formula) {}
+    GoalStmt(Formula formula) : formula(formula) {
+        _visitorName = "visit_goal_stmt";
+    }
 
-    std::string _visitorName;
     Formula formula;
 };
 inline bool operator==(const GoalStmt& lhs, const GoalStmt& rhs) {
@@ -384,14 +373,14 @@ class ProblemDef : public Visitable {
    public:
     ProblemDef(std::string name, std::string domainName,
                std::vector<Object> objects, InitStmt init, GoalStmt goal)
-        : _visitorName("visit_problem_def"),
-          name(name),
+        : name(name),
           domainName(domainName),
           objects(objects),
           init(init),
-          goal(goal) {}
+          goal(goal) {
+        _visitorName = "visit_problem_def";
+    }
 
-    std::string _visitorName;
     std::string name;
     std::string domainName;
     std::vector<Object> objects;
@@ -414,7 +403,6 @@ class Object : public Visitable {
         this->typeName = type;
     }
 
-    std::string _visitorName;
     std::string name;
     std::string typeName;
 };

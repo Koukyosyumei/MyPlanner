@@ -445,11 +445,22 @@ struct Parser {
         return result;
     }
 
-    Domain* parse_domain(bool read_from_file = false) {
+    Domain parse_domain(bool read_from_file = false) {
         LispIterator iter = _read_input({domInput});
         DomainDef domAST = parse_domain_def(iter);
         TraversePDDLDomain visitor = TraversePDDLDomain();
+        std::cout << "init domAST is: " << domAST._visitorName << std::endl;
         domAST.accept(&visitor);
         return visitor.domain;
     }
+
+    Problem parse_problem(std::string dom, bool read_from_file = false) {
+        LispIterator iter = _read_input({probInput});
+        ProblemDef probAST = parse_problem_def(iter);
+        TraversePDDLProblem visitor = TraversePDDLProblem();
+        probAST.accept(&visitor);
+        return visitor.get_problem();
+    }
+
+    void set_prob_file(std::string fname) { probFile = fname; }
 };

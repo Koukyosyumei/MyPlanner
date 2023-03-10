@@ -194,7 +194,7 @@ class TraversePDDLDomain : public PDDLVisitor {
     std::unordered_map<std::string, Action> _actions;
     std::unordered_map<std::string, Type> _constants;
     std::set<std::string> _requirements;
-    Domain* domain = nullptr;
+    Domain domain;
     Type _objectType = Type("object", "<NULL>");
 
     void visit_problem_def(ProblemDef* node) override {
@@ -226,8 +226,11 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
+        std::cout << "visit_domain_def starts" << std::endl;
 
         if (node->requirements.keywords.size() != 0) {
+            std::cout << "requirements is : " << node->requirements._visitorName
+                      << std::endl;
             node->requirements.accept(this);
         }
 
@@ -256,11 +259,13 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
             t->parent = _types[t->parent].name;
         }
-
+        std::cout << "predicates is: " << node->predicates._visitorName
+                  << std::endl;
         node->predicates.accept(this);
 
         if (node->actions.size() != 0) {
             for (ActionStmt& a : node->actions) {
+                std::cout << "actionstmt is : " << a._visitorName << std::endl;
                 a.accept(this);
                 Action& action = _actionstmtHash[a];
                 if (_actions.find(action.name) != _actions.end()) {
@@ -275,21 +280,23 @@ class TraversePDDLDomain : public PDDLVisitor {
         if (node->constants.size() != 0) {
             for (int i = 0; i < node->constants.size(); i++) {
                 Object* c = &node->constants[i];
+                std::cout << "Object is: " << c->_visitorName << std::endl;
                 c->accept(this);
             }
         }
 
+        std::cout << "Final Setup" << std::endl;
         std::vector<Predicate> tmp_predicates;
         std::vector<Action> tmp_actions;
-        domain = new Domain(node->name, _types, tmp_predicates, tmp_actions,
-                            _constants);
-        domain->predicates_dict = _predicates;
-        domain->actions_dict = _actions;
+        domain =
+            Domain(node->name, _types, tmp_predicates, tmp_actions, _constants);
+        domain.predicates_dict = _predicates;
+        domain.actions_dict = _actions;
     }
 
     void visit_object(Object* node) override {
         std::string type_name = node->typeName;
-        if (type_name == "") {
+        if (type_name == "<NULL>") {
             type_name = "object";
         }
         if (_types.find(type_name) == _types.end()) {
@@ -528,7 +535,7 @@ class TraversePDDLDomain : public PDDLVisitor {
 class TraversePDDLProblem : public PDDLVisitor {
    private:
     Domain _domain;
-    Problem* _problemDef;
+    Problem _problemDef;
     std::unordered_map<PredicateInstance, Predicate> _predicateHash;
     std::unordered_map<InitStmt, std::vector<Predicate>> _initHash;
     std::unordered_map<GoalStmt, std::vector<Predicate>> _goalHash;
@@ -536,6 +543,8 @@ class TraversePDDLProblem : public PDDLVisitor {
 
    public:
     TraversePDDLProblem(Domain& domain) : _domain(domain) {}
+
+    Problem get_problem() { return _problemDef; }
 
     void visit_problem_def(ProblemDef* node) {
         // Check whether the in the problem file referenced domain name matches
@@ -562,7 +571,7 @@ class TraversePDDLProblem : public PDDLVisitor {
 
         // Create the problem data structure.
         _problemDef =
-            new Problem(node->name, _domain, _objects, init_list, goal_list);
+            Problem(node->name, _domain, _objects, init_list, goal_list);
     }
 
     void visit_formula(Formula* node) override {
