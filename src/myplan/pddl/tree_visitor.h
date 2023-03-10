@@ -197,6 +197,33 @@ class TraversePDDLDomain : public PDDLVisitor {
     Domain* domain = nullptr;
     Type _objectType = Type("object", "<NULL>");
 
+    void visit_problem_def(ProblemDef* node) override {
+        for (Object& o : node->objects) {
+            o.accept(this);
+        }
+
+        node->init.accept(this);
+        node->goal.accept(this);
+    }
+
+    void visit_init_stmt(InitStmt* node) override {
+        for (PredicateInstance& p : node->predicates) {
+            p.accept(this);
+        }
+    }
+
+    void visit_goal_stmt(GoalStmt* node) override {
+        node->formula.accept(this);
+    }
+
+    void visit_predicate_instance(PredicateInstance* node) override {}
+
+    void visit_formula(Formula* node) override {
+        for (Formula& c : node->children) {
+            c.accept(this);
+        }
+    }
+
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
 
@@ -536,6 +563,12 @@ class TraversePDDLProblem : public PDDLVisitor {
         // Create the problem data structure.
         _problemDef =
             new Problem(node->name, _domain, _objects, init_list, goal_list);
+    }
+
+    void visit_formula(Formula* node) override {
+        for (Formula& c : node->children) {
+            c.accept(this);
+        }
     }
 
     void visit_object(Object* node) {
