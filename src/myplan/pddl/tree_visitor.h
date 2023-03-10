@@ -142,6 +142,41 @@ struct hash<ActionStmt> {
         return seed;
     }
 };
+
+template <>
+struct hash<InitStmt> {
+    size_t operator()(const InitStmt& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        for (PredicateInstance p : hoge.predicates) {
+            auto nn_hash = hash<std::string>()(p._visitorName);
+            auto dd_hash = hash<std::string>()(p.name);
+
+            seed ^= nn_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= dd_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+
+        return seed;
+    }
+};
+
+template <>
+struct hash<GoalStmt> {
+    size_t operator()(const GoalStmt& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.formula._visitorName);
+        auto m_hash = hash<std::string>()(hoge.formula.key);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
 }  // namespace std
 
 class TraversePDDLDomain : public PDDLVisitor {
@@ -488,7 +523,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
         // Apply to all object definitions.
         for (Object& o : node->objects) {
-            o->accept(this);
+            o.accept(this);
         }
 
         // Apply to the initial state definition.
@@ -505,7 +540,7 @@ class TraversePDDLProblem : public PDDLVisitor {
     }
 
     void visit_object(Object* node) {
-        Type type_def;
+        Type type_def = Type("<NULL>", "<NULL>");
         // Check for multiple definition of objects.
         if (_objects.find(node->name) != _objects.end()) {
             throw std::runtime_error(
@@ -530,7 +565,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         std::vector<Predicate> initList;
         // Apply to all predicates in the statement.
         for (PredicateInstance& p : node->predicates) {
-            p->accept(this);
+            p.accept(this);
             Predicate pred = _predicateHash[p];
             initList.push_back(pred);
         }
@@ -551,7 +586,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
 
         // Get predicate from the domain data structure.
-        PredicateDef& predDef = this->_domain.predicates[c.key];
+        Predicate predDef = this->_domain.predicates[c.key];
         std::vector<std::pair<std::string, Type>> signature;
         size_t count = 0;
 
@@ -605,7 +640,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         std::vector<pair<std::string, std::string>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
-            Type o_type;
+            Type o_type = Type("<NULL>", "<NULL>");
             // Check whether predicate was introduced in objects or domain
             // constants.
             if (!(_objects.count(o) || _domain.constants.count(o))) {
