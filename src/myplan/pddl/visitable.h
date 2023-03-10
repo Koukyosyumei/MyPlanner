@@ -120,7 +120,6 @@ class Visitable {
     Visitable(const std::string vname = "") : _visitorName(vname) {}
 
     void accept(PDDLVisitor* visitor) {
-        std::cout << "given name is: " << _visitorName << std::endl;
         if (_visitorName.empty())
             throw std::runtime_error(
                 "Error: visit method of uninitialized visitor called!");

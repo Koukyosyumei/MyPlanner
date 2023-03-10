@@ -226,11 +226,8 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
-        std::cout << "visit_domain_def starts" << std::endl;
 
         if (node->requirements.keywords.size() != 0) {
-            std::cout << "requirements is : " << node->requirements._visitorName
-                      << std::endl;
             node->requirements.accept(this);
         }
 
@@ -259,13 +256,10 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
             t->parent = _types[t->parent].name;
         }
-        std::cout << "predicates is: " << node->predicates._visitorName
-                  << std::endl;
         node->predicates.accept(this);
 
         if (node->actions.size() != 0) {
             for (ActionStmt& a : node->actions) {
-                std::cout << "actionstmt is : " << a._visitorName << std::endl;
                 a.accept(this);
                 Action& action = _actionstmtHash[a];
                 if (_actions.find(action.name) != _actions.end()) {
@@ -280,12 +274,10 @@ class TraversePDDLDomain : public PDDLVisitor {
         if (node->constants.size() != 0) {
             for (int i = 0; i < node->constants.size(); i++) {
                 Object* c = &node->constants[i];
-                std::cout << "Object is: " << c->_visitorName << std::endl;
                 c->accept(this);
             }
         }
 
-        std::cout << "Final Setup" << std::endl;
         std::vector<Predicate> tmp_predicates;
         std::vector<Action> tmp_actions;
         domain =
@@ -608,7 +600,7 @@ class TraversePDDLProblem : public PDDLVisitor {
 
     void visit_keyword(Keyword* node) override {}
 
-    void visit_problem_def(ProblemDef* node) {
+    void visit_problem_def(ProblemDef* node) override {
         // Check whether the in the problem file referenced domain name matches
         // the supplied domain data structure.
         if (node->domainName != _domain.name) {

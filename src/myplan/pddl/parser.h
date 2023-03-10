@@ -449,7 +449,6 @@ struct Parser {
         LispIterator iter = _read_input({domInput});
         DomainDef domAST = parse_domain_def(iter);
         TraversePDDLDomain visitor = TraversePDDLDomain();
-        std::cout << "init domAST is: " << domAST._visitorName << std::endl;
         domAST.accept(&visitor);
         return visitor.domain;
     }
