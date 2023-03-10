@@ -454,10 +454,10 @@ struct Parser {
         return visitor.domain;
     }
 
-    Problem parse_problem(std::string dom, bool read_from_file = false) {
+    Problem parse_problem(Domain dom, bool read_from_file = false) {
         LispIterator iter = _read_input({probInput});
         ProblemDef probAST = parse_problem_def(iter);
-        TraversePDDLProblem visitor = TraversePDDLProblem();
+        TraversePDDLProblem visitor = TraversePDDLProblem(dom);
         probAST.accept(&visitor);
         return visitor.get_problem();
     }

@@ -26,4 +26,23 @@ TEST(parser_pddl_regression, UntypedConstatns) {
     _parser.probInput = problem_input;
 
     Domain domain = _parser.parse_domain(false);
+    Problem problem = _parser.parse_problem(domain, false);
+
+    _parser.domInput = domain_input;
+    domain = _parser.parse_domain(false);
+
+    for (auto kv : domain.constants) {
+        ASSERT_EQ(kv.first, "x");
+    }
 }
+
+TEST(parser_pddl_regression, EmptyActions) {
+    std::string domain_input =
+        "(define (domain regression-test) (:predicates (trivial-goal)) )";
+
+    Parser _parser = Parser("");
+    _parser.domInput = domain_input;
+    Domain domain = _parser.parse_domain(false);
+    ASSERT_EQ(domain.actions.size(), 0);
+}
+
