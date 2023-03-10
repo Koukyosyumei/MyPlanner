@@ -587,7 +587,7 @@ class TraversePDDLProblem : public PDDLVisitor {
 
         // Get predicate from the domain data structure.
         Predicate predDef = this->_domain.predicates[c.key];
-        std::vector<std::pair<std::string, Type>> signature;
+        std::vector<std::pair<std::string, std::vector<Type>>> signature;
         size_t count = 0;
 
         // Check whether the predicate uses the correct signature.
@@ -637,7 +637,7 @@ class TraversePDDLProblem : public PDDLVisitor {
     }
 
     void visit_predicate_instance(PredicateInstance* node) {
-        std::vector<pair<std::string, std::string>> signature;
+        std::vector<pair<std::string, std::vector<Type>>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
             Type o_type = Type("<NULL>", "<NULL>");
@@ -652,7 +652,8 @@ class TraversePDDLProblem : public PDDLVisitor {
             } else if (_domain.constants.count(o)) {
                 o_type = _domain.constants[o];
             }
-            signature.emplace_back(o, o_type);
+            std::vector<Type> tmp_o_type_vec = {o_type};
+            signature.emplace_back(make_pair(o, tmp_o_type_vec));
         }
         _predicateHash[*node] = Predicate(node->name, signature);
     }
