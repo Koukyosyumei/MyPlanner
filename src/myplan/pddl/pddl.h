@@ -10,8 +10,7 @@ using namespace std;
 
 class Type {
    public:
-    Type(string name_ = "<NULL>", std::vector<string> parents_ = {"<NULL>"})
-        : name(name_) {
+    Type(string name_, std::vector<string> parents_) : name(name_) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
         if (parents_.size() > 0) {
             parent = parents_[0];
@@ -31,6 +30,7 @@ class Type {
 
 class Predicate {
    public:
+    Predicate(){};
     Predicate(string name, vector<pair<string, vector<Type>>> signature)
         : name(name), signature(signature) {}
 
@@ -52,6 +52,7 @@ class Effect {
 
 class Action {
    public:
+    Action(){};
     Action(string name, vector<pair<string, vector<Type>>> signature,
            vector<Predicate> precondition, Effect effect)
         : name(name),
@@ -79,8 +80,10 @@ class Domain {
     string name;
     unordered_map<string, Type> types;
     vector<Predicate> predicates;
+    unordered_map<string, Predicate> predicates_dict;
     vector<Action> actions;
-    std::unordered_map<std::string, Type> constants;
+    unordered_map<string, Action> actions_dict;
+    unordered_map<string, Type> constants;
 };
 
 class Problem {

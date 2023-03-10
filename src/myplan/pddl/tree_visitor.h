@@ -209,8 +209,8 @@ class TraversePDDLDomain : public PDDLVisitor {
                 if (t.name == "object") {
                     explicitObjectDef = true;
                 }
-                t.accept(this);
-                Type type = _typeHash[t];
+                this->visit_type(&t);
+                Type& type = _typeHash[t];
                 _types[type.name] = type;
             }
         }
@@ -233,20 +233,15 @@ class TraversePDDLDomain : public PDDLVisitor {
         node->predicates.accept(this);
 
         if (node->actions.size() != 0) {
-            for (int i = 0; i < node->actions.size(); i++) {
-                ActionStmt* a = &node->actions[i];
-                a->accept(this);
-                std::string action_name = get_in(a);
-                if (_actions.find(action_name) != _actions.end()) {
+            for (ActionStmt& a : node->actions) {
+                a.accept(this);
+                Action& action = _actionstmtHash[a];
+                if (_actions.find(action.name) != _actions.end()) {
                     throw SemanticError("Error: action with name " +
-                                        action_name +
+                                        action.name +
                                         " has already been defined");
                 }
-                std::vector<pair<std::string, std::vector<Type>>> tmp_sig;
-                std::vector<Predicate> tmp_pred;
-                Effect tmp_effect;
-                _actions[action_name] =
-                    Action(action_name, tmp_sig, tmp_pred, tmp_effect);
+                _actions[action.name] = action;
             }
         }
 
@@ -257,8 +252,12 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
         }
 
-        domain =
-            new Domain(node->name, _types, _predicates, _actions, _constants);
+        std::vector<Predicate> tmp_predicates;
+        std::vector<Action> tmp_actions;
+        domain = new Domain(node->name, _types, tmp_predicates, tmp_actions,
+                            _constants);
+        domain->predicates_dict = _predicates;
+        domain->actions_dict = _actions;
     }
 
     void visit_object(Object* node) override {
@@ -290,7 +289,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         /* Visit all requirement keywords... */
         for (Keyword& k : node->keywords) {
             k.accept(this);
-            std::string requirementName = get_in(&k);
+            std::string requirementName = _keywordHash[k];
             /* ... and add them to the requirement list. */
             _requirements.insert(requirementName);
         }
@@ -579,14 +578,14 @@ class TraversePDDLProblem : public PDDLVisitor {
          */
 
         // Check whether predicate was introduced in domain file.
-        if (this->_domain.predicates.find(c.key) ==
-            this->_domain.predicates.end()) {
+        if (this->_domain.predicates_dict.find(c.key) ==
+            this->_domain.predicates_dict.end()) {
             throw SemanticError("Error: unknown predicate " + c.key +
                                 " in goal definition");
         }
 
         // Get predicate from the domain data structure.
-        Predicate predDef = this->_domain.predicates[c.key];
+        Predicate predDef = this->_domain.predicates_dict[c.key];
         std::vector<std::pair<std::string, std::vector<Type>>> signature;
         size_t count = 0;
 
@@ -624,8 +623,8 @@ class TraversePDDLProblem : public PDDLVisitor {
             }
         } else {
             // Only a single predicate is allowed then (s.a.)
-            if (this->_domain.predicates.find(formula.key) ==
-                this->_domain.predicates.end()) {
+            if (this->_domain.predicates_dict.find(formula.key) ==
+                this->_domain.predicates_dict.end()) {
                 throw SemanticError(
                     "Error: predicate in goal definition is not in CNF");
             }
