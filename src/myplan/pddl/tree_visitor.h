@@ -318,7 +318,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
     }
 
-    void visit_requirements_stmt(RequirementsStmt* node) {
+    void visit_requirements_stmt(RequirementsStmt* node) override {
         /* Visits a PDDL requirement statement. */
         /* Visit all requirement keywords... */
         for (Keyword& k : node->keywords) {
@@ -329,13 +329,13 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
     }
 
-    void visit_keyword(Keyword* node) {
+    void visit_keyword(Keyword* node) override {
         /* Visits a PDDL keyword. */
         /* Nothing to do but to store its name in the node. */
         _keywordHash[*node] = node->name;
     }
 
-    void visit_predicates_stmt(PredicatesStmt* node) {
+    void visit_predicates_stmt(PredicatesStmt* node) override {
         /* Visits a PDDL predicate statement. */
         /* Visit all predicates in the predicate statement. */
         for (PredicateVar& p : node->predicates) {
@@ -352,7 +352,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
     }
 
-    void visit_predicate(PredicateVar* node) {
+    void visit_predicate(PredicateVar* node) override {
         /* Visits a PDDL predicate. */
         std::vector<pair<std::string, std::vector<Type>>> signature;
         /* Visit all predicate parameters. */
@@ -367,7 +367,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         _predicateHash[*node] = Predicate(node->name, signature);
     }
 
-    void visit_variable(Variable* node) {
+    void visit_variable(Variable* node) override {
         /* Visits a PDDL variable. */
         /* If there is no type given, it's always of type 'object'. */
         if (!node->typed) {
@@ -389,7 +389,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
     }
 
-    void visit_action_stmt(ActionStmt* node) {
+    void visit_action_stmt(ActionStmt* node) override {
         /* Visits a PDDL action statement. */
         std::vector<pair<std::string, std::vector<Type>>> signature;
         /* Visit all parameters and create signature. */
@@ -430,7 +430,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         precond.push_back(Predicate(c.key, signature));
     }
 
-    void visit_precondition_stmt(PreconditionStmt* node) {
+    void visit_precondition_stmt(PreconditionStmt* node) override {
         // Visits a PDDL precondition statement.
         std::vector<Predicate> precond;
         Formula& formula = node->formula;
@@ -461,7 +461,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         _precondHash[*node] = precond;
     }
 
-    void visit_effect_stmt(EffectStmt* node) {
+    void visit_effect_stmt(EffectStmt* node) override {
         // Visits a PDDL effect statement.
         Formula& formula = node->formula;
         Effect effect;
@@ -542,9 +542,71 @@ class TraversePDDLProblem : public PDDLVisitor {
     std::unordered_map<std::string, Type> _objects;
 
    public:
+    TraversePDDLProblem() {}
     TraversePDDLProblem(Domain& domain) : _domain(domain) {}
 
     Problem get_problem() { return _problemDef; }
+
+    void visit_domain_def(DomainDef* node) override {
+        node->requirements.accept(this);
+
+        if (node->types.size() != 0) {
+            for (Type& t : node->types) {
+                this->visit_type(&t);
+            }
+        }
+        if (node->constants.size() != 0) {
+            for (Object& c : node->constants) {
+                c.accept(this);
+            }
+        }
+        node->predicates.accept(this);
+        if (node->actions.size() != 0) {
+            for (ActionStmt& a : node->actions) {
+                a.accept(this);
+            }
+        }
+    }
+
+    void visit_predicates_stmt(PredicatesStmt* node) override {
+        for (PredicateVar& p : node->predicates) {
+            p.accept(this);
+        }
+    }
+
+    void visit_action_stmt(ActionStmt* node) override {
+        for (Variable& v : node->parameters) {
+            v.accept(this);
+        }
+        node->precond.accept(this);
+        node->effect.accept(this);
+    }
+
+    void visit_type(Type* node) override {}
+
+    void visit_effect_stmt(EffectStmt* node) override {
+        node->formula.accept(this);
+    }
+
+    void visit_precondition_stmt(PreconditionStmt* node) override {
+        node->formula.accept(this);
+    }
+
+    void visit_requirements_stmt(RequirementsStmt* node) override {
+        for (Keyword& k : node->keywords) {
+            k.accept(this);
+        }
+    }
+
+    void visit_predicate(PredicateVar* node) override {
+        for (Variable& v : node->parameters) {
+            v.accept(this);
+        }
+    }
+
+    void visit_variable(Variable* node) override {}
+
+    void visit_keyword(Keyword* node) override {}
 
     void visit_problem_def(ProblemDef* node) {
         // Check whether the in the problem file referenced domain name matches
@@ -580,7 +642,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
     }
 
-    void visit_object(Object* node) {
+    void visit_object(Object* node) override {
         Type type_def = Type("<NULL>", "<NULL>");
         // Check for multiple definition of objects.
         if (_objects.find(node->name) != _objects.end()) {
@@ -602,7 +664,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         _objects[node->name] = type_def;
     }
 
-    void visit_init_stmt(InitStmt* node) {
+    void visit_init_stmt(InitStmt* node) override {
         std::vector<Predicate> initList;
         // Apply to all predicates in the statement.
         for (PredicateInstance& p : node->predicates) {
@@ -648,7 +710,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         goal.emplace_back(c.key, signature);
     }
 
-    void visit_goal_stmt(GoalStmt* node) {
+    void visit_goal_stmt(GoalStmt* node) override {
         /* Visits a PDDL-problem goal state statement. */
 
         Formula& formula = node->formula;
@@ -677,7 +739,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         _goalHash[*node] = goal;
     }
 
-    void visit_predicate_instance(PredicateInstance* node) {
+    void visit_predicate_instance(PredicateInstance* node) override {
         std::vector<pair<std::string, std::vector<Type>>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
