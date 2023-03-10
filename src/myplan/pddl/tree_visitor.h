@@ -24,8 +24,105 @@ template <>
 struct hash<Type> {
     size_t operator()(const Type& hoge) const {
         size_t seed = 0;
-        auto n_hash = hash<int>()(hoge.n);
-        auto d_hash = hash<double>()(hoge.d);
+        auto n_hash = hash<std::string>()(hoge.name);
+        auto d_hash = hash<std::string>()(hoge.parent);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<PredicateVar> {
+    size_t operator()(const PredicateVar& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.name);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<Keyword> {
+    size_t operator()(const Keyword& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.name);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<Variable> {
+    size_t operator()(const Variable& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.name);
+        auto m_hash = hash<bool>()(hoge.typed);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<Formula> {
+    size_t operator()(const Formula& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.key);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<PreconditionStmt> {
+    size_t operator()(const PreconditionStmt& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.formula._visitorName);
+        auto m_hash = hash<std::string>()(hoge.formula.key);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<EffectStmt> {
+    size_t operator()(const EffectStmt& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.formula._visitorName);
+        auto m_hash = hash<std::string>()(hoge.formula.key);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
+struct hash<ActionStmt> {
+    size_t operator()(const ActionStmt& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.name);
 
         seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -142,6 +142,10 @@ class Keyword : public Visitable {
 
     std::string _visitorName;
     std::string name;
+
+    bool operator==(Keyword const& other) {
+        return _visitorName == other._visitorName && name == other.name;
+    }
 };
 
 class Variable : public Visitable {
