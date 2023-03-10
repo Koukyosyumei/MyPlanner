@@ -167,6 +167,11 @@ class Variable : public Visitable {
     std::string name;
     bool typed;
     std::vector<std::string> types;
+
+    bool operator==(Variable const& other) {
+        return _visitorName == other._visitorName && name == other.name &&
+               typed == other.typed;
+    }
 };
 
 class PredicateVar : public Visitable {
@@ -177,6 +182,10 @@ class PredicateVar : public Visitable {
     std::string _visitorName;
     std::string name;
     std::vector<Variable> parameters;
+
+    bool operator==(PredicateVar const& other) {
+        return _visitorName == other._visitorName && name == other.name;
+    }
 };
 
 class PredicateInstance : public Visitable {
@@ -236,6 +245,11 @@ class Formula : public Visitable {
     std::string key;
     std::vector<Formula> children;
     FormulaType type;
+
+    bool operator==(Formula const& other) {
+        return _visitorName == other._visitorName && key == other.key &&
+               type == other.type;
+    }
 };
 
 class PreconditionStmt : public Visitable {
@@ -248,6 +262,10 @@ class PreconditionStmt : public Visitable {
 
     std::string _visitorName;
     Formula formula;
+
+    bool operator==(PreconditionStmt const& other) {
+        return _visitorName == other._visitorName && formula == other.formula;
+    }
 };
 
 class EffectStmt : public Visitable {
@@ -260,6 +278,10 @@ class EffectStmt : public Visitable {
 
     std::string _visitorName;
     Formula formula;
+
+    bool operator==(EffectStmt const& other) {
+        return _visitorName == other._visitorName && formula == other.formula;
+    }
 };
 
 class PredicatesStmt : public Visitable {
@@ -288,6 +310,11 @@ class ActionStmt : public Visitable {
     std::vector<Variable> parameters;
     PreconditionStmt precond;
     EffectStmt effect;
+
+    bool operator==(ActionStmt const& other) {
+        return _visitorName == other._visitorName && name == other.name &&
+               precond == other.precond && effect == other.effect;
+    }
 };
 
 class DomainDef : public Visitable {

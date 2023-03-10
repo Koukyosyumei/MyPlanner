@@ -1,5 +1,6 @@
 #pragma once
 #include <any>
+#include <functional>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -18,15 +19,30 @@ class SemanticError : public exception {
     string msg;
 };
 
+namespace std {
+template <>
+struct hash<Type> {
+    size_t operator()(const Type& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<int>()(hoge.n);
+        auto d_hash = hash<double>()(hoge.d);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+}  // namespace std
+
 class TraversePDDLDomain : public PDDLVisitor {
    public:
-    std::unordered_map<void*, std::string> _nodeHash;
     std::unordered_map<Type, Type> _typeHash;
     std::unordered_map<PredicateVar, Predicate> _predicateHash;
     std::unordered_map<Variable, pair<std::string, vector<Type>>> _variableHash;
     std::unordered_map<PreconditionStmt, std::vector<Predicate>> _precondHash;
     std::unordered_map<EffectStmt, Effect> _effectHash;
     std::unordered_map<ActionStmt, Action> _actionstmtHash;
+    std::unordered_map<Keyword, std::string> _keywordHash;
 
     std::unordered_map<std::string, Type> _types;
     std::unordered_map<std::string, Predicate> _predicates;
@@ -35,10 +51,6 @@ class TraversePDDLDomain : public PDDLVisitor {
     std::set<std::string> _requirements;
     Domain* domain = nullptr;
     Type _objectType = Type("object", nullptr);
-
-    std::string get_in(void* node) { return _nodeHash[node]; }
-
-    void set_in(void* node, std::string val) { _nodeHash[node] = val; }
 
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
@@ -142,7 +154,7 @@ class TraversePDDLDomain : public PDDLVisitor {
     void visit_keyword(Keyword* node) {
         /* Visits a PDDL keyword. */
         /* Nothing to do but to store its name in the node. */
-        set_in(node, node->name);
+        _keywordHash[*node] = node->name;
     }
 
     void visit_predicates_stmt(PredicatesStmt* node) {
@@ -345,8 +357,7 @@ class TraversePDDLDomain : public PDDLVisitor {
 class TraversePDDLProblem : public PDDLVisitor {
    private:
     Domain _domain;
-    Problem _problemDef;
-    std::unordered_map<void*, std::string> _nodeHash;
+    Problem* _problemDef;
     std::unordered_map<PredicateInstance, Predicate> _predicateHash;
     std::unordered_map<InitStmt, std::vector<Predicate>> _initHash;
     std::unordered_map<GoalStmt, std::vector<Predicate>> _goalHash;
@@ -380,7 +391,7 @@ class TraversePDDLProblem : public PDDLVisitor {
 
         // Create the problem data structure.
         _problemDef =
-            Problem(node->name, _domain, _objects, init_list, goal_list);
+            new Problem(node->name, _domain, _objects, init_list, goal_list);
     }
 
     void visit_object(Object* node) {

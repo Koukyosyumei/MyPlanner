@@ -21,6 +21,9 @@ class Type {
         : name(name_), parent(parent_) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
     }
+    bool operator==(const Type & other) const {
+        return name == other.name && parent == other.parent;
+    }
 
     string name;
     string parent;
