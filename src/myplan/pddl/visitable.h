@@ -143,7 +143,7 @@ class Keyword : public Visitable {
     std::string _visitorName;
     std::string name;
 };
-bool operator==(const Keyword& lhs, const Keyword& rhs) {
+inline bool operator==(const Keyword& lhs, const Keyword& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name;
 }
 
@@ -171,7 +171,7 @@ class Variable : public Visitable {
     bool typed;
     std::vector<std::string> types;
 };
-bool operator==(const Variable& lhs, const Variable& rhs) {
+inline bool operator==(const Variable& lhs, const Variable& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name &&
            lhs.typed == rhs.typed;
 }
@@ -185,7 +185,7 @@ class PredicateVar : public Visitable {
     std::string name;
     std::vector<Variable> parameters;
 };
-bool operator==(const PredicateVar& lhs, const PredicateVar& rhs) {
+inline bool operator==(const PredicateVar& lhs, const PredicateVar& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name;
 }
 
@@ -204,7 +204,7 @@ class PredicateInstance : public Visitable {
     std::string name;
     std::vector<std::string> parameters;
 };
-bool operator==(const PredicateInstance& lhs, const PredicateInstance& rhs) {
+inline bool operator==(const PredicateInstance& lhs, const PredicateInstance& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name;
 }
 
@@ -250,7 +250,7 @@ class Formula : public Visitable {
     std::vector<Formula> children;
     FormulaType type;
 };
-bool operator==(const Formula& lhs, const Formula& rhs) {
+inline bool operator==(const Formula& lhs, const Formula& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.key == rhs.key &&
            lhs.type == rhs.type;
 }
@@ -266,7 +266,7 @@ class PreconditionStmt : public Visitable {
     std::string _visitorName;
     Formula formula;
 };
-bool operator==(const PreconditionStmt& lhs, const PreconditionStmt& rhs) {
+inline bool operator==(const PreconditionStmt& lhs, const PreconditionStmt& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.formula == rhs.formula;
 }
 
@@ -281,7 +281,7 @@ class EffectStmt : public Visitable {
     std::string _visitorName;
     Formula formula;
 };
-bool operator==(const EffectStmt& lhs, const EffectStmt& rhs) {
+inline bool operator==(const EffectStmt& lhs, const EffectStmt& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.formula == rhs.formula;
 }
 
@@ -312,7 +312,7 @@ class ActionStmt : public Visitable {
     PreconditionStmt precond;
     EffectStmt effect;
 };
-bool operator==(const ActionStmt& lhs, const ActionStmt& rhs) {
+inline bool operator==(const ActionStmt& lhs, const ActionStmt& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.name == rhs.name &&
            lhs.precond == rhs.precond && lhs.effect == rhs.effect;
 }
@@ -353,7 +353,7 @@ class InitStmt : public Visitable {
     std::vector<PredicateInstance> predicates;
 };
 
-bool operator==(const InitStmt& lhs, const InitStmt& rhs) {
+inline bool operator==(const InitStmt& lhs, const InitStmt& rhs) {
     if (lhs._visitorName != rhs._visitorName) {
         return false;
     }
@@ -376,7 +376,7 @@ class GoalStmt : public Visitable {
     std::string _visitorName;
     Formula formula;
 };
-bool operator==(const GoalStmt& lhs, const GoalStmt& rhs) {
+inline bool operator==(const GoalStmt& lhs, const GoalStmt& rhs) {
     return lhs._visitorName == rhs._visitorName && lhs.formula == rhs.formula;
 }
 
