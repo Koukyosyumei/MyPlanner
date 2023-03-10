@@ -47,6 +47,19 @@ struct hash<PredicateVar> {
 };
 
 template <>
+struct hash<PredicateInstance> {
+    size_t operator()(const PredicateInstance& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge._visitorName);
+        auto d_hash = hash<std::string>()(hoge.name);
+
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+};
+
+template <>
 struct hash<Keyword> {
     size_t operator()(const Keyword& hoge) const {
         size_t seed = 0;
