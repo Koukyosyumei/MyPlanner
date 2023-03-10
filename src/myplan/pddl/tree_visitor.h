@@ -195,7 +195,7 @@ class TraversePDDLDomain : public PDDLVisitor {
     std::unordered_map<std::string, Type> _constants;
     std::set<std::string> _requirements;
     Domain* domain = nullptr;
-    Type _objectType = Type("object", nullptr);
+    Type _objectType = Type("object", "<NULL>");
 
     void visit_domain_def(DomainDef* node) override {
         bool explicitObjectDef = false;
