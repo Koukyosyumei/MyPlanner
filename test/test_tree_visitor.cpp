@@ -13,36 +13,38 @@
 #include "myplan/pddl/lisp_parser.h"
 #include "myplan/pddl/parser.h"
 
-TEST(parser_pddl_tree_visitor, PDDLVisitor) {
-    std::string domain_input =
-        "(define (domain BLOCKS) "
-        "(:requirements :strips :typing) (:types block) (:predicates (on ?x - "
-        "block ?y - block) (ontable ?x - block) (clear ?x - block) (handempty) "
-        "(holding ?x - block) ) (:constants horst block1 block2 - block) "
-        "(:action pick-up :parameters (?x - block) :precondition (and (clear "
-        "?x) (ontable ?x) (handempty)) :effect (and (not (ontable ?x)) (not "
-        "(clear ?x)) (not (handempty)) (holding ?x))) (:action put-down "
-        ":parameters (?x - block) :precondition (holding ?x) :effect (and (not "
-        "(holding ?x)) (clear ?x) (handempty) (ontable ?x))) (:action stack "
-        ":parameters (?x - block ?y - block) :precondition (and (holding ?x) "
-        "(clear ?y)) :effect (and (not (holding ?x)) (not (clear ?y)) (clear "
-        "?x) (handempty) (on ?x ?y))) (:action unstack :parameters (?x - block "
-        "?y - block) :precondition (and (on ?x ?y) (clear ?x) (handempty)) "
-        ":effect (and (holding ?x) (clear ?y) (not (clear ?x)) (not "
-        "(handempty)) (not (on ?x ?y)))))";
+std::string domain_input =
+    "(define (domain BLOCKS) "
+    "(:requirements :strips :typing) (:types block) (:predicates (on ?x - "
+    "block ?y - block) (ontable ?x - block) (clear ?x - block) (handempty) "
+    "(holding ?x - block) ) (:constants horst block1 block2 - block) "
+    "(:action pick-up :parameters (?x - block) :precondition (and (clear "
+    "?x) (ontable ?x) (handempty)) :effect (and (not (ontable ?x)) (not "
+    "(clear ?x)) (not (handempty)) (holding ?x))) (:action put-down "
+    ":parameters (?x - block) :precondition (holding ?x) :effect (and (not "
+    "(holding ?x)) (clear ?x) (handempty) (ontable ?x))) (:action stack "
+    ":parameters (?x - block ?y - block) :precondition (and (holding ?x) "
+    "(clear ?y)) :effect (and (not (holding ?x)) (not (clear ?y)) (clear "
+    "?x) (handempty) (on ?x ?y))) (:action unstack :parameters (?x - block "
+    "?y - block) :precondition (and (on ?x ?y) (clear ?x) (handempty)) "
+    ":effect (and (holding ?x) (clear ?y) (not (clear ?x)) (not "
+    "(handempty)) (not (on ?x ?y)))))";
 
-    std::string problem_input =
-        "(define (problem BLOCKS-5-0) (:domain BLOCKS) (:objects B E A C D - "
-        "block) (:INIT (CLEAR D) (CLEAR C) (ONTABLE D) (ONTABLE A) (ON C E) "
-        "(ON E B) (ON B A) (HANDEMPTY)) (:goal (AND (ON A E) (ON E B) (ON B D) "
-        "(ON D C))) )";
+std::string problem_input =
+    "(define (problem BLOCKS-5-0) (:domain BLOCKS) (:objects B E A C D - "
+    "block) (:INIT (CLEAR D) (CLEAR C) (ONTABLE D) (ONTABLE A) (ON C E) "
+    "(ON E B) (ON B A) (HANDEMPTY)) (:goal (AND (ON A E) (ON E B) (ON B D) "
+    "(ON D C))) )";
 
-    Parser _parser = Parser("");
+Parser _parser = Parser("");
+Domain _domain;
+Problem _problem;
+
+TEST(tree_visitor, ActionsSetAndParameters) {
     _parser.domInput = domain_input;
     _parser.probInput = problem_input;
-
-    Domain _domain = _parser.parse_domain(false);
-    Problem _problem = _parser.parse_problem(_domain, false);
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test action set & parameters
     std::unordered_set<std::string> test_us = {"pick-up", "put-down", "stack",
@@ -57,6 +59,13 @@ TEST(parser_pddl_tree_visitor, PDDLVisitor) {
         }
     }
     ASSERT_EQ(tmp_cnt_0, 6);
+}
+
+TEST(tree_visitor, ActionPrecondition) {
+    _parser.domInput = domain_input;
+    _parser.probInput = problem_input;
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test action precondition
     std::unordered_set<std::string> test_precond_names = {
@@ -72,6 +81,13 @@ TEST(parser_pddl_tree_visitor, PDDLVisitor) {
         }
     }
     ASSERT_EQ(precond_names.size(), test_precond_names.size());
+}
+
+TEST(tree_visitor, ActionEffect) {
+    _parser.domInput = domain_input;
+    _parser.probInput = problem_input;
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test action effects
     std::vector<std::string> all_effects_add = {
@@ -99,9 +115,23 @@ TEST(parser_pddl_tree_visitor, PDDLVisitor) {
     }
     ASSERT_EQ(tmp_cnt_2, all_effects_add.size());
     ASSERT_EQ(tmp_cnt_3, all_effects_del.size());
+}
+
+TEST(tree_visitor, DomainName) {
+    _parser.domInput = domain_input;
+    _parser.probInput = problem_input;
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test action domain name
     ASSERT_EQ(_domain.name, "blocks");
+}
+
+TEST(tree_visitor, Predicates) {
+    _parser.domInput = domain_input;
+    _parser.probInput = problem_input;
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test actino predicates
     std::unordered_set<std::string> test_pred_names = {"on", "ontable", "clear",
@@ -114,6 +144,13 @@ TEST(parser_pddl_tree_visitor, PDDLVisitor) {
         }
     }
     ASSERT_EQ(pred_names, test_pred_names);
+}
+
+TEST(tree_visitor, Constatns) {
+    _parser.domInput = domain_input;
+    _parser.probInput = problem_input;
+    _domain = _parser.parse_domain(false);
+    _problem = _parser.parse_problem(_domain, false);
 
     // test constants
     std::unordered_set<std::string> test_constants_key = {"horst", "block1",
