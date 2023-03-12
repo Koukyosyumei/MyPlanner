@@ -58,21 +58,3 @@ TEST(OperatorTest, Successors) {
     ASSERT_TRUE(task1.goal_reached({"var1", "var2"}));
 }
 
-/*
-TEST(OperatorTest, ApplicationTest2) {
-    std::unordered_set<std::string> s1{"var1"};
-    std::unordered_set<std::string> s2{"var2"};
-    std::unordered_set<std::string> s3{"var1", "var2"};
-    Operator op1("op1", {"var1"}, {"var2"}, {});
-    EXPECT_THROW(op1.apply(s2), std::logic_error);
-}
-
-TEST(OperatorTest, ApplicationTest3) {
-    std::unordered_set<std::string> s1{"var1"};
-    std::unordered_set<std::string> s2{"var2"};
-    std::unordered_set<std::string> s3{"var1", "var2"};
-    Operator op4("op1", {"var1"}, {"var2"}, {"var2"});
-    ASSERT_EQ(op4.apply(s1), s3);
-}
-*/
-

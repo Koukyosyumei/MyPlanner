@@ -13,18 +13,14 @@ class DummyTask : public BaseTask {
     }
 
     bool goal_reached(std::unordered_set<std::string> state) override {
-        std::cout << "reached is : " << (goals == state) << std::endl;
         return goals == state;
     }
 
     std::vector<std::pair<Operator, std::unordered_set<std::string>>>
     get_successor_states(std::unordered_set<std::string> state) override {
-        std::cout << "start suc sta" << std::endl;
         std::vector<std::pair<Operator, std::unordered_set<std::string>>>
             succesors;
-        std::cout << "size of given state is " << state.size() << std::endl;
         for (std::string s : state) {
-            std::cout << s << " ";
             if (0 < std::stoi(s)) {
                 std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) - 1)};
@@ -44,15 +40,14 @@ class DummyTask : public BaseTask {
                     std::make_pair(Operator("add1", {}, {}, {}), tmp_u));
             }
         }
-        std::cout << "size of suc: " << succesors.size() << std::endl;
         return succesors;
     }
 };
 
-inline DummyTask get_simple_space() {
+inline DummyTask get_simple_search_space() {
     return DummyTask("5+2+2+1", {"5"}, {"10"});
 }
-inline DummyTask get_simple_space2() {
+inline DummyTask get_simple_search_space2() {
     return DummyTask("5-1-1-1-1", {"5"}, {"1"});
 }
 inline DummyTask get_search_space_at_goal() {

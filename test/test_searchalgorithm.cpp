@@ -20,7 +20,13 @@ TEST(breadth_first, SearchNoSolution) {
 }
 
 TEST(breadth_first, SearchThreeStep) {
-    DummyTask task = get_simple_space();
+    DummyTask task = get_simple_search_space();
     std::vector<std::string> solution = breadth_first_search(task);
     ASSERT_EQ(solution.size(), 3);
+}
+
+TEST(breadth_first, SearchFourStep) {
+    DummyTask task = get_simple_search_space2();
+    std::vector<std::string> solution = breadth_first_search(task);
+    ASSERT_EQ(solution.size(), 4);
 }
