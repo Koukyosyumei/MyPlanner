@@ -12,3 +12,15 @@ TEST(breadth_first, SearchAtGoal) {
     std::vector<std::string> solution = breadth_first_search(task);
     ASSERT_EQ(solution.size(), 0);
 }
+
+TEST(breadth_first, SearchNoSolution) {
+    DummyTask task = get_search_no_solution();
+    std::vector<std::string> solution = breadth_first_search(task);
+    ASSERT_EQ(solution.size(), 0);
+}
+
+TEST(breadth_first, SearchThreeStep) {
+    DummyTask task = get_simple_space();
+    std::vector<std::string> solution = breadth_first_search(task);
+    ASSERT_EQ(solution.size(), 3);
+}

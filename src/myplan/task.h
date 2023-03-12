@@ -109,7 +109,20 @@ struct hash<Operator> {
 };
 }  // namespace std
 
-class Task {
+class BaseTask {
+   public:
+    std::string name;
+    std::unordered_set<std::string> facts;
+    std::unordered_set<std::string> initial_state;
+    std::unordered_set<std::string> goals;
+    std::vector<Operator> operators;
+
+    virtual bool goal_reached(std::unordered_set<std::string> state) = 0;
+    virtual std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+    get_successor_states(std::unordered_set<std::string> state) = 0;
+};
+
+class Task : public BaseTask {
     /*
     A STRIPS planning task
     */
@@ -130,7 +143,7 @@ class Task {
           goals(goals),
           operators(operators) {}
 
-    bool goal_reached(std::unordered_set<std::string> state) {
+    bool goal_reached(std::unordered_set<std::string> state) override {
         /*
         The goal has been reached if all facts that are true in "goals"
         are true in "state".
@@ -145,7 +158,7 @@ class Task {
     }
 
     std::vector<std::pair<Operator, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string> state) {
+    get_successor_states(std::unordered_set<std::string> state) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied

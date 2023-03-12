@@ -1,14 +1,14 @@
 #pragma once
 #include <algorithm>
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 class SearchNode {
    public:
-    // Constructor
-    SearchNode(std::string state, SearchNode* parent, std::string action,
-               int g)
+    // Constructo
+    SearchNode() {}
+    SearchNode(std::string state, SearchNode* parent, std::string action, int g)
         : state(state), parent(parent), action(action), g(g) {}
 
     // Extract the solution from the search space
@@ -16,6 +16,7 @@ class SearchNode {
         std::vector<std::string> solution;
         SearchNode* node = this;
         while (node->parent != nullptr) {
+            // std::cout << node->action << std::endl;
             solution.push_back(node->action);
             node = node->parent;
         }
@@ -36,7 +37,7 @@ inline SearchNode make_root_node(std::string initial_state) {
 
 // Construct a new search node linked to a parent node
 inline SearchNode make_child_node(SearchNode* parent_node, std::string action,
-                           std::string state) {
+                                  std::string state) {
     return SearchNode(state, parent_node, action, parent_node->g + 1);
 }
 

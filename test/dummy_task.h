@@ -3,7 +3,7 @@
 
 #include "myplan/task.h"
 
-class DummyTask : public Task {
+class DummyTask : public BaseTask {
    public:
     DummyTask(std::string name, std::unordered_set<std::string> initial_state,
               std::unordered_set<std::string> goals) {
@@ -12,15 +12,19 @@ class DummyTask : public Task {
         this->goals = goals;
     }
 
-    bool goal_reached(std::unordered_set<std::string> state) {
+    bool goal_reached(std::unordered_set<std::string> state) override {
+        std::cout << "reached is : " << (goals == state) << std::endl;
         return goals == state;
     }
 
     std::vector<std::pair<Operator, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string> state) {
+    get_successor_states(std::unordered_set<std::string> state) override {
+        std::cout << "start suc sta" << std::endl;
         std::vector<std::pair<Operator, std::unordered_set<std::string>>>
             succesors;
+        std::cout << "size of given state is " << state.size() << std::endl;
         for (std::string s : state) {
+            std::cout << s << " ";
             if (0 < std::stoi(s)) {
                 std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) - 1)};
@@ -40,6 +44,7 @@ class DummyTask : public Task {
                     std::make_pair(Operator("add1", {}, {}, {}), tmp_u));
             }
         }
+        std::cout << "size of suc: " << succesors.size() << std::endl;
         return succesors;
     }
 };
