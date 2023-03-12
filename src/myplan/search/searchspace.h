@@ -1,3 +1,4 @@
+#pragma once
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -29,12 +30,12 @@ class SearchNode {
 };
 
 // Construct an initial search node
-SearchNode make_root_node(std::string initial_state) {
+inline SearchNode make_root_node(std::string initial_state) {
     return SearchNode(initial_state, nullptr, "", 0);
 }
 
 // Construct a new search node linked to a parent node
-SearchNode make_child_node(SearchNode* parent_node, std::string action,
+inline SearchNode make_child_node(SearchNode* parent_node, std::string action,
                            std::string state) {
     return SearchNode(state, parent_node, action, parent_node->g + 1);
 }

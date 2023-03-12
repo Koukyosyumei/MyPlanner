@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "myplan/search/searchspace.cpp"
+#include "myplan/search/searchspace.h"
 
 SearchNode root = make_root_node("state1");
 SearchNode child1 = make_child_node(&root, "action1", "state2");

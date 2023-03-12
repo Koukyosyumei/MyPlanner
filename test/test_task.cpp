@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_set>
 
-#include "myplan/task.cpp"
+#include "myplan/task.h"
 
 TEST(OperatorTest, Applicable) {
     std::unordered_set<std::string> s1 = {"var1"};

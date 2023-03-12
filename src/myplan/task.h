@@ -120,6 +120,7 @@ class Task {
     std::unordered_set<std::string> goals;
     std::vector<Operator> operators;
 
+    Task() {}
     Task(std::string name, std::unordered_set<std::string> facts,
          std::unordered_set<std::string> initial_state,
          std::unordered_set<std::string> goals, std::vector<Operator> operators)
