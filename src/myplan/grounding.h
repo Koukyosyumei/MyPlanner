@@ -16,9 +16,9 @@
 
 using namespace std;
 
-std::vector<Operator> relevance_analysis(
-    const std::vector<Operator>& operators,
-    const std::unordered_set<std::string>& goals, bool verbose_logging) {
+std::vector<Operator> relevance_analysis(std::vector<Operator>& operators,
+                                         std::unordered_set<std::string>& goals,
+                                         bool verbose_logging) {
     /* This implements a relevance analysis of operators.
      * We start with all facts within the goal and iteratively compute
      * a fixpoint of all relevant effects.
@@ -61,7 +61,7 @@ std::vector<Operator> relevance_analysis(
 
     // delete all irrelevant effects
     std::unordered_set<Operator> del_operators;
-    for (const auto& op : operators) {
+    for (auto& op : operators) {
         // calculate new effects
         std::set<std::string> new_addlist;
         std::set_intersection(op.add_effects.begin(), op.add_effects.end(),
@@ -232,6 +232,80 @@ unordered_set<string> _get_partial_state(const vector<Predicate>& atoms) {
     return partial_state;
 }
 
+bool _find_pred_in_init(string pred_name, string param, int sig_pos,
+                        std::unordered_set<std::string> init) {
+    /*
+    This method is used to check whether an instantiation of the predicate
+    denoted by pred_name with the parameter param at position sig_pos is
+    present in the initial condition.
+    Useful to evaluate static preconditions efficiently.
+    */
+    regex match_init;
+    if (sig_pos == 0) {
+        match_init = regex("\\(" + pred_name + " " + param + ".*");
+    } else {
+        string reg_ex = "\\(" + pred_name + "\\s+";
+        for (int i = 0; i < sig_pos; i++) {
+            reg_ex += "[\\w\\d-]+\\s+";
+        }
+        reg_ex += param + ".*";
+        match_init = regex(reg_ex);
+    }
+    for (string str : init) {
+        if (regex_match(str, match_init)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Operator* _create_operator(
+    Action* action, std::unordered_map<std::string, std::string>& assignment,
+    std::unordered_set<std::string>& statics,
+    std::unordered_set<std::string>& init) {
+    std::unordered_set<std::string> precondition_facts;
+    for (Predicate precondition : action->precondition) {
+        std::string fact = _ground_atom(precondition, assignment);
+        std::string predicate_name = precondition.name;
+        if (statics.count(predicate_name) > 0) {
+            // Check if this precondition is false in the initial state
+            if (init.count(fact) == 0) {
+                // This precondition is never true -> Don't add operator
+                return nullptr;
+            }
+        } else {
+            // This precondition is not always true -> Add it
+            precondition_facts.insert(fact);
+        }
+    }
+
+    std::unordered_set<std::string> add_effects =
+        _ground_atoms(action->effect.addlist, assignment);
+    std::unordered_set<std::string> del_effects =
+        _ground_atoms(action->effect.dellist, assignment);
+    // If the same fact is added and deleted by an operator the STRIPS formalism
+    // adds it.
+    for (std::string fact : add_effects) {
+        if (del_effects.count(fact) > 0) {
+            del_effects.erase(fact);
+        }
+    }
+    // If a fact is present in the precondition, we do not have to add it.
+    // Note that if a fact is in the delete and in the add effects,
+    // it has already been deleted in the previous step.
+    for (std::string fact : precondition_facts) {
+        if (add_effects.count(fact) > 0) {
+            add_effects.erase(fact);
+        }
+    }
+    std::vector<std::string> args;
+    for (auto& [name, types] : action->signature) {
+        args.push_back(assignment[name]);
+    }
+    std::string name = _get_grounded_string(action->name, args);
+    return new Operator(name, precondition_facts, add_effects, del_effects);
+}
+
 std::vector<Operator> _ground_action(Action action, TypeMap type_map,
                                      std::vector<std::string> statics,
                                      std::unordered_set<std::string> init) {
@@ -316,7 +390,7 @@ std::vector<Operator> _ground_action(Action action, TypeMap type_map,
 
 std::vector<Operator> _ground_actions(
     std::vector<Action> actions,
-    std::unordered_map<Type, std::vector<std::string>>,
+    std::unordered_map<Type, std::vector<std::string>> type_map,
     std::vector<string> statics, std::unordered_set<std::string> init) {
     /*
     Ground a list of actions and return the resulting list of operators.
@@ -334,100 +408,6 @@ std::vector<Operator> _ground_actions(
         operators.insert(operators.end(), op_list.begin(), op_list.end());
     }
     return operators;
-}
-
-bool _find_pred_in_init(string pred_name, string param, int sig_pos,
-                        std::unordered_set<std::string> init) {
-    /*
-    This method is used to check whether an instantiation of the predicate
-    denoted by pred_name with the parameter param at position sig_pos is
-    present in the initial condition.
-    Useful to evaluate static preconditions efficiently.
-    */
-    regex match_init;
-    if (sig_pos == 0) {
-        match_init = regex("\\(" + pred_name + " " + param + ".*");
-    } else {
-        string reg_ex = "\\(" + pred_name + "\\s+";
-        for (int i = 0; i < sig_pos; i++) {
-            reg_ex += "[\\w\\d-]+\\s+";
-        }
-        reg_ex += param + ".*";
-        match_init = regex(reg_ex);
-    }
-    for (string str : init) {
-        if (regex_match(str, match_init)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-Operator* _create_operator(
-    Action* action, std::unordered_map<std::string, std::string>& assignment,
-    std::unordered_set<std::string>& statics,
-    std::unordered_set<std::string>& init) {
-    std::unordered_set<std::string> precondition_facts;
-    for (Predicate precondition : action->precondition) {
-        std::string fact = _ground_atom(precondition, assignment);
-        std::string predicate_name = precondition.name;
-        if (statics.count(predicate_name) > 0) {
-            // Check if this precondition is false in the initial state
-            if (init.count(fact) == 0) {
-                // This precondition is never true -> Don't add operator
-                return nullptr;
-            }
-        } else {
-            // This precondition is not always true -> Add it
-            precondition_facts.insert(fact);
-        }
-    }
-
-    std::unordered_set<std::string> add_effects =
-        _ground_atoms(action->effect.addlist, assignment);
-    std::unordered_set<std::string> del_effects =
-        _ground_atoms(action->effect.dellist, assignment);
-    // If the same fact is added and deleted by an operator the STRIPS formalism
-    // adds it.
-    for (std::string fact : add_effects) {
-        if (del_effects.count(fact) > 0) {
-            del_effects.erase(fact);
-        }
-    }
-    // If a fact is present in the precondition, we do not have to add it.
-    // Note that if a fact is in the delete and in the add effects,
-    // it has already been deleted in the previous step.
-    for (std::string fact : precondition_facts) {
-        if (add_effects.count(fact) > 0) {
-            add_effects.erase(fact);
-        }
-    }
-    std::vector<std::string> args;
-    for (auto& [name, types] : action->signature) {
-        args.push_back(assignment[name]);
-    }
-    std::string name = _get_grounded_string(action->name, args);
-    return new Operator(name, precondition_facts, add_effects, del_effects);
-}
-
-// Helper function to find predicate in initial state
-bool _find_pred_in_init(const string& pred_name, const string& obj_name,
-                        int sig_pos, const unordered_set<string>& init) {
-    for (auto fact : init) {
-        if (fact.find(pred_name) != string::npos) {
-            // predicate name is in the fact
-            vector<string> tokens;
-            // istringstream iss(fact);
-            for (string token; iss >> token;) {
-                tokens.push_back(token);
-            }
-            if (tokens[sig_pos + 1] == obj_name) {
-                // the predicate is instantiated with obj_name
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 Task ground(const Problem& problem,
