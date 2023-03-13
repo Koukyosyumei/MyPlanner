@@ -47,6 +47,7 @@ class Predicate {
     vector<pair<string, vector<Type>>> signature;
 
     bool operator<(const Predicate& rhs) const { return name < rhs.name; }
+    bool operator==(const Predicate& rhs) const { return name == rhs.name; }
 };
 
 class Effect {
