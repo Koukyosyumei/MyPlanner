@@ -105,8 +105,9 @@ inline std::vector<Operator> relevance_analysis(
     return new_operators;
 }
 
-std::vector<std::string> _get_statics(const std::vector<Predicate>& predicates,
-                                      const std::vector<Action>& actions) {
+inline std::vector<std::string> _get_statics(
+    const std::vector<Predicate>& predicates,
+    const std::vector<Action>& actions) {
     std::vector<std::unordered_set<Predicate>> effects;
     std::transform(actions.begin(), actions.end(), back_inserter(effects),
                    [](const Action& a) {
@@ -138,19 +139,24 @@ std::vector<std::string> _get_statics(const std::vector<Predicate>& predicates,
     return statics;
 }
 
-std::unordered_map<Type, std::vector<std::string>> _create_type_map(
+inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
     const std::unordered_map<std::string, Type> objects) {
     std::unordered_map<Type, std::vector<std::string>> type_map;
     for (const auto& obj : objects) {
         std::string object_name = obj.first;
         Type object_type = obj.second;
         Type* parent_type = object_type.parent_ptr;
-
         while (true) {
-            type_map[object_type].push_back(object_name);
-            object_type = *parent_type;
+            if (type_map.find(object_type) != type_map.end()) {
+                type_map[object_type].push_back(object_name);
+            } else {
+                type_map.insert({object_type, {object_name}});
+            }
             if (object_type.parent_ptr != nullptr) {
-                parent_type = object_type.parent_ptr;
+                auto next_parent_type = object_type.parent_ptr;
+                auto next_object_type = *parent_type;
+                object_type = next_object_type;
+                parent_type = next_parent_type;
             } else {
                 break;
             }
@@ -159,7 +165,7 @@ std::unordered_map<Type, std::vector<std::string>> _create_type_map(
     return type_map;
 }
 
-std::unordered_set<std::string> _collect_facts(
+inline std::unordered_set<std::string> _collect_facts(
     std::vector<Operator>& operators) {
     /*
     Collect all facts from grounded operators (precondition, add
