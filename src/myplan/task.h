@@ -11,19 +11,17 @@ using namespace std;
 class Operator {
    public:
     string name;
-    unordered_set<string> preconditions;
-    unordered_set<string> add_effects;
-    unordered_set<string> del_effects;
+    set<string> preconditions;
+    set<string> add_effects;
+    set<string> del_effects;
 
     Operator(string name, vector<string> preconditions,
              vector<string> add_effects, vector<string> del_effects) {
         this->name = name;
         this->preconditions =
-            unordered_set<string>(preconditions.begin(), preconditions.end());
-        this->add_effects =
-            unordered_set<string>(add_effects.begin(), add_effects.end());
-        this->del_effects =
-            unordered_set<string>(del_effects.begin(), del_effects.end());
+            set<string>(preconditions.begin(), preconditions.end());
+        this->add_effects = set<string>(add_effects.begin(), add_effects.end());
+        this->del_effects = set<string>(del_effects.begin(), del_effects.end());
     }
 
     bool applicable(const unordered_set<string>& state) {
@@ -62,12 +60,12 @@ class Operator {
 
     string str() const {
         string s = name + "\n";
-        vector<pair<string, unordered_set<string>>> tmp_vec = {
+        vector<pair<string, set<string>>> tmp_vec = {
             make_pair("PRE", preconditions), make_pair("ADD", add_effects),
             make_pair("DEL", del_effects)};
         for (auto tmp : tmp_vec) {
             string group = tmp.first;
-            unordered_set<string> facts = tmp.second;
+            set<string> facts = tmp.second;
             for (const string& fact : facts) {
                 s += "  " + group + ": " + fact + "\n";
             }
@@ -96,14 +94,14 @@ struct hash<Operator> {
     size_t operator()(const Operator& op) const {
         size_t seed = 0;
         auto hash_1 = hash<std::string>()(op.name);
-        auto hash_2 = hash<std::unordered_set<std::string>>()(op.preconditions);
-        auto hash_3 = hash<std::unordered_set<std::string>>()(op.add_effects);
-        auto hash_4 = hash<std::unordered_set<std::string>>()(op.del_effects);
+        // auto hash_2 = hash<std::set<std::string>>()(op.preconditions);
+        // auto hash_3 = hash<std::set<std::string>>()(op.add_effects);
+        // auto hash_4 = hash<std::set<std::string>>()(op.del_effects);
 
         seed ^= hash_1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= hash_2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= hash_3 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= hash_4 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= hash_2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= hash_3 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= hash_4 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         return seed;
     }
 };

@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -16,6 +17,13 @@ class Type {
             parent = parents_[0];
         }
     }
+    Type(string name_, Type* parent_ptr_)
+        : name(name_), parent_ptr(parent_ptr_) {
+        if (parent_ptr != nullptr) {
+            name = parent_ptr->name;
+            transform(name.begin(), name.end(), name.begin(), ::tolower);
+        }
+    }
     Type(string name_ = "<NULL>", string parent_ = "<NULL>")
         : name(name_), parent(parent_) {
         transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -26,6 +34,7 @@ class Type {
 
     string name;
     string parent;
+    Type* parent_ptr;
 };
 
 class Predicate {

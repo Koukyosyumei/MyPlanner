@@ -177,6 +177,25 @@ struct hash<GoalStmt> {
     }
 };
 
+template <>
+struct hash<Predicate> {
+    size_t operator()(const Predicate& hoge) const {
+        size_t seed = 0;
+        auto n_hash = hash<std::string>()(hoge.name);
+        seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+        for (pair<std::string, std::vector<Type>> sp : hoge.signature) {
+            auto d_hash = hash<std::string>()(sp.first);
+            seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            for (Type t : sp.second) {
+                auto m_hash = hash<Type>()(t);
+                seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+        }
+        return seed;
+    }
+};
+
 }  // namespace std
 
 class TraversePDDLDomain : public PDDLVisitor {

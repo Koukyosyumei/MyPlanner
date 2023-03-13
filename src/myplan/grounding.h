@@ -1,13 +1,16 @@
+#pragma once
 #include <algorithm>
 #include <functional>
 #include <iterator>
 #include <map>
 #include <memory>
+#include <regex>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 #include "pddl/pddl.h"
+#include "pddl/tree_visitor.h"
 #include "pddl/visitable.h"
 #include "task.h"
 
@@ -15,15 +18,15 @@ using namespace std;
 
 std::vector<Operator> relevance_analysis(
     const std::vector<Operator>& operators,
-    const std::unordered_set<Predicate>& goals, bool verbose_logging) {
+    const std::unordered_set<std::string>& goals, bool verbose_logging) {
     /* This implements a relevance analysis of operators.
      * We start with all facts within the goal and iteratively compute
      * a fixpoint of all relevant effects.
      * Relevant effects are those that contribute to a valid path to the goal.
      */
     bool debug = true;
-    std::unordered_set<Predicate> relevant_facts;
-    std::unordered_set<Predicate> old_relevant_facts;
+    std::set<std::string> relevant_facts;
+    std::set<std::string> old_relevant_facts;
     std::unordered_set<Predicate> debug_pruned_op;
     bool changed = true;
     for (const auto& goal : goals) {
@@ -37,14 +40,20 @@ std::vector<Operator> relevance_analysis(
         old_relevant_facts = relevant_facts;
         // compute cut of relevant facts with effects of all operators
         for (const auto& op : operators) {
-            std::unordered_set<Predicate> new_addlist =
-                op.add_effects() & relevant_facts;
-            std::unordered_set<Predicate> new_dellist =
-                op.del_effects() & relevant_facts;
+            std::set<std::string> new_addlist;
+            std::set_intersection(
+                op.add_effects.begin(), op.add_effects.end(),
+                relevant_facts.begin(), relevant_facts.end(),
+                std::inserter(new_addlist, new_addlist.end()));
+            std::set<std::string> new_dellist;
+            std::set_intersection(
+                op.del_effects.begin(), op.del_effects.end(),
+                relevant_facts.begin(), relevant_facts.end(),
+                std::inserter(new_dellist, new_dellist.end()));
             if (!new_addlist.empty() || !new_dellist.empty()) {
                 // add all preconditions to relevant facts
-                relevant_facts.insert(op.preconditions().begin(),
-                                      op.preconditions().end());
+                relevant_facts.insert(op.preconditions.begin(),
+                                      op.preconditions.end());
             }
         }
         changed = old_relevant_facts != relevant_facts;
@@ -54,22 +63,26 @@ std::vector<Operator> relevance_analysis(
     std::unordered_set<Operator> del_operators;
     for (const auto& op : operators) {
         // calculate new effects
-        std::unordered_set<Predicate> new_addlist =
-            op.add_effects() & relevant_facts;
-        std::unordered_set<Predicate> new_dellist =
-            op.del_effects() & relevant_facts;
+        std::set<std::string> new_addlist;
+        std::set_intersection(op.add_effects.begin(), op.add_effects.end(),
+                              relevant_facts.begin(), relevant_facts.end(),
+                              std::inserter(new_addlist, new_addlist.end()));
+        std::set<std::string> new_dellist;
+        std::set_intersection(op.del_effects.begin(), op.del_effects.end(),
+                              relevant_facts.begin(), relevant_facts.end(),
+                              std::inserter(new_dellist, new_dellist.end()));
         if (debug) {
-            debug_pruned_op.insert(op.add_effects().begin(),
-                                   op.add_effects().end());
-            debug_pruned_op.insert(op.del_effects().begin(),
-                                   op.del_effects().end());
+            debug_pruned_op.insert(op.add_effects.begin(),
+                                   op.add_effects.end());
+            debug_pruned_op.insert(op.del_effects.begin(),
+                                   op.del_effects.end());
         }
         // store new effects
-        op.set_add_effects(new_addlist);
-        op.set_del_effects(new_dellist);
+        op.add_effects = new_addlist;
+        op.del_effects = new_dellist;
         if (new_addlist.empty() && new_dellist.empty()) {
             if (verbose_logging) {
-                std::cout << "Relevance analysis removed oparator " << op.name()
+                std::cout << "Relevance analysis removed oparator " << op.name
                           << std::endl;
             }
             del_operators.insert(op);
@@ -90,126 +103,138 @@ std::vector<Operator> relevance_analysis(
     return new_operators;
 }
 
-vector<Predicate> _get_statics(const vector<Predicate>& predicates,
-                               const vector<Action>& actions) {
-    vector<unordered_set<Predicate>> effects;
-    transform(actions.begin(), actions.end(), back_inserter(effects),
-              [](const Action& a) {
-                  return unordered_set<Predicate>{a.effect.addlist.begin(),
-                                                  a.effect.addlist.end()};
-              });
-    transform(actions.begin(), actions.end(), back_inserter(effects),
-              [](const Action& a) {
-                  return unordered_set<Predicate>{a.effect.dellist.begin(),
-                                                  a.effect.dellist.end()};
-              });
-    unordered_set<Predicate> flattened_effects;
+std::vector<Predicate> _get_statics(const std::vector<Predicate>& predicates,
+                                    const std::vector<Action>& actions) {
+    std::vector<std::unordered_set<Predicate>> effects;
+    std::transform(actions.begin(), actions.end(), back_inserter(effects),
+                   [](const Action& a) {
+                       return std::unordered_set<Predicate>{
+                           a.effect.addlist.begin(), a.effect.addlist.end()};
+                   });
+    std::transform(actions.begin(), actions.end(), back_inserter(effects),
+                   [](const Action& a) {
+                       return std::unordered_set<Predicate>{
+                           a.effect.dellist.begin(), a.effect.dellist.end()};
+                   });
+    std::unordered_set<Predicate> flattened_effects;
     for (const auto& es : effects) {
         flattened_effects.insert(es.begin(), es.end());
     }
 
     auto is_static = [&](const Predicate& pred) {
-        return none_of(
+        return std::none_of(
             flattened_effects.begin(), flattened_effects.end(),
             [&](const Predicate& eff) { return pred.name == eff.name; });
     };
 
-    vector<Predicate> statics;
-    copy_if(predicates.begin(), predicates.end(), back_inserter(statics),
-            is_static);
+    std::vector<Predicate> statics;
+    std::copy_if(predicates.begin(), predicates.end(), back_inserter(statics),
+                 is_static);
     return statics;
 }
 
-template <typename T>
-using TypeMap = map<shared_ptr<Type<T>>, unordered_set<Object>>;
-
-template <typename T>
-void put_object_in_type_map(Object obj, TypeMap<T>& type_map) {
-    shared_ptr<Type<T>> obj_type = obj.type;
-    while (obj_type) {
-        type_map[obj_type].insert(obj);
-        obj_type = obj_type->parent;
-    }
-}
-
-TypeMap<Object> _create_type_map(const vector<Object>& objects) {
-    TypeMap<Object> type_map;
+std::unordered_map<Type, std::vector<std::string>> _create_type_map(
+    const std::unordered_map<std::string, Type> objects) {
+    std::unordered_map<Type, std::vector<std::string>> type_map;
     for (const auto& obj : objects) {
-        put_object_in_type_map(obj, type_map);
+        std::string object_name = obj.first;
+        Type object_type = obj.second;
+        Type* parent_type = object_type.parent_ptr;
+
+        while (true) {
+            type_map[object_type].push_back(object_name);
+            object_type = *parent_type;
+            if (object_type.parent_ptr != nullptr) {
+                parent_type = object_type.parent_ptr;
+            } else {
+                break;
+            }
+        }
     }
     return type_map;
 }
 
-unordered_set<Predicate> _collect_facts(vector<Operator> operators) {
+std::unordered_set<std::string> _collect_facts(
+    std::vector<Operator>& operators) {
     /*
     Collect all facts from grounded operators (precondition, add
     effects and delete effects).
     */
-    unordered_set<Predicate> facts;
-    for (Operator op : operators) {
-        for (Predicate p : op.preconditions) {
+    std::unordered_set<std::string> facts;
+    for (Operator& op : operators) {
+        for (std::string p : op.preconditions) {
             facts.insert(p);
         }
-        for (Predicate p : op.add_effects) {
+        for (std::string p : op.add_effects) {
             facts.insert(p);
         }
-        for (Predicate p : op.del_effects) {
+        for (std::string p : op.del_effects) {
             facts.insert(p);
         }
     }
     return facts;
 }
 
-vector<GroundOperator> _ground_actions(vector<Action> actions, TypeMap type_map,
-                                       vector<string> statics, State init) {
-    /*
-    Ground a list of actions and return the resulting list of operators.
-    @param actions: List of actions
-    @param type_map: Mapping from type to objects of that type
-    @param statics: Names of the static predicates
-    @param init: Grounded initial state
-    */
-    vector<vector<GroundOperator>> op_lists;
-    for (Action action : actions) {
-        op_lists.push_back(_ground_action(action, type_map, statics, init));
+// Helper function to get grounded string
+std::string _get_grounded_string(std::string name,
+                                 std::vector<std::string> args) {
+    std::string args_string = "";
+    if (!args.empty()) {
+        args_string += " ";
+        for (auto arg : args) {
+            args_string += arg + " ";
+        }
     }
-    vector<GroundOperator> operators;
-    for (vector<GroundOperator> op_list : op_lists) {
-        operators.insert(operators.end(), op_list.begin(), op_list.end());
-    }
-    return operators;
+    return "(" + name + args_string + ")";
 }
 
-bool _find_pred_in_init(string pred_name, string param, int sig_pos,
-                        State init) {
-    /*
-    This method is used to check whether an instantiation of the predicate
-    denoted by pred_name with the parameter param at position sig_pos is
-    present in the initial condition.
-    Useful to evaluate static preconditions efficiently.
-    */
-    regex match_init;
-    if (sig_pos == 0) {
-        match_init = regex("\\(" + pred_name + " " + param + ".*");
-    } else {
-        string reg_ex = "\\(" + pred_name + "\\s+";
-        for (int i = 0; i < sig_pos; i++) {
-            reg_ex += "[\\w\\d-]+\\s+";
-        }
-        reg_ex += param + ".*";
-        match_init = regex(reg_ex);
-    }
-    for (string str : init) {
-        if (regex_match(str, match_init)) {
-            return true;
+// Helper function to ground atom
+std::string _ground_atom(
+    const Predicate& atom,
+    const std::unordered_map<std::string, std::string>& assignment) {
+    std::vector<std::string> names;
+    for (auto [name, types] : atom.signature) {
+        if (assignment.count(name)) {
+            names.push_back(assignment.at(name));
+        } else {
+            names.push_back(name);
         }
     }
-    return false;
+    return _get_grounded_string(atom.name, names);
+}
+
+// Helper function to ground atoms
+std::unordered_set<std::string> _ground_atoms(
+    const set<Predicate>& atoms,
+    const std::unordered_map<std::string, std::string>& assignment) {
+    std::unordered_set<std::string> grounded_atoms;
+    for (auto atom : atoms) {
+        grounded_atoms.insert(_ground_atom(atom, assignment));
+    }
+    return grounded_atoms;
+}
+
+// Helper function to get fact string
+std::string _get_fact(const Predicate& atom) {
+    std::vector<std::string> args;
+    for (auto [name, types] : atom.signature) {
+        args.push_back(name);
+    }
+    return _get_grounded_string(atom.name, args);
+}
+
+// Helper function to get partial state
+unordered_set<string> _get_partial_state(const vector<Predicate>& atoms) {
+    unordered_set<string> partial_state;
+    for (auto atom : atoms) {
+        partial_state.insert(_get_fact(atom));
+    }
+    return partial_state;
 }
 
 std::vector<Operator> _ground_action(Action action, TypeMap type_map,
                                      std::vector<std::string> statics,
-                                     std::vector<std::string> init) {
+                                     std::unordered_set<std::string> init) {
     std::vector<Operator> operators;
     std::unordered_map<std::string, std::unordered_set<std::string>>
         param_to_objects;
@@ -250,9 +275,9 @@ std::vector<Operator> _ground_action(Action action, TypeMap type_map,
                     std::unordered_set<std::string> obj_copy(objects);
                     for (auto& o : obj_copy) {
                         if (!_find_pred_in_init(pred.name, o, sig_pos, init)) {
-                            if (verbose_logging) {
-                                remove_debug++;
-                            }
+                            // if (verbose_logging) {
+                            //    remove_debug++;
+                            //}
                             objects.erase(o);
                         }
                     }
@@ -260,10 +285,10 @@ std::vector<Operator> _ground_action(Action action, TypeMap type_map,
             }
         }
     }
-    if (verbose_logging) {
-        std::cout << "Static precondition analysis removed " << remove_debug
-                  << " possible objects\n";
-    }
+    // if (verbose_logging) {
+    //     std::cout << "Static precondition analysis removed " << remove_debug
+    //               << " possible objects\n";
+    // }
 
     // save a list of possible assignment tuples (param_name, object)
     std::vector<std::vector<std::pair<std::string, std::string>>> domain_lists;
@@ -289,12 +314,61 @@ std::vector<Operator> _ground_action(Action action, TypeMap type_map,
     return operators;
 }
 
+std::vector<Operator> _ground_actions(
+    std::vector<Action> actions,
+    std::unordered_map<Type, std::vector<std::string>>,
+    std::vector<string> statics, std::unordered_set<std::string> init) {
+    /*
+    Ground a list of actions and return the resulting list of operators.
+    @param actions: List of actions
+    @param type_map: Mapping from type to objects of that type
+    @param statics: Names of the static predicates
+    @param init: Grounded initial state
+    */
+    std::vector<std::vector<Operator>> op_lists;
+    for (Action action : actions) {
+        op_lists.push_back(_ground_action(action, type_map, statics, init));
+    }
+    std::vector<Operator> operators;
+    for (std::vector<Operator> op_list : op_lists) {
+        operators.insert(operators.end(), op_list.begin(), op_list.end());
+    }
+    return operators;
+}
+
+bool _find_pred_in_init(string pred_name, string param, int sig_pos,
+                        std::unordered_set<std::string> init) {
+    /*
+    This method is used to check whether an instantiation of the predicate
+    denoted by pred_name with the parameter param at position sig_pos is
+    present in the initial condition.
+    Useful to evaluate static preconditions efficiently.
+    */
+    regex match_init;
+    if (sig_pos == 0) {
+        match_init = regex("\\(" + pred_name + " " + param + ".*");
+    } else {
+        string reg_ex = "\\(" + pred_name + "\\s+";
+        for (int i = 0; i < sig_pos; i++) {
+            reg_ex += "[\\w\\d-]+\\s+";
+        }
+        reg_ex += param + ".*";
+        match_init = regex(reg_ex);
+    }
+    for (string str : init) {
+        if (regex_match(str, match_init)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Operator* _create_operator(
     Action* action, std::unordered_map<std::string, std::string>& assignment,
     std::unordered_set<std::string>& statics,
     std::unordered_set<std::string>& init) {
     std::unordered_set<std::string> precondition_facts;
-    for (Atom precondition : action->precondition) {
+    for (Predicate precondition : action->precondition) {
         std::string fact = _ground_atom(precondition, assignment);
         std::string predicate_name = precondition.name;
         if (statics.count(predicate_name) > 0) {
@@ -336,69 +410,14 @@ Operator* _create_operator(
     return new Operator(name, precondition_facts, add_effects, del_effects);
 }
 
-// Helper function to get grounded string
-string get_grounded_string(string name, vector<string> args) {
-    string args_string = "";
-    if (!args.empty()) {
-        args_string += " ";
-        for (auto arg : args) {
-            args_string += arg + " ";
-        }
-    }
-    return "(" + name + args_string + ")";
-}
-
-// Helper function to ground atom
-string ground_atom(const Atom& atom,
-                   const unordered_map<string, string>& assignment) {
-    vector<string> names;
-    for (auto [name, types] : atom.signature) {
-        if (assignment.count(name)) {
-            names.push_back(assignment.at(name));
-        } else {
-            names.push_back(name);
-        }
-    }
-    return get_grounded_string(atom.name, names);
-}
-
-// Helper function to ground atoms
-unordered_set<string> ground_atoms(
-    const vector<Atom>& atoms,
-    const unordered_map<string, string>& assignment) {
-    unordered_set<string> grounded_atoms;
-    for (auto atom : atoms) {
-        grounded_atoms.insert(ground_atom(atom, assignment));
-    }
-    return grounded_atoms;
-}
-
-// Helper function to get fact string
-string get_fact(const Atom& atom) {
-    vector<string> args;
-    for (auto [name, types] : atom.signature) {
-        args.push_back(name);
-    }
-    return get_grounded_string(atom.name, args);
-}
-
-// Helper function to get partial state
-unordered_set<string> get_partial_state(const vector<Atom>& atoms) {
-    unordered_set<string> partial_state;
-    for (auto atom : atoms) {
-        partial_state.insert(get_fact(atom));
-    }
-    return partial_state;
-}
-
 // Helper function to find predicate in initial state
-bool find_pred_in_init(const string& pred_name, const string& obj_name,
-                       int sig_pos, const unordered_set<string>& init) {
+bool _find_pred_in_init(const string& pred_name, const string& obj_name,
+                        int sig_pos, const unordered_set<string>& init) {
     for (auto fact : init) {
         if (fact.find(pred_name) != string::npos) {
             // predicate name is in the fact
             vector<string> tokens;
-            istringstream iss(fact);
+            // istringstream iss(fact);
             for (string token; iss >> token;) {
                 tokens.push_back(token);
             }
@@ -415,34 +434,34 @@ Task ground(const Problem& problem,
             bool remove_statics_from_initial_state = true,
             bool remove_irrelevant_operators = true) {
     // Objects
-    Objects objects = problem.objects;
+    std::unordered_map<std::string, Type> objects = problem.objects;
     for (const auto& constant : problem.domain.constants) {
-        objects.insert(constant.second.begin(), constant.second.end());
+        objects.insert({constant.first, constant.second});
     }
 
     // Get the names of the static predicates
     auto statics =
-        get_statics(problem.domain.predicates, problem.domain.actions);
+        _get_statics(problem.domain.predicates, problem.domain.actions);
 
     // Create a map from types to objects
-    auto type_map = create_type_map(objects);
+    auto type_map = _create_type_map(objects);
 
     // Transform initial state into a specific state
-    auto init = get_partial_state(problem.initial_state);
+    auto init = _get_partial_state(problem.init);
 
     // Ground actions
     auto operators =
-        ground_actions(problem.domain.actions, type_map, statics, init);
+        _ground_actions(problem.domain.actions, type_map, statics, init);
 
     // Ground goal
     // TODO: Remove facts that can only become true and are true in the
     //       initial state
     // TODO: Return simple unsolvable problem if goal contains a fact that can
     //       only become false and is false in the initial state
-    auto goals = get_partial_state(problem.goal);
+    auto goals = _get_partial_state(problem.goal);
 
     // Collect facts from operators and include the ones from the goal
-    auto facts = collect_facts(operators);
+    auto facts = _collect_facts(operators);
     facts.insert(goals.begin(), goals.end());
 
     // Remove statics from initial state
