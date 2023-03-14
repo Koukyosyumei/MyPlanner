@@ -275,6 +275,13 @@ template <typename T>
 inline std::vector<std::vector<T>> product(
     const std::vector<std::vector<T>>& iterables) {
     std::vector<std::vector<T>> results;
+
+    for (std::vector<T> vec : iterables) {
+        if (vec.size() == 0) {
+            return results;
+        }
+    }
+
     if (iterables.empty()) {
         results.push_back({});
         return results;
@@ -383,6 +390,7 @@ inline std::vector<Operator> _ground_action(
         param_to_objects[param_name] = objects_set;
     }
 
+
     // For each parameter that is not constant,
     // remove all invalid static preconditions
     int remove_debug = 0;
@@ -430,6 +438,7 @@ inline std::vector<Operator> _ground_action(
         domain_lists.push_back(tuples);
     }
 
+
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
         product<std::pair<std::string, std::string>>(domain_lists);
@@ -467,7 +476,9 @@ inline std::vector<Operator> _ground_actions(
     }
     std::vector<Operator> operators;
     for (std::vector<Operator> op_list : op_lists) {
-        operators.insert(operators.end(), op_list.begin(), op_list.end());
+        for (Operator op : op_list) {
+            operators.push_back(op);
+        }
     }
     return operators;
 }
@@ -481,9 +492,23 @@ inline Task ground(const Problem& problem,
         objects.insert({constant.first, constant.second});
     }
 
+    std::vector<Action> domain_actions = problem.domain.actions;
+    if (domain_actions.size() == 0) {
+        for (auto ap : problem.domain.actions_dict) {
+            domain_actions.push_back(ap.second);
+        }
+    }
+    // problem.domain.actions = domain_actions;
+    std::vector<Predicate> domain_predicates = problem.domain.predicates;
+    if (domain_predicates.size() == 0) {
+        for (auto pp : problem.domain.predicates_dict) {
+            domain_predicates.push_back(pp.second);
+        }
+    }
+
     // Get the names of the static predicates
     std::vector<std::string> statics =
-        _get_statics(problem.domain.predicates, problem.domain.actions);
+        _get_statics(domain_predicates, domain_actions);
 
     // Create a map from types to objects
     std::unordered_map<Type, std::vector<std::string>> type_map =
@@ -494,7 +519,7 @@ inline Task ground(const Problem& problem,
 
     // Ground actions
     std::vector<Operator> operators =
-        _ground_actions(problem.domain.actions, type_map, statics, init);
+        _ground_actions(domain_actions, type_map, statics, init);
 
     // Ground goal
     // TODO: Remove facts that can only become true and are true in the
