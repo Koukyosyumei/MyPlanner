@@ -455,18 +455,18 @@ TEST(grounding, Operators) {
         "(define (problem prob) (:domain dom) (:objects y - object) (:init) "
         "(:goal (ok y)))";
 
-    std::vector<std::string> tests_pre_in = {"(and)", "(and)", "(and)",
-                                             "(and (ok ?x))",
-                                             "(and (ok, ?x)), (aand (ok ?x))"};
+    std::vector<std::string> tests_pre_in = {"(and)",          "(and)",
+                                             "(and)",          "(and (ok ?x))",
+                                             "(and (ok, ?x))", "(and (ok ?x))"};
     std::vector<std::string> tests_eff_in = {
         "(ok ?x)", "(and (not (ok ?x)))", "(and (ok ?x) (not (ok ?x)))",
         "(ok ?x)", "(and (not (ok ?x)))", "(and (ok ?x) (not (ok ?x)))"};
     std::vector<std::set<std::string>> tests_pre_exp = {
-        {}, {}, {}, {}, {"(ok y)"}, {"(ok y)"}};
+        {}, {}, {}, {"(ok y )"}, {"(ok y )"}, {"(ok y )"}};
     std::vector<std::set<std::string>> tests_add_exp = {
-        {"(ok y)"}, {}, {"(ok y)"}, {}, {}, {}};
-    std::vector<std::set<std::string>> tests_del_exp = {{}, {"(ok y)"}, {},
-                                                        {}, {"(ok y)"}, {}};
+        {"(ok y )"}, {}, {"(ok y )"}, {}, {}, {}};
+    std::vector<std::set<std::string>> tests_del_exp = {{}, {"(ok y )"}, {},
+                                                        {}, {"(ok y )"}, {}};
 
     for (int i = 0; i < 6; i++) {
         std::string pre_in = tests_pre_in[i];
@@ -475,36 +475,29 @@ TEST(grounding, Operators) {
             dom_pddl_1 + pre_in + dom_pddl_2 + eff_in + dom_pddl_3;
         std::cout << dom << std::endl;
         problem = parse_problem(parser, dom, prob_pddl);
-        std::cout << 1 << std::endl;
         domain = problem.domain;
         std::vector<Action> actions;
         for (auto ap : problem.domain.actions_dict) {
             actions.push_back(ap.second);
         }
-        std::cout << 2 << std::endl;
         std::vector<Predicate> predicates_vec;
         for (auto pp : problem.domain.predicates_dict) {
             predicates_vec.push_back(pp.second);
         }
 
-        std::unordered_map<std::string, Type> ojects = problem.objects;
+        objects = problem.objects;
         for (auto c : domain.constants) {
             objects.insert(c);
         }
 
-        std::cout << 333 << std::endl;
-
         std::vector<std::string> statics =
             _get_statics(predicates_vec, actions);
-        std::cout << 888 << std::endl;
         type_map = _create_type_map(objects);
-        std::cout << 999 << std::endl;
         std::unordered_set<std::string> init = _get_partial_state(problem.init);
-        std::cout << 100 << std::endl;
+
         std::vector<Operator> operators =
             _ground_actions(actions, type_map, statics, init);
 
-        std::cout << 1111 << std::endl;
         ASSERT_EQ(operators.size(), 1);
         ASSERT_EQ(operators[0].preconditions, tests_pre_exp[i]);
         ASSERT_EQ(operators[0].add_effects, tests_add_exp[i]);

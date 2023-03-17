@@ -365,6 +365,7 @@ inline Operator* _create_operator(
         std::vector<std::string>(add_effects.begin(), add_effects.end());
     std::vector<std::string> del_effects_vec =
         std::vector<std::string>(del_effects.begin(), del_effects.end());
+
     return new Operator(name, precondition_facts_vec, add_effects_vec,
                         del_effects_vec);
 }
@@ -375,6 +376,7 @@ inline std::vector<Operator> _ground_action(
     std::vector<Operator> operators;
     std::unordered_map<std::string, std::unordered_set<std::string>>
         param_to_objects;
+
 
     for (auto& [param_name, param_types] : action.signature) {
         // List of sets of objects for this parameter
@@ -389,7 +391,6 @@ inline std::vector<Operator> _ground_action(
         }
         param_to_objects[param_name] = objects_set;
     }
-
 
     // For each parameter that is not constant,
     // remove all invalid static preconditions
@@ -437,7 +438,6 @@ inline std::vector<Operator> _ground_action(
         }
         domain_lists.push_back(tuples);
     }
-
 
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
