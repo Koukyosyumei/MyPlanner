@@ -457,7 +457,7 @@ TEST(grounding, Operators) {
 
     std::vector<std::string> tests_pre_in = {"(and)",          "(and)",
                                              "(and)",          "(and (ok ?x))",
-                                             "(and (ok, ?x))", "(and (ok ?x))"};
+                                             "(and (ok ?x))", "(and (ok ?x))"};
     std::vector<std::string> tests_eff_in = {
         "(ok ?x)", "(and (not (ok ?x)))", "(and (ok ?x) (not (ok ?x)))",
         "(ok ?x)", "(and (not (ok ?x)))", "(and (ok ?x) (not (ok ?x)))"};
@@ -473,7 +473,6 @@ TEST(grounding, Operators) {
         std::string eff_in = tests_eff_in[i];
         std::string dom =
             dom_pddl_1 + pre_in + dom_pddl_2 + eff_in + dom_pddl_3;
-        std::cout << dom << std::endl;
         problem = parse_problem(parser, dom, prob_pddl);
         domain = problem.domain;
         std::vector<Action> actions;

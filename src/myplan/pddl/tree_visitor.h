@@ -275,8 +275,8 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
             t->parent = _types[t->parent].name;
         }
-        node->predicates.accept(this);
 
+        node->predicates.accept(this);
         if (node->actions.size() != 0) {
             for (ActionStmt& a : node->actions) {
                 a.accept(this);
@@ -298,7 +298,13 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
 
         std::vector<Predicate> tmp_predicates;
+        for (auto pp : _predicates) {
+            tmp_predicates.push_back(pp.second);
+        }
         std::vector<Action> tmp_actions;
+        for (auto ap : _actions) {
+            tmp_actions.push_back(ap.second);
+        }
         domain =
             Domain(node->name, _types, tmp_predicates, tmp_actions, _constants);
         domain.predicates_dict = _predicates;
