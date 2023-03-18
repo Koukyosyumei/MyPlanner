@@ -7,17 +7,23 @@
 #include "myplan/search/searchspace.h"
 
 SearchNode root = make_root_node({"state1"});
-SearchNode child1 = make_child_node(&root, "action1", {"state2"});
-SearchNode child2 = make_child_node(&root, "action2", {"state3"});
-SearchNode grandchild1 = make_child_node(&child1, "action3", {"state4"});
-SearchNode grandchild2 = make_child_node(&child2, "action4", {"state5"});
+SearchNode child1 = make_child_node(0, root.g, "action1", {"state2"});
+SearchNode child2 = make_child_node(0, root.g, "action2", {"state3"});
+SearchNode grandchild1 = make_child_node(1, child1.g, "action3", {"state4"});
+SearchNode grandchild2 = make_child_node(2, child2.g, "action4", {"state5"});
 
 TEST(searchspace, ExtractSolution) {
-    ASSERT_EQ(root.extract_solution().size(), 0);
+    std::vector<SearchNode> nodes = {root, child1, child2, grandchild1, grandchild2};
+    std::vector<std::string> solution_0;
+    solution_0 = extract_solution(0, nodes);
+    ASSERT_EQ(solution_0.size(), 0);
     std::vector<std::string> test1 = {"action1", "action3"};
     std::vector<std::string> test2 = {"action2", "action4"};
-    ASSERT_EQ(grandchild1.extract_solution(), test1);
-    ASSERT_EQ(grandchild2.extract_solution(), test2);
+    std::vector<std::string> solution_1, solution_2;
+    solution_1 = extract_solution(3, nodes);
+    solution_2 = extract_solution(4, nodes);
+    ASSERT_EQ(solution_1, test1);
+    ASSERT_EQ(solution_2, test2);
 }
 
 TEST(searchspace, GValues) {

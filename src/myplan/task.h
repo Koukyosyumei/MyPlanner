@@ -43,7 +43,7 @@ class Operator {
         return true;
     }
 
-    unordered_set<string> apply(const unordered_set<string>& state) {
+    unordered_set<string> apply(const unordered_set<string> state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
         for (const string& fact : del_effects) {
