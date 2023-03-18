@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "lisp_iterators.h"
+#include "lisp_parser.h"
 #include "parser_common.h"
 #include "tree_visitor.h"
 #include "visitable.h"
@@ -446,7 +447,18 @@ struct Parser {
     }
 
     Domain parse_domain(bool read_from_file = false) {
-        LispIterator iter = _read_input({domInput});
+        std::vector<std::string> source;
+        if (read_from_file) {
+            std::ifstream domain_file;
+            domain_file.open(domFile, std::ios::out);
+            std::string tmp_line;
+            while (domain_file >> tmp_line) {
+                source.push_back(tmp_line);
+            }
+        } else {
+            source = {domInput};
+        }
+        LispIterator iter = _read_input(source);
         DomainDef domAST = parse_domain_def(iter);
         TraversePDDLDomain visitor = TraversePDDLDomain();
         domAST.accept(&visitor);
@@ -454,7 +466,18 @@ struct Parser {
     }
 
     Problem parse_problem(Domain dom, bool read_from_file = false) {
-        LispIterator iter = _read_input({probInput});
+        std::vector<std::string> source;
+        if (read_from_file) {
+            std::ifstream problem_file;
+            problem_file.open(probFile, std::ios::out);
+            std::string tmp_line;
+            while (problem_file >> tmp_line) {
+                source.push_back(tmp_line);
+            }
+        } else {
+            source = {probInput};
+        }
+        LispIterator iter = _read_input(source);
         ProblemDef probAST = parse_problem_def(iter);
         TraversePDDLProblem visitor = TraversePDDLProblem(dom);
         probAST.accept(&visitor);

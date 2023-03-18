@@ -17,6 +17,6 @@ file(GLOB testSRC
 set(TEST_RUNNER main.cpp ${testSRC})
 add_executable(${TEST_NAME} ${TEST_RUNNER})
 
-target_link_libraries(${TEST_NAME} gtest gtest_main pthread myplan)
+target_link_libraries(${TEST_NAME} gtest gtest_main pthread libmyplan)
 
 gtest_discover_tests(${TEST_NAME})

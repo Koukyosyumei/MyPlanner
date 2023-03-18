@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project("myplan" LANGUAGES C CXX)
+project("libmyplan" LANGUAGES C CXX)
 
 # find_package(Threads REQUIRED)
 
