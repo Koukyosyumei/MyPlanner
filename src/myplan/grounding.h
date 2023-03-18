@@ -531,18 +531,6 @@ inline Task ground(const Problem& problem,
     std::unordered_set<std::string> facts = _collect_facts(operators);
     facts.insert(goals.begin(), goals.end());
 
-    std::cout << "init is ";
-    for (auto i : init) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "facts are ";
-    for (auto f : facts) {
-        std::cout << f << " ";
-    }
-    std::cout << std::endl;
-
     // Remove statics from initial state
     std::unordered_set<std::string> new_init;
     if (remove_statics_from_initial_state) {
@@ -553,12 +541,6 @@ inline Task ground(const Problem& problem,
         }
         init = new_init;
     }
-
-    std::cout << "new init is ";
-    for (auto i : init) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
 
     // Perform relevance analysis
     if (remove_irrelevant_operators) {
