@@ -45,23 +45,24 @@ void parse_args(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     parse_args(argc, argv);
     Parser parser = Parser(domain_file_path, problem_file_path);
-    printf("Parsing Domain %s", domain_file_path.c_str());
+    printf("Parsing Domain %s \n", domain_file_path.c_str());
     Domain domain = parser.parse_domain(true);
-    printf("Parsing Problem %s", problem_file_path.c_str());
+    printf("Parsing Problem %s \n", problem_file_path.c_str());
     Problem problem = parser.parse_problem(domain, true);
-    printf("Grounding start: %s", problem.name.c_str());
+    printf("Grounding start: %s \n", problem.name.c_str());
     Task task = ground(problem);
-    printf("Grounding end: %s", problem.name.c_str());
+    printf("Grounding end: %s \n", problem.name.c_str());
 
-    printf("Search start: %s", task.name.c_str());
+    printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;
     start = chrono::system_clock::now();
     vector<string> solution = breadth_first_search(task);
     end = chrono::system_clock::now();
     float elapsed =
         chrono::duration_cast<chrono::milliseconds>(end - start).count();
-    printf("Search time is complete %f [ms]", elapsed);
+    printf("Search time is complete %f [ms] \n", elapsed);
 
+    printf("Length of solution is %d \n", (int)solution.size());
     ofstream solution_file;
     solution_file.open(solution_file_path, ios::out);
     for (string op : solution) {

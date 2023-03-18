@@ -1,5 +1,5 @@
 # clean up
-rm -rf build/*
+# rm -rf build/*
 
 # build
 ./script/build.sh
@@ -8,3 +8,5 @@ rm -rf build/*
 cd build
 ctest -V
 cd ..
+
+cp build/script/myplan myplan

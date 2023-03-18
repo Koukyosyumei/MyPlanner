@@ -25,6 +25,16 @@ class Operator {
     }
 
     bool applicable(const unordered_set<string>& state) {
+        std::cout << "state is ";
+        for (auto s : state) {
+            std::cout << s << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "precondition is ";
+        for (auto s : preconditions) {
+            std::cout << s << " ";
+        }
+        std::cout << std::endl;
         for (string p : preconditions) {
             if (state.find(p) == state.end()) {
                 return false;
@@ -125,21 +135,18 @@ class Task : public BaseTask {
     A STRIPS planning task
     */
    public:
-    std::string name;
-    std::unordered_set<std::string> facts;
-    std::unordered_set<std::string> initial_state;
-    std::unordered_set<std::string> goals;
-    std::vector<Operator> operators;
 
     Task() {}
     Task(std::string name, std::unordered_set<std::string> facts,
          std::unordered_set<std::string> initial_state,
-         std::unordered_set<std::string> goals, std::vector<Operator> operators)
-        : name(name),
-          facts(facts),
-          initial_state(initial_state),
-          goals(goals),
-          operators(operators) {}
+         std::unordered_set<std::string> goals,
+         std::vector<Operator> operators) {
+        this->name = name;
+        this->facts = facts;
+        this->initial_state = initial_state;
+        this->goals = goals;
+        this->operators = operators;
+    }
 
     bool goal_reached(std::unordered_set<std::string> state) override {
         /*
@@ -164,11 +171,13 @@ class Task : public BaseTask {
         */
         std::vector<std::pair<Operator, std::unordered_set<std::string>>>
             successors;
+        std::cout << "Len of operators is " << operators.size() << std::endl;
         for (Operator op : operators) {
             if (op.applicable(state)) {
                 successors.push_back(std::make_pair(op, op.apply(state)));
             }
         }
+        std::cout << "Len of successors is " << successors.size() << std::endl;
         return successors;
     }
 

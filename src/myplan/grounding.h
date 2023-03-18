@@ -377,7 +377,6 @@ inline std::vector<Operator> _ground_action(
     std::unordered_map<std::string, std::unordered_set<std::string>>
         param_to_objects;
 
-
     for (auto& [param_name, param_types] : action.signature) {
         // List of sets of objects for this parameter
         std::vector<std::vector<std::string>> objects;
@@ -532,14 +531,34 @@ inline Task ground(const Problem& problem,
     std::unordered_set<std::string> facts = _collect_facts(operators);
     facts.insert(goals.begin(), goals.end());
 
+    std::cout << "init is ";
+    for (auto i : init) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "facts are ";
+    for (auto f : facts) {
+        std::cout << f << " ";
+    }
+    std::cout << std::endl;
+
     // Remove statics from initial state
     std::unordered_set<std::string> new_init;
     if (remove_statics_from_initial_state) {
-        std::set_intersection(init.begin(), init.end(), facts.begin(),
-                              facts.end(),
-                              std::inserter(new_init, new_init.end()));
+        for (std::string i : init) {
+            if (facts.count(i) > 0) {
+                new_init.insert(i);
+            }
+        }
         init = new_init;
     }
+
+    std::cout << "new init is ";
+    for (auto i : init) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
 
     // Perform relevance analysis
     if (remove_irrelevant_operators) {

@@ -452,7 +452,7 @@ struct Parser {
             std::ifstream domain_file;
             domain_file.open(domFile, std::ios::out);
             std::string tmp_line;
-            while (domain_file >> tmp_line) {
+            while (std::getline(domain_file, tmp_line)) {
                 source.push_back(tmp_line);
             }
         } else {
@@ -471,7 +471,7 @@ struct Parser {
             std::ifstream problem_file;
             problem_file.open(probFile, std::ios::out);
             std::string tmp_line;
-            while (problem_file >> tmp_line) {
+            while (std::getline(problem_file, tmp_line)) {
                 source.push_back(tmp_line);
             }
         } else {
