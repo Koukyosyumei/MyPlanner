@@ -6,11 +6,11 @@
 
 #include "myplan/search/searchspace.h"
 
-SearchNode root = make_root_node("state1");
-SearchNode child1 = make_child_node(&root, "action1", "state2");
-SearchNode child2 = make_child_node(&root, "action2", "state3");
-SearchNode grandchild1 = make_child_node(&child1, "action3", "state4");
-SearchNode grandchild2 = make_child_node(&child2, "action4", "state5");
+SearchNode root = make_root_node({"state1"});
+SearchNode child1 = make_child_node(&root, "action1", {"state2"});
+SearchNode child2 = make_child_node(&root, "action2", {"state3"});
+SearchNode grandchild1 = make_child_node(&child1, "action3", {"state4"});
+SearchNode grandchild2 = make_child_node(&child2, "action4", {"state5"});
 
 TEST(searchspace, ExtractSolution) {
     ASSERT_EQ(root.extract_solution().size(), 0);
@@ -27,7 +27,13 @@ TEST(searchspace, GValues) {
 }
 
 TEST(searchspace, States) {
-    ASSERT_EQ(root.state, "state1");
-    ASSERT_EQ(child2.state, "state3");
-    ASSERT_EQ(grandchild1.state, "state4");
+    for (std::string s : root.state) {
+        ASSERT_EQ(s, "state1");
+    }
+    for (std::string s : child2.state) {
+        ASSERT_EQ(s, "state3");
+    }
+    for (std::string s : grandchild1.state) {
+        ASSERT_EQ(s, "state4");
+    }
 }
