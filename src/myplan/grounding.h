@@ -139,25 +139,59 @@ inline std::vector<std::string> _get_statics(
     return statics;
 }
 
+/*
 inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
-    const std::unordered_map<std::string, Type> objects) {
+    const std::unordered_map<std::string, Type>& objects) {
     std::unordered_map<Type, std::vector<std::string>> type_map;
-    for (const auto& obj : objects) {
-        std::string object_name = obj.first;
-        Type object_type = obj.second;
+
+    // for every type we append the corresponding object
+    std::cout << "**" << std::endl;
+    for (const auto& [object_name, object_type] : objects) {
+        std::cout << 1 << std::endl;
         Type* parent_type = object_type.parent;
+        while (parent_type != nullptr) {
+            std::cout << 2 << std::endl;
+            if (type_map.find(*parent_type) != type_map.end()) {
+                type_map[object_type].push_back(object_name);
+            } else {
+                type_map.insert({*parent_type, {object_name}});
+            }
+            //type_map[*parent_type].push_back(object_name);
+            std::cout << 3 << std::endl;
+            parent_type = parent_type->parent;
+        }
+        type_map[object_type].push_back(object_name);
+    }
+    std::cout << "--" << std::endl;
+
+    // TODO vectors in map should be ordered lists
+    return type_map;
+}
+*/
+
+inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
+    const std::unordered_map<std::string, Type>& objects) {
+    std::unordered_map<Type, std::vector<std::string>> type_map;
+    for (const auto& kv : objects) {
+        const std::string object_name = kv.first;
+        Type object_type = kv.second;
+        Type* parent_type = object_type.parent;
+
         while (true) {
+            std::cout << 1 << std::endl;
             if (type_map.find(object_type) != type_map.end()) {
                 type_map[object_type].push_back(object_name);
             } else {
                 type_map.insert({object_type, {object_name}});
             }
+            std::cout << 2 << std::endl;
             if (object_type.parent != nullptr) {
                 auto next_parent_type = object_type.parent;
+                std::cout << 3 << std::endl;
                 auto next_object_type = *parent_type;
+                std::cout << 4 << std::endl;
                 object_type = next_object_type;
                 parent_type = next_parent_type;
-                std::cout << "Not NULLPTR" << std::endl;
             } else {
                 std::cout << "IS NULLPTR" << std::endl;
                 break;
