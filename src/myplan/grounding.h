@@ -145,23 +145,26 @@ inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
     for (const auto& obj : objects) {
         std::string object_name = obj.first;
         Type object_type = obj.second;
-        Type* parent_type = object_type.parent_ptr;
+        Type* parent_type = object_type.parent;
         while (true) {
             if (type_map.find(object_type) != type_map.end()) {
                 type_map[object_type].push_back(object_name);
             } else {
                 type_map.insert({object_type, {object_name}});
             }
-            if (object_type.parent_ptr != nullptr) {
-                auto next_parent_type = object_type.parent_ptr;
+            if (object_type.parent != nullptr) {
+                auto next_parent_type = object_type.parent;
                 auto next_object_type = *parent_type;
                 object_type = next_object_type;
                 parent_type = next_parent_type;
+                std::cout << "Not NULLPTR" << std::endl;
             } else {
+                std::cout << "IS NULLPTR" << std::endl;
                 break;
             }
         }
     }
+    std::cout << "successuflyy construct type_map" << std::endl;
     return type_map;
 }
 
@@ -377,6 +380,16 @@ inline std::vector<Operator> _ground_action(
     std::unordered_map<std::string, std::unordered_set<std::string>>
         param_to_objects;
 
+    std::cout << "type_map is" << std::endl;
+    for (auto tmp : type_map) {
+        std::cout << tmp.first.name << ": ";
+        for (auto s : tmp.second) {
+            std::cout << s << " ";
+        }
+        std::cout << endl;
+    }
+    std::cout << "===" << std::endl;
+
     for (auto& [param_name, param_types] : action.signature) {
         // List of sets of objects for this parameter
         std::vector<std::vector<std::string>> objects;
@@ -390,6 +403,16 @@ inline std::vector<Operator> _ground_action(
         }
         param_to_objects[param_name] = objects_set;
     }
+
+    std::cout << "param_to_objects is" << std::endl;
+    for (auto pop : param_to_objects) {
+        std::cout << pop.first << ": ";
+        for (auto ps : pop.second) {
+            std::cout << ps << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "----" << std::endl;
 
     // For each parameter that is not constant,
     // remove all invalid static preconditions
@@ -433,15 +456,17 @@ inline std::vector<Operator> _ground_action(
     for (auto& [name, objects] : param_to_objects) {
         std::vector<std::pair<std::string, std::string>> tuples;
         for (auto& object : objects) {
+            std::cout << name << ":" << object << " ";
             tuples.emplace_back(name, object);
         }
         domain_lists.push_back(tuples);
     }
-
+    std::cout << std::endl;
+    std::cout << "len of domain lists is " << domain_lists.size() << std::endl;
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
         product<std::pair<std::string, std::string>>(domain_lists);
-
+    std::cout << "len of assignments is " << assignments.size() << std::endl;
     std::unordered_set<std::string> statics_set(statics.begin(), statics.end());
     // Create a new operator for each possible assignment of parameters
     for (auto& assign : assignments) {
@@ -449,6 +474,7 @@ inline std::vector<Operator> _ground_action(
         for (auto tmp : assign) {
             tmp_dict.insert({tmp.first, tmp.second});
         }
+        std::cout << action.name << std::endl;
         Operator* op = _create_operator(&action, tmp_dict, statics_set, init);
         if (op != nullptr) {
             operators.push_back(*op);
@@ -476,9 +502,12 @@ inline std::vector<Operator> _ground_actions(
     std::vector<Operator> operators;
     for (std::vector<Operator> op_list : op_lists) {
         for (Operator op : op_list) {
+            std::cout << "Op: " << op.name << " ";
             operators.push_back(op);
         }
+        std::cout << std::endl;
     }
+    std::cout << "len of ope " << operators.size() << std::endl;
     return operators;
 }
 
@@ -486,6 +515,10 @@ inline Task ground(const Problem& problem,
                    bool remove_statics_from_initial_state = true,
                    bool remove_irrelevant_operators = true) {
     // Objects
+    for (auto& obp : problem.objects) {
+        std::cout << "po is nullptr ?: " << (obp.second.parent == nullptr)
+                  << std::endl;
+    }
     std::unordered_map<std::string, Type> objects = problem.objects;
     for (const auto& constant : problem.domain.constants) {
         objects.insert({constant.first, constant.second});
@@ -516,6 +549,8 @@ inline Task ground(const Problem& problem,
     // Transform initial state into a specific state
     std::unordered_set<string> init = _get_partial_state(problem.init);
 
+    std::cout << "len of domain_actions is " << domain_actions.size()
+              << std::endl;
     // Ground actions
     std::vector<Operator> operators =
         _ground_actions(domain_actions, type_map, statics, init);

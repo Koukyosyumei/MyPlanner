@@ -85,6 +85,52 @@ inline std::vector<T> _parse_type_helper(LispIterator& iter) {
     return result;
 }
 
+inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
+    std::vector<Type> result;
+    std::vector<std::string> tmpList;
+    while (!iter.empty()) {
+        std::string var = iter.next().get_word();
+        size_t count_var_0 =
+            std::count(reserved.begin(), reserved.end(), var.substr(0, 1));
+        if (!var.empty() && count_var_0) {
+            throw runtime_error(
+                "Error type must not begin with reserved char!");
+        } else if (var == "-") {
+            /*
+            if (iter.peek().is_structure()) {
+                LispIterator types_iter = iter.next();
+                if (!types_iter.try_match("either")) {
+                    throw runtime_error(
+                        "Error multiple parent definition must start with "
+                        "\"either\"");
+                }
+                std::vector<std::string> tlist =
+                    parse_string_helper_list(types_iter);
+                Type* tmp_parent = new Type(tlist[0], nullptr);
+                while (!tmpList.empty()) {
+                    result.push_back(Type(tmpList.back(), tmp_parent));
+                    tmpList.pop_back();
+                }
+            }*/
+            // else {
+            std::string ctype = iter.next().get_word();
+            Type* tmp_parent = new Type(ctype, nullptr);
+            while (!tmpList.empty()) {
+                result.push_back(Type(tmpList.back(), tmp_parent));
+                tmpList.pop_back();
+            }
+            //}
+        } else if (!var.empty()) {
+            tmpList.insert(tmpList.begin(), var);
+        }
+    }
+    while (tmpList.size() != 0) {
+        result.push_back(Type(tmpList.back(), nullptr));
+        tmpList.pop_back();
+    }
+    return result;
+}
+
 inline Keyword parse_keyword(LispIterator& iter) {
     std::string name = iter.get_word();
     if (name.empty()) {
@@ -152,8 +198,17 @@ inline std::vector<T> _parse_type_with_error(LispIterator& iter,
     return _parse_type_helper<T>(iter);
 }
 
+inline std::vector<Type> _parse_types_with_error(LispIterator& iter,
+                                                 std::string keyword) {
+    if (!iter.try_match(keyword)) {
+        throw invalid_argument("Error keyword" + keyword +
+                               " required before type");
+    }
+    return _parse_types_helper(iter);
+}
+
 inline std::vector<Type> parse_types_stmt(LispIterator& iter) {
-    return _parse_type_with_error<Type>(iter, ":types");
+    return _parse_types_with_error(iter, ":types");
 }
 
 inline std::vector<Object> parse_objects_stmt(LispIterator& iter) {
@@ -460,8 +515,10 @@ struct Parser {
         }
         LispIterator iter = _read_input(source);
         DomainDef domAST = parse_domain_def(iter);
+        std::cout << "parse domain def!" << std::endl;
         TraversePDDLDomain visitor = TraversePDDLDomain();
         domAST.accept(&visitor);
+        std::cout << "successufly accept" << std::endl;
         return visitor.domain;
     }
 

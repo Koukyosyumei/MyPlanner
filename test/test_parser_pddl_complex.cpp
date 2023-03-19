@@ -91,7 +91,7 @@ TEST(parser_pddl_complex, Types) {
     };
     for (int i = 0; i < types.size(); i++) {
         ASSERT_EQ(types[i].name, test_names[i]);
-        ASSERT_EQ(types[i].parent, test_types[i]);
+        ASSERT_EQ(types[i].parent->name, test_types[i]);
     }
 }
 

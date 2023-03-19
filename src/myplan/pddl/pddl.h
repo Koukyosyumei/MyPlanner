@@ -11,30 +11,28 @@ using namespace std;
 
 class Type {
    public:
-    Type(string name_, std::vector<string> parents_) : name(name_) {
-        transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (parents_.size() > 0) {
-            parent = parents_[0];
-        }
-    }
-    Type(string name_, Type* parent_ptr_)
-        : name(name_), parent_ptr(parent_ptr_) {
-        if (parent_ptr != nullptr) {
-            name = parent_ptr->name;
-            transform(name.begin(), name.end(), name.begin(), ::tolower);
-        }
-    }
-    Type(string name_ = "<NULL>", string parent_ = "<NULL>")
+    //    Type(string name_, std::vector<string> parents_) : name(name_) {
+    //        transform(name.begin(), name.end(), name.begin(), ::tolower);
+    //        if (parents_.size() > 0) {
+    //            parent = parents_[0];
+    //        }
+    //    }
+    Type(string name_ = "<NULL>", Type* parent_ = nullptr)
         : name(name_), parent(parent_) {
+        // if (parent != nullptr) {
+        //     name = parent->name;
         transform(name.begin(), name.end(), name.begin(), ::tolower);
+        //}
     }
-    bool operator==(const Type& other) const {
-        return name == other.name && parent == other.parent;
-    }
+    //    Type(string name_ = "<NULL>", string parent_ = "<NULL>")
+    //        : name(name_), parent(parent_) {
+    //        transform(name.begin(), name.end(), name.begin(), ::tolower);
+    //    }
+    bool operator==(const Type& other) const { return name == other.name; }
 
     string name;
-    string parent;
-    Type* parent_ptr;
+    // string parent;
+    Type* parent;
 };
 
 class Predicate {

@@ -44,14 +44,28 @@ void parse_args(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
     parse_args(argc, argv);
+
     Parser parser = Parser(domain_file_path, problem_file_path);
     printf("Parsing Domain %s \n", domain_file_path.c_str());
     Domain domain = parser.parse_domain(true);
     printf("Parsing Problem %s \n", problem_file_path.c_str());
+    printf("%d Predicates parsed (list style) \n",
+           (int)domain.predicates.size());
+    printf("%d Predicates parsed (dict style) \n",
+           (int)domain.predicates_dict.size());
+    printf("%d Actions parsed (list style) \n", (int)domain.actions.size());
+    printf("%d Actions parsed (dict style) \n",
+           (int)domain.actions_dict.size());
+    printf("%d Constants parsed \n", (int)domain.constants.size());
+
     Problem problem = parser.parse_problem(domain, true);
+    printf("%d Objects parsed \n", (int)problem.objects.size());
+
     printf("Grounding start: %s \n", problem.name.c_str());
     Task task = ground(problem);
     printf("Grounding end: %s \n", problem.name.c_str());
+    printf("%d Variables created \n", (int)task.facts.size());
+    printf("%d Operators created \n", (int)task.operators.size());
 
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;

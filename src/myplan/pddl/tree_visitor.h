@@ -25,10 +25,10 @@ struct hash<Type> {
     size_t operator()(const Type& hoge) const {
         size_t seed = 0;
         auto n_hash = hash<std::string>()(hoge.name);
-        auto d_hash = hash<std::string>()(hoge.parent);
+        // auto d_hash = hash<std::string>()(hoge.parent);
 
         seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        // seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
         return seed;
     }
 };
@@ -214,7 +214,7 @@ class TraversePDDLDomain : public PDDLVisitor {
     std::unordered_map<std::string, Type> _constants;
     std::set<std::string> _requirements;
     Domain domain;
-    Type _objectType = Type("object", "<NULL>");
+    Type _objectType = Type("object", nullptr);
 
     void visit_problem_def(ProblemDef* node) override {
         for (Object& o : node->objects) {
@@ -269,11 +269,14 @@ class TraversePDDLDomain : public PDDLVisitor {
             if (kv.first == "object") {
                 continue;
             }
-            Type* t = &kv.second;
-            if (_types.find(t->parent) == _types.end()) {
-                throw SemanticError("Error unknown parent type: " + t->parent);
+            // Type* t = &kv.second;
+            if (kv.second.parent != nullptr) {
+                if (_types.find(kv.second.parent->name) == _types.end()) {
+                    throw SemanticError("Error unknown parent type: " +
+                                        kv.second.parent->name);
+                }
+                kv.second.parent = &_types[kv.second.parent->name];
             }
-            t->parent = _types[t->parent].name;
         }
 
         node->predicates.accept(this);
@@ -328,8 +331,9 @@ class TraversePDDLDomain : public PDDLVisitor {
     }
 
     void visit_type(Type* node) override {
-        if (node->parent == "<NULL>") {
-            _typeHash[*node] = Type(node->name, "object");
+        if (node->parent == nullptr) {
+            Type* obj = new Type("object", nullptr);
+            _typeHash[*node] = Type(node->name, obj);
         } else {
             _typeHash[*node] = Type(node->name, node->parent);
         }
@@ -660,7 +664,7 @@ class TraversePDDLProblem : public PDDLVisitor {
     }
 
     void visit_object(Object* node) override {
-        Type type_def = Type("<NULL>", "<NULL>");
+        Type type_def = Type("<NULL>", nullptr);
         // Check for multiple definition of objects.
         if (_objects.find(node->name) != _objects.end()) {
             throw std::runtime_error(
@@ -760,7 +764,7 @@ class TraversePDDLProblem : public PDDLVisitor {
         std::vector<pair<std::string, std::vector<Type>>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
-            Type o_type = Type("<NULL>", "<NULL>");
+            Type o_type = Type("<NULL>", nullptr);
             // Check whether predicate was introduced in objects or domain
             // constants.
             if (!(_objects.count(o) || _domain.constants.count(o))) {
