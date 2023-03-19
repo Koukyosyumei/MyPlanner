@@ -147,7 +147,7 @@ Problem parse_problem(Parser& parser, std::string dom, std::string prob) {
     parser.domInput = dom;
     parser.probInput = prob;
     Domain domain = parser.parse_domain(false);
-    return parser.parse_problem(domain, false);
+    return *parser.parse_problem(domain, false);
 }
 
 bool starts_with(const std::string& str, const std::string& prefix) {
@@ -259,7 +259,7 @@ TEST(grounding, Operators) {
     standard_domain.predicates_dict = predicates;
     standard_domain.actions_dict = actions;
 
-    Problem standard_problem = Problem("test_problem_statics", standard_domain,
+    Problem standard_problem = Problem("test_problem_statics", &standard_domain,
                                        objects, initial_state, goal_state);
 
     //    # action with signature with 2 types
@@ -323,7 +323,7 @@ TEST(grounding, Operators) {
     domain.actions_dict = {{"action-constant", action_constant}};
     domain.constants = {{"my_car", types["car"]}};
     Problem problem =
-        Problem("test_problem", domain, objects, initial_state, goal_state);
+        Problem("test_problem", &domain, objects, initial_state, goal_state);
 
     Task task = ground(problem);
 
@@ -417,12 +417,14 @@ TEST(grounding, Operators) {
     domain.predicates_dict = predicates;
     domain.actions_dict = actions;
     domain.constants = constants;
+    std::unordered_map<std::string, Type> tmp_objects = {{"y", type_object}};
+    std::vector<Predicate> tmp_init;
     Problem problem5 =
-        Problem("regression-test-05", domain, {{"y", type_object}}, {},
+        Problem("regression-test-05", &domain, tmp_objects, tmp_init,
                 {Predicate("the-predicate",
                            {{"x", {type_object}}, {"y", {type_object}}})});
     Problem problem6 =
-        Problem("regression-test-06", domain, {{"y", type_object}}, {},
+        Problem("regression-test-06", &domain, tmp_objects, tmp_init,
                 {Predicate("the-predicate",
                            {{"y", {type_object}}, {"y", {type_object}}})});
 
@@ -474,13 +476,13 @@ TEST(grounding, Operators) {
         std::string dom =
             dom_pddl_1 + pre_in + dom_pddl_2 + eff_in + dom_pddl_3;
         problem = parse_problem(parser, dom, prob_pddl);
-        domain = problem.domain;
+        domain = *(problem.domain);
         std::vector<Action> actions;
-        for (auto ap : problem.domain.actions_dict) {
+        for (auto ap : problem.domain->actions_dict) {
             actions.push_back(ap.second);
         }
         std::vector<Predicate> predicates_vec;
-        for (auto pp : problem.domain.predicates_dict) {
+        for (auto pp : problem.domain->predicates_dict) {
             predicates_vec.push_back(pp.second);
         }
 

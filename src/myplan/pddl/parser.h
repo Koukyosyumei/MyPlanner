@@ -96,7 +96,6 @@ inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
             throw runtime_error(
                 "Error type must not begin with reserved char!");
         } else if (var == "-") {
-            /*
             if (iter.peek().is_structure()) {
                 LispIterator types_iter = iter.next();
                 if (!types_iter.try_match("either")) {
@@ -109,23 +108,28 @@ inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
                 Type* tmp_parent = new Type(tlist[0], nullptr);
                 while (!tmpList.empty()) {
                     result.push_back(Type(tmpList.back(), tmp_parent));
+                    std::cout << "1-Type " << result[result.size() - 1].name
+                              << std::endl;
                     tmpList.pop_back();
                 }
-            }*/
-            // else {
-            std::string ctype = iter.next().get_word();
-            Type* tmp_parent = new Type(ctype, nullptr);
-            while (!tmpList.empty()) {
-                result.push_back(Type(tmpList.back(), tmp_parent));
-                tmpList.pop_back();
+            } else {
+                std::string ctype = iter.next().get_word();
+                Type* tmp_parent = new Type(ctype, nullptr);
+                std::cout << "2.5-Type " << ctype << std::endl;
+                while (!tmpList.empty()) {
+                    result.push_back(Type(tmpList.back(), tmp_parent));
+                    std::cout << "2-Type " << result[result.size() - 1].name
+                              << std::endl;
+                    tmpList.pop_back();
+                }
             }
-            //}
         } else if (!var.empty()) {
             tmpList.insert(tmpList.begin(), var);
         }
     }
     while (tmpList.size() != 0) {
         result.push_back(Type(tmpList.back(), nullptr));
+        std::cout << "3-Type " << result[result.size() - 1].name << std::endl;
         tmpList.pop_back();
     }
     return result;
@@ -522,7 +526,17 @@ struct Parser {
         return visitor.domain;
     }
 
-    Problem parse_problem(Domain dom, bool read_from_file = false) {
+    Problem* parse_problem(Domain& dom, bool read_from_file = false) {
+        std::cout << "Print out given domain.types" << std::endl;
+        for (auto tpp : dom.types) {
+            std::cout << tpp.first << ": ";
+            std::cout << tpp.second.name << " ";
+            if (tpp.second.parent != nullptr) {
+                std::cout << tpp.second.parent->name;
+            }
+            std::cout << std::endl;
+        }
+
         std::vector<std::string> source;
         if (read_from_file) {
             std::ifstream problem_file;
@@ -536,7 +550,7 @@ struct Parser {
         }
         LispIterator iter = _read_input(source);
         ProblemDef probAST = parse_problem_def(iter);
-        TraversePDDLProblem visitor = TraversePDDLProblem(dom);
+        TraversePDDLProblem visitor = TraversePDDLProblem(&dom);
         probAST.accept(&visitor);
         return visitor.get_problem();
     }

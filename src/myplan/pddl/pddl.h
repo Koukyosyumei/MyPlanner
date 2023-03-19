@@ -22,6 +22,12 @@ class Type {
         // if (parent != nullptr) {
         //     name = parent->name;
         transform(name.begin(), name.end(), name.begin(), ::tolower);
+        if (parent_ == nullptr) {
+            std::cout << "Type Construction - " << name << std::endl;
+        } else {
+            std::cout << "Type Construction - " << name << " " << parent->name
+                      << std::endl;
+        }
         //}
     }
     //    Type(string name_ = "<NULL>", string parent_ = "<NULL>")
@@ -77,7 +83,7 @@ class Action {
 class Domain {
    public:
     Domain(){};
-    Domain(string name_, unordered_map<string, Type> types_,
+    Domain(string name_, unordered_map<string, Type>& types_,
            vector<Predicate> predicates_, vector<Action> actions_,
            unordered_map<string, Type> constants_ = {})
         : name(name_),
@@ -98,8 +104,8 @@ class Domain {
 class Problem {
    public:
     Problem(){};
-    Problem(std::string name, Domain domain,
-            std::unordered_map<std::string, Type> objects,
+    Problem(std::string name, Domain* domain,
+            std::unordered_map<std::string, Type>& objects,
             std::vector<Predicate> init, std::vector<Predicate> goal)
         : name(name),
           domain(domain),
@@ -108,7 +114,7 @@ class Problem {
           goal(goal) {}
 
     std::string name;
-    Domain domain;
+    Domain* domain;
     std::unordered_map<std::string, Type> objects;
     std::vector<Predicate> init;
     std::vector<Predicate> goal;

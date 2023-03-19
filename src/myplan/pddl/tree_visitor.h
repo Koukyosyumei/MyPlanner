@@ -266,16 +266,19 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
 
         for (auto& kv : _types) {
-            if (kv.first == "object") {
+            if (kv.second.name == "object") {
                 continue;
             }
             // Type* t = &kv.second;
             if (kv.second.parent != nullptr) {
+                std::cout << "kv is " << kv.second.name << " "
+                          << kv.second.parent->name << " ";
                 if (_types.find(kv.second.parent->name) == _types.end()) {
                     throw SemanticError("Error unknown parent type: " +
                                         kv.second.parent->name);
                 }
                 kv.second.parent = &_types[kv.second.parent->name];
+                std::cout << kv.second.parent->name << std::endl;
             }
         }
 
@@ -310,6 +313,15 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
         domain =
             Domain(node->name, _types, tmp_predicates, tmp_actions, _constants);
+        std::cout << "Print out domain.types" << std::endl;
+        for (auto tpp : domain.types) {
+            std::cout << tpp.first << ": ";
+            std::cout << tpp.second.name << " ";
+            if (tpp.second.parent != nullptr) {
+                std::cout << tpp.second.parent->name;
+            }
+            std::cout << std::endl;
+        }
         domain.predicates_dict = _predicates;
         domain.actions_dict = _actions;
     }
@@ -337,6 +349,7 @@ class TraversePDDLDomain : public PDDLVisitor {
         } else {
             _typeHash[*node] = Type(node->name, node->parent);
         }
+        std::cout << "4-Type " << node->name << std::endl;
     }
 
     void visit_requirements_stmt(RequirementsStmt* node) override {
@@ -555,8 +568,8 @@ class TraversePDDLDomain : public PDDLVisitor {
 
 class TraversePDDLProblem : public PDDLVisitor {
    private:
-    Domain _domain;
-    Problem _problemDef;
+    Domain* _domain;
+    Problem* _problemDef;
     std::unordered_map<PredicateInstance, Predicate> _predicateHash;
     std::unordered_map<InitStmt, std::vector<Predicate>> _initHash;
     std::unordered_map<GoalStmt, std::vector<Predicate>> _goalHash;
@@ -564,9 +577,9 @@ class TraversePDDLProblem : public PDDLVisitor {
 
    public:
     TraversePDDLProblem() {}
-    TraversePDDLProblem(Domain& domain) : _domain(domain) {}
+    TraversePDDLProblem(Domain* domain) : _domain(domain) {}
 
-    Problem get_problem() { return _problemDef; }
+    Problem* get_problem() { return _problemDef; }
 
     void visit_domain_def(DomainDef* node) override {
         node->requirements.accept(this);
@@ -632,12 +645,12 @@ class TraversePDDLProblem : public PDDLVisitor {
     void visit_problem_def(ProblemDef* node) override {
         // Check whether the in the problem file referenced domain name matches
         // the supplied domain data structure.
-        if (node->domainName != _domain.name) {
+        if (node->domainName != _domain->name) {
             throw std::runtime_error(
                 "Error trying to parse problem file with domain: " +
                 node->domainName +
                 " together with a domain file that specifies domain: " +
-                _domain.name);
+                _domain->name);
         }
         // Apply to all object definitions.
         for (Object& o : node->objects) {
@@ -652,9 +665,29 @@ class TraversePDDLProblem : public PDDLVisitor {
         node->goal.accept(this);
         std::vector<Predicate> goal_list = _goalHash[node->goal];
 
+        std::cout << "Print out 's objects" << std::endl;
+        for (auto& obp : _objects) {
+            std::cout << obp.first << " ";
+            std::cout << obp.second.name << " ";
+            if (obp.second.parent != nullptr) {
+                std::cout << obp.second.parent->name;
+            }
+            std::cout << std::endl;
+        }
+
         // Create the problem data structure.
         _problemDef =
-            Problem(node->name, _domain, _objects, init_list, goal_list);
+            new Problem(node->name, _domain, _objects, init_list, goal_list);
+
+        std::cout << "Print out problemdef's objects" << std::endl;
+        for (auto& obp : _problemDef->objects) {
+            std::cout << obp.first << " ";
+            std::cout << obp.second.name << " ";
+            if (obp.second.parent != nullptr) {
+                std::cout << obp.second.parent->name;
+            }
+            std::cout << std::endl;
+        }
     }
 
     void visit_formula(Formula* node) override {
@@ -664,7 +697,7 @@ class TraversePDDLProblem : public PDDLVisitor {
     }
 
     void visit_object(Object* node) override {
-        Type type_def = Type("<NULL>", nullptr);
+        // Type type_def = Type("<NULL>", nullptr);
         // Check for multiple definition of objects.
         if (_objects.find(node->name) != _objects.end()) {
             throw std::runtime_error(
@@ -672,17 +705,36 @@ class TraversePDDLProblem : public PDDLVisitor {
         }
         // Untyped objects get the standard type 'object'.
         if (node->typeName == "<NULL>") {
-            type_def = _domain.types["object"];
+            _objects[node->name] = _domain->types["object"];
         } else {
             // Check whether used type was introduced in domain file.
-            if (_domain.types.find(node->typeName) == _domain.types.end()) {
+            if (_domain->types.find(node->typeName) == _domain->types.end()) {
                 throw std::runtime_error("Error: unknown type " +
                                          node->typeName +
                                          " used in object definition!");
             }
-            type_def = _domain.types[node->typeName];
+            std::cout << "domain_type is "
+                      << _domain->types[node->typeName].name << " ";
+            if (_domain->types[node->typeName].parent != nullptr) {
+                std::cout << _domain->types[node->typeName].parent->name;
+            }
+            std::cout << std::endl;
+
+            _objects[node->name] = _domain->types[node->typeName];
+
+            std::cout << "99999 domain_type is " << _objects[node->name].name
+                      << " ";
+            if (_objects[node->name].parent != nullptr) {
+                std::cout << _objects[node->name].parent->name;
+            }
+            std::cout << std::endl;
         }
-        _objects[node->name] = type_def;
+        // std::cout << "Visit objects: " << type_def.name;
+        //  if (type_def.parent != nullptr) {
+        //      std::cout << " " << type_def.parent->name;
+        //  }
+        // std::cout << std::endl;
+        //_objects[node->name] = type_def;
     }
 
     void visit_init_stmt(InitStmt* node) override {
@@ -703,14 +755,14 @@ class TraversePDDLProblem : public PDDLVisitor {
          */
 
         // Check whether predicate was introduced in domain file.
-        if (this->_domain.predicates_dict.find(c.key) ==
-            this->_domain.predicates_dict.end()) {
+        if (this->_domain->predicates_dict.find(c.key) ==
+            this->_domain->predicates_dict.end()) {
             throw SemanticError("Error: unknown predicate " + c.key +
                                 " in goal definition");
         }
 
         // Get predicate from the domain data structure.
-        Predicate predDef = this->_domain.predicates_dict[c.key];
+        Predicate predDef = this->_domain->predicates_dict[c.key];
         std::vector<std::pair<std::string, std::vector<Type>>> signature;
         size_t count = 0;
 
@@ -748,8 +800,8 @@ class TraversePDDLProblem : public PDDLVisitor {
             }
         } else {
             // Only a single predicate is allowed then (s.a.)
-            if (this->_domain.predicates_dict.find(formula.key) ==
-                this->_domain.predicates_dict.end()) {
+            if (this->_domain->predicates_dict.find(formula.key) ==
+                this->_domain->predicates_dict.end()) {
                 throw SemanticError(
                     "Error: predicate in goal definition is not in CNF");
             }
@@ -767,14 +819,14 @@ class TraversePDDLProblem : public PDDLVisitor {
             Type o_type = Type("<NULL>", nullptr);
             // Check whether predicate was introduced in objects or domain
             // constants.
-            if (!(_objects.count(o) || _domain.constants.count(o))) {
+            if (!(_objects.count(o) || _domain->constants.count(o))) {
                 throw SemanticError(
                     "Error: object " + o +
                     " referenced in problem definition - but not defined");
             } else if (_objects.count(o)) {
                 o_type = _objects[o];
-            } else if (_domain.constants.count(o)) {
-                o_type = _domain.constants[o];
+            } else if (_domain->constants.count(o)) {
+                o_type = _domain->constants[o];
             }
             std::vector<Type> tmp_o_type_vec = {o_type};
             signature.emplace_back(make_pair(o, tmp_o_type_vec));

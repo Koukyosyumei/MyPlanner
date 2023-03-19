@@ -38,7 +38,7 @@ std::string problem_input =
 
 Parser _parser = Parser("");
 Domain _domain;
-Problem _problem;
+Problem* _problem;
 
 TEST(tree_visitor, ActionsSetAndParameters) {
     _parser.domInput = domain_input;

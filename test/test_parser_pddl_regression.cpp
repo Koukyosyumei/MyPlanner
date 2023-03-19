@@ -26,7 +26,7 @@ TEST(parser_pddl_regression, UntypedConstatns) {
     _parser.probInput = problem_input;
 
     Domain domain = _parser.parse_domain(false);
-    Problem problem = _parser.parse_problem(domain, false);
+    Problem* problem = _parser.parse_problem(domain, false);
 
     _parser.domInput = domain_input;
     domain = _parser.parse_domain(false);
