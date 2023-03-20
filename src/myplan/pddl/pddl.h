@@ -44,11 +44,11 @@ class Type {
 class Predicate {
    public:
     Predicate(){};
-    Predicate(string name, vector<pair<string, vector<Type>>> signature)
+    Predicate(string name, vector<pair<string, vector<Type*>>> signature)
         : name(name), signature(signature) {}
 
     string name;
-    vector<pair<string, vector<Type>>> signature;
+    vector<pair<string, vector<Type*>>> signature;
 
     bool operator<(const Predicate& rhs) const { return name < rhs.name; }
     bool operator==(const Predicate& rhs) const { return name == rhs.name; }
@@ -67,7 +67,7 @@ class Effect {
 class Action {
    public:
     Action(){};
-    Action(string name, vector<pair<string, vector<Type>>> signature,
+    Action(string name, vector<pair<string, vector<Type*>>> signature,
            vector<Predicate> precondition, Effect effect)
         : name(name),
           signature(signature),
@@ -75,7 +75,7 @@ class Action {
           effect(effect) {}
 
     string name;
-    vector<pair<string, vector<Type>>> signature;
+    vector<pair<string, vector<Type*>>> signature;
     vector<Predicate> precondition;
     Effect effect;
 };
@@ -83,9 +83,9 @@ class Action {
 class Domain {
    public:
     Domain(){};
-    Domain(string name_, unordered_map<string, Type>& types_,
+    Domain(string name_, unordered_map<string, Type*>& types_,
            vector<Predicate> predicates_, vector<Action> actions_,
-           unordered_map<string, Type> constants_ = {})
+           unordered_map<string, Type*> constants_ = {})
         : name(name_),
           types(types_),
           predicates(predicates_),
@@ -93,19 +93,19 @@ class Domain {
           constants(constants_) {}
 
     string name;
-    unordered_map<string, Type> types;
+    unordered_map<string, Type*> types;
     vector<Predicate> predicates;
     unordered_map<string, Predicate> predicates_dict;
     vector<Action> actions;
     unordered_map<string, Action> actions_dict;
-    unordered_map<string, Type> constants;
+    unordered_map<string, Type*> constants;
 };
 
 class Problem {
    public:
     Problem(){};
     Problem(std::string name, Domain* domain,
-            std::unordered_map<std::string, Type>& objects,
+            std::unordered_map<std::string, Type*>& objects,
             std::vector<Predicate> init, std::vector<Predicate> goal)
         : name(name),
           domain(domain),
@@ -115,7 +115,7 @@ class Problem {
 
     std::string name;
     Domain* domain;
-    std::unordered_map<std::string, Type> objects;
+    std::unordered_map<std::string, Type*> objects;
     std::vector<Predicate> init;
     std::vector<Predicate> goal;
 };

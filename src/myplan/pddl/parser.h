@@ -530,9 +530,9 @@ struct Parser {
         std::cout << "Print out given domain.types" << std::endl;
         for (auto tpp : dom.types) {
             std::cout << tpp.first << ": ";
-            std::cout << tpp.second.name << " ";
-            if (tpp.second.parent != nullptr) {
-                std::cout << tpp.second.parent->name;
+            std::cout << tpp.second->name << " ";
+            if (tpp.second->parent != nullptr) {
+                std::cout << tpp.second->parent->name;
             }
             std::cout << std::endl;
         }

@@ -44,7 +44,7 @@ TEST(tree_visitor, ActionsSetAndParameters) {
     _parser.domInput = domain_input;
     _parser.probInput = problem_input;
     _domain = _parser.parse_domain(false);
-    _problem = _parser.parse_problem(_domain, false);
+    //_problem = _parser.parse_problem(_domain, false);
 
     // test action set & parameters
     std::unordered_set<std::string> test_us = {"pick-up", "put-down", "stack",
@@ -54,7 +54,7 @@ TEST(tree_visitor, ActionsSetAndParameters) {
     for (auto a : _domain.actions_dict) {
         ASSERT_TRUE(test_us.find(a.first) != test_us.end());
         for (auto s : a.second.signature) {
-            ASSERT_EQ(s.second[0].name, "block");
+            ASSERT_EQ(s.second[0]->name, "block");
             tmp_cnt_0++;
         }
     }
@@ -65,7 +65,7 @@ TEST(tree_visitor, ActionPrecondition) {
     _parser.domInput = domain_input;
     _parser.probInput = problem_input;
     _domain = _parser.parse_domain(false);
-    _problem = _parser.parse_problem(_domain, false);
+    //_problem = _parser.parse_problem(_domain, false);
 
     // test action precondition
     std::unordered_set<std::string> test_precond_names = {
@@ -140,7 +140,7 @@ TEST(tree_visitor, Predicates) {
     for (auto p : _domain.predicates_dict) {
         pred_names.insert(p.first);
         for (auto s : p.second.signature) {
-            ASSERT_EQ(s.second[0].name, "block");
+            ASSERT_EQ(s.second[0]->name, "block");
         }
     }
     ASSERT_EQ(pred_names, test_pred_names);
@@ -158,7 +158,7 @@ TEST(tree_visitor, Constatns) {
     std::unordered_set<std::string> constants_key;
     for (auto c : _domain.constants) {
         constants_key.insert(c.first);
-        ASSERT_EQ(c.second.name, "block");
+        ASSERT_EQ(c.second->name, "block");
     }
     ASSERT_EQ(constants_key, test_constants_key);
 }

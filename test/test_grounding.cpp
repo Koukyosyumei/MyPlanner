@@ -17,7 +17,7 @@
 using namespace std;
 
 Action get_action(std::string name,
-                  std::vector<pair<string, std::vector<Type>>> signature,
+                  std::vector<pair<string, std::vector<Type*>>> signature,
                   std::vector<Predicate> preconditiona,
                   std::vector<Predicate> addlist,
                   std::vector<Predicate> dellist) {
@@ -35,15 +35,16 @@ TEST(grounding, Statics1) {
     Type type_car = Type("car", &type_vehicle);
     Type type_city = Type("city", &type_object);
     Type type_country = Type("country", &type_object);
-    std::unordered_map<std::string, Type> types{
-        {"object", type_object},
-        {"car", type_car},
-        {"city", type_city},
-        {"country", type_country},
+    std::unordered_map<std::string, Type*> types{
+        {"object", &type_object},
+        {"car", &type_car},
+        {"city", &type_city},
+        {"country", &type_country},
     };
+    std::vector<pair<std::string, std::vector<Type*>>> sig1 = {
+        {"car", {types["car"]}}, {"dest", {types["city"]}}};
 
-    std::vector<Predicate> predicate_orig = {
-        Predicate("at", {{"car", {types["car"]}}, {"dest", {types["city"]}}})};
+    std::vector<Predicate> predicate_orig = {Predicate("at", sig1)};
     std::vector<Predicate> predicate_dest = {
         Predicate("at", {{"car", {types["car"]}}, {"orig", {types["city"]}}})};
     std::vector<Predicate> predicate_in = {Predicate(
@@ -68,7 +69,7 @@ TEST(grounding, Statics1) {
 
 TEST(grounding, Statics2) {
     Type type_object = Type("object", nullptr);
-    std::vector<pair<std::string, std::vector<Type>>> empty_signature;
+    std::vector<pair<std::string, std::vector<Type*>>> empty_signature;
     Predicate predicate_a = Predicate("a", empty_signature);
     Predicate predicate_b = Predicate("b", empty_signature);
     Action the_action = get_action("the_action", empty_signature, {predicate_a},
@@ -88,28 +89,28 @@ TEST(grounding, Map1) {
     Type type_truck = Type("truck", &type_vehicle);
     Type type_city = Type("city", &type_object);
 
-    std::unordered_map<std::string, Type> objects{
-        {"red_car", type_car},      {"green_car", type_car},
-        {"blue_truck", type_truck}, {"motorbike", type_vehicle},
-        {"freiburg", type_city},    {"basel", type_city},
+    std::unordered_map<std::string, Type*> objects{
+        {"red_car", &type_car},      {"green_car", &type_car},
+        {"blue_truck", &type_truck}, {"motorbike", &type_vehicle},
+        {"freiburg", &type_city},    {"basel", &type_city},
     };
 
-    std::unordered_map<Type, std::vector<std::string>> type_map =
+    std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(objects);
 
     std::vector<pair<std::string, std::vector<std::string>>> expected{
-        {"red_car", type_map[type_car]},
-        {"green_car", type_map[type_car]},
-        {"blue_truck", type_map[type_truck]},
-        {"red_car", type_map[type_vehicle]},
-        {"green_car", type_map[type_vehicle]},
-        {"blue_truck", type_map[type_vehicle]},
-        {"motorbike", type_map[type_vehicle]},
-        {"freiburg", type_map[type_city]},
-        {"basel", type_map[type_city]},
-        {"green_car", type_map[type_object]},
-        {"motorbike", type_map[type_object]},
-        {"basel", type_map[type_object]}};
+        {"red_car", type_map[type_car.name]},
+        {"green_car", type_map[type_car.name]},
+        {"blue_truck", type_map[type_truck.name]},
+        {"red_car", type_map[type_vehicle.name]},
+        {"green_car", type_map[type_vehicle.name]},
+        {"blue_truck", type_map[type_vehicle.name]},
+        {"motorbike", type_map[type_vehicle.name]},
+        {"freiburg", type_map[type_city.name]},
+        {"basel", type_map[type_city.name]},
+        {"green_car", type_map[type_object.name]},
+        {"motorbike", type_map[type_object.name]},
+        {"basel", type_map[type_object.name]}};
 
     for (auto e : expected) {
         ASSERT_TRUE(std::find(e.second.begin(), e.second.end(), e.first) !=
@@ -119,12 +120,12 @@ TEST(grounding, Map1) {
 
 TEST(grounding, Map2) {
     Type type_object = Type("object", nullptr);
-    std::unordered_map<std::string, Type> objects{{"object1", type_object}};
-    std::unordered_map<Type, std::vector<std::string>> type_map =
+    std::unordered_map<std::string, Type*> objects{{"object1", &type_object}};
+    std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(objects);
-    ASSERT_TRUE(std::find(type_map[type_object].begin(),
-                          type_map[type_object].end(),
-                          "object1") != type_map[type_object].end());
+    ASSERT_TRUE(std::find(type_map[type_object.name].begin(),
+                          type_map[type_object.name].end(),
+                          "object1") != type_map[type_object.name].end());
 }
 
 TEST(grounding, Facts) {
@@ -189,14 +190,14 @@ TEST(grounding, Operators) {
     Type type_my_car = Type("my_car", &type_vehicle);
     Type type_color = Type("color", &type_object);
 
-    std::unordered_map<std::string, Type> types{
-        {"object", type_object}, {"vehicle", type_vehicle},
-        {"car", type_car},       {"truck", type_truck},
-        {"city", type_city},     {"country", type_country},
-        {"my_car", type_my_car}, {"color", type_color},
+    std::unordered_map<std::string, Type*> types{
+        {"object", &type_object}, {"vehicle", &type_vehicle},
+        {"car", &type_car},       {"truck", &type_truck},
+        {"city", &type_city},     {"country", &type_country},
+        {"my_car", &type_my_car}, {"color", &type_color},
     };
 
-    std::unordered_map<std::string, Type> objects{
+    std::unordered_map<std::string, Type*> objects{
         {"red_car", types["car"]},      {"green_car", types["car"]},
         {"blue_truck", types["truck"]}, {"freiburg", types["city"]},
         {"basel", types["city"]},       {"green", types["color"]},
@@ -299,7 +300,7 @@ TEST(grounding, Operators) {
                     {"dest", {types["city"]}}},
                    {}, {predicate_car_orig}, {predicate_car_dest});
 
-    std::unordered_map<Type, std::vector<std::string>> type_map =
+    std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(objects);
 
     std::unordered_set<std::string> grounded_initial_state =
@@ -402,31 +403,31 @@ TEST(grounding, Operators) {
     Problem parsed_problem8 = parse_problem(parser, dom_08, prob_08);
 
     type_object = Type("object", nullptr);
-    types = {{"object", type_object}};
+    types = {{"object", &type_object}};
     predicates = {{"the_predicate",
                    Predicate("the-predicate",
-                             {{"v1", {type_object}}, {"v2", {type_object}}})}};
-    std::unordered_map<std::string, Type> constants = {{"x", type_object}};
+                             {{"v1", {&type_object}}, {"v2", {&type_object}}})}};
+    std::unordered_map<std::string, Type*> constants = {{"x", &type_object}};
     actions = {
         {"theaction",
-         get_action("theaction", {{"?x", {type_object}}}, {},
+         get_action("theaction", {{"?x", {&type_object}}}, {},
                     {Predicate("the-predicate",
-                               {{"x", {type_object}}, {"?x", {type_object}}})},
+                               {{"x", {&type_object}}, {"?x", {&type_object}}})},
                     {})}};
     domain = Domain("regression-test", types, {}, {}, {});
     domain.predicates_dict = predicates;
     domain.actions_dict = actions;
     domain.constants = constants;
-    std::unordered_map<std::string, Type> tmp_objects = {{"y", type_object}};
+    std::unordered_map<std::string, Type*> tmp_objects = {{"y", &type_object}};
     std::vector<Predicate> tmp_init;
     Problem problem5 =
         Problem("regression-test-05", &domain, tmp_objects, tmp_init,
                 {Predicate("the-predicate",
-                           {{"x", {type_object}}, {"y", {type_object}}})});
+                           {{"x", {&type_object}}, {"y", {&type_object}}})});
     Problem problem6 =
         Problem("regression-test-06", &domain, tmp_objects, tmp_init,
                 {Predicate("the-predicate",
-                           {{"y", {type_object}}, {"y", {type_object}}})});
+                           {{"y", {&type_object}}, {"y", {&type_object}}})});
 
     Task parsed_task5 = ground(parsed_problem5);
     Task coded_task5 = ground(problem5);
@@ -457,8 +458,8 @@ TEST(grounding, Operators) {
         "(define (problem prob) (:domain dom) (:objects y - object) (:init) "
         "(:goal (ok y)))";
 
-    std::vector<std::string> tests_pre_in = {"(and)",          "(and)",
-                                             "(and)",          "(and (ok ?x))",
+    std::vector<std::string> tests_pre_in = {"(and)",         "(and)",
+                                             "(and)",         "(and (ok ?x))",
                                              "(and (ok ?x))", "(and (ok ?x))"};
     std::vector<std::string> tests_eff_in = {
         "(ok ?x)", "(and (not (ok ?x)))", "(and (ok ?x) (not (ok ?x)))",

@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
     std::cout << "Print out parser problemdef's objects" << std::endl;
     for (auto& obp : problem_ptr->objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
@@ -73,9 +73,9 @@ int main(int argc, char* argv[]) {
               << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }

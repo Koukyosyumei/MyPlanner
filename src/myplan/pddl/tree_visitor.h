@@ -184,14 +184,16 @@ struct hash<Predicate> {
         auto n_hash = hash<std::string>()(hoge.name);
         seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
-        for (pair<std::string, std::vector<Type>> sp : hoge.signature) {
+        /*
+        for (pair<std::string, std::vector<Type*>> sp : hoge.signature) {
             auto d_hash = hash<std::string>()(sp.first);
             seed ^= d_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            for (Type t : sp.second) {
+            for (Type* t : sp.second) {
                 auto m_hash = hash<Type>()(t);
                 seed ^= m_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             }
-        }
+        }*/
+
         return seed;
     }
 };
@@ -200,21 +202,22 @@ struct hash<Predicate> {
 
 class TraversePDDLDomain : public PDDLVisitor {
    public:
-    std::unordered_map<Type, Type> _typeHash;
+    std::unordered_map<std::string, Type*> _typeHash;
     std::unordered_map<PredicateVar, Predicate> _predicateHash;
-    std::unordered_map<Variable, pair<std::string, vector<Type>>> _variableHash;
+    std::unordered_map<Variable, pair<std::string, vector<Type*>>>
+        _variableHash;
     std::unordered_map<PreconditionStmt, std::vector<Predicate>> _precondHash;
     std::unordered_map<EffectStmt, Effect> _effectHash;
     std::unordered_map<ActionStmt, Action> _actionstmtHash;
     std::unordered_map<Keyword, std::string> _keywordHash;
 
-    std::unordered_map<std::string, Type> _types;
+    std::unordered_map<std::string, Type*> _types;
     std::unordered_map<std::string, Predicate> _predicates;
     std::unordered_map<std::string, Action> _actions;
-    std::unordered_map<std::string, Type> _constants;
+    std::unordered_map<std::string, Type*> _constants;
     std::set<std::string> _requirements;
     Domain domain;
-    Type _objectType = Type("object", nullptr);
+    Type* _objectType = new Type("object", nullptr);
 
     void visit_problem_def(ProblemDef* node) override {
         for (Object& o : node->objects) {
@@ -256,8 +259,8 @@ class TraversePDDLDomain : public PDDLVisitor {
                     explicitObjectDef = true;
                 }
                 this->visit_type(&t);
-                Type& type = _typeHash[t];
-                _types[type.name] = type;
+                Type* type = _typeHash[t.name];
+                _types[type->name] = type;
             }
         }
 
@@ -266,19 +269,19 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
 
         for (auto& kv : _types) {
-            if (kv.second.name == "object") {
+            if (kv.second->name == "object") {
                 continue;
             }
             // Type* t = &kv.second;
-            if (kv.second.parent != nullptr) {
-                std::cout << "kv is " << kv.second.name << " "
-                          << kv.second.parent->name << " ";
-                if (_types.find(kv.second.parent->name) == _types.end()) {
+            if (kv.second->parent != nullptr) {
+                std::cout << "kv is " << kv.second->name << " "
+                          << kv.second->parent->name << " ";
+                if (_types.find(kv.second->parent->name) == _types.end()) {
                     throw SemanticError("Error unknown parent type: " +
-                                        kv.second.parent->name);
+                                        kv.second->parent->name);
                 }
-                kv.second.parent = &_types[kv.second.parent->name];
-                std::cout << kv.second.parent->name << std::endl;
+                kv.second->parent = _types[kv.second->parent->name];
+                std::cout << kv.second->parent->name << std::endl;
             }
         }
 
@@ -316,9 +319,9 @@ class TraversePDDLDomain : public PDDLVisitor {
         std::cout << "Print out domain.types" << std::endl;
         for (auto tpp : domain.types) {
             std::cout << tpp.first << ": ";
-            std::cout << tpp.second.name << " ";
-            if (tpp.second.parent != nullptr) {
-                std::cout << tpp.second.parent->name;
+            std::cout << tpp.second->name << " ";
+            if (tpp.second->parent != nullptr) {
+                std::cout << tpp.second->parent->name;
             }
             std::cout << std::endl;
         }
@@ -345,9 +348,11 @@ class TraversePDDLDomain : public PDDLVisitor {
     void visit_type(Type* node) override {
         if (node->parent == nullptr) {
             Type* obj = new Type("object", nullptr);
-            _typeHash[*node] = Type(node->name, obj);
+            Type* t = new Type(node->name, obj);
+            _typeHash[node->name] = t;
         } else {
-            _typeHash[*node] = Type(node->name, node->parent);
+            Type* t = new Type(node->name, node->parent);
+            _typeHash[node->name] = t;
         }
         std::cout << "4-Type " << node->name << std::endl;
     }
@@ -388,11 +393,11 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_predicate(PredicateVar* node) override {
         /* Visits a PDDL predicate. */
-        std::vector<pair<std::string, std::vector<Type>>> signature;
+        std::vector<pair<std::string, std::vector<Type*>>> signature;
         /* Visit all predicate parameters. */
         for (Variable& v : node->parameters) {
             v.accept(this);
-            pair<std::string, std::vector<Type>> signatureTuple =
+            pair<std::string, std::vector<Type*>> signatureTuple =
                 _variableHash[v];
             /* Append each parameter to the predicate signature. */
             signature.emplace_back(signatureTuple);
@@ -405,11 +410,11 @@ class TraversePDDLDomain : public PDDLVisitor {
         /* Visits a PDDL variable. */
         /* If there is no type given, it's always of type 'object'. */
         if (!node->typed) {
-            std::vector<Type> typelist = {_types["object"]};
+            std::vector<Type*> typelist = {_types["object"]};
             _variableHash[*node] = make_pair(node->name, typelist);
         } else {
             /* Visit all type declarations of the variable. */
-            std::vector<Type> typelist;
+            std::vector<Type*> typelist;
             for (auto& t : node->types) {
                 /* Check whether they have been defined. */
                 if (!_types.count(t)) {
@@ -425,11 +430,11 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void visit_action_stmt(ActionStmt* node) override {
         /* Visits a PDDL action statement. */
-        std::vector<pair<std::string, std::vector<Type>>> signature;
+        std::vector<pair<std::string, std::vector<Type*>>> signature;
         /* Visit all parameters and create signature. */
         for (Variable& v : node->parameters) {
             v.accept(this);
-            pair<std::string, std::vector<Type>> signatureTuple =
+            pair<std::string, std::vector<Type*>> signatureTuple =
                 _variableHash[v];
             signature.emplace_back(signatureTuple);
         }
@@ -445,7 +450,7 @@ class TraversePDDLDomain : public PDDLVisitor {
 
     void add_precond(std::vector<Predicate>& precond, Formula& c) {
         Predicate preDef = _predicates[c.key];
-        std::vector<pair<std::string, vector<Type>>> signature;
+        std::vector<pair<std::string, vector<Type*>>> signature;
         int count = 0;
         if (c.children.size() != preDef.signature.size()) {
             throw SemanticError(
@@ -542,7 +547,7 @@ class TraversePDDLDomain : public PDDLVisitor {
                 "Error: NoneType predicate used in effect of action");
         }
         Predicate predDef = _predicates[nextPredicate.key];
-        std::vector<std::pair<std::string, std::vector<Type>>> signature;
+        std::vector<std::pair<std::string, std::vector<Type*>>> signature;
         int count = 0;
         // Check whether predicate is used with the correct signature.
         if (nextPredicate.children.size() != predDef.signature.size()) {
@@ -573,7 +578,7 @@ class TraversePDDLProblem : public PDDLVisitor {
     std::unordered_map<PredicateInstance, Predicate> _predicateHash;
     std::unordered_map<InitStmt, std::vector<Predicate>> _initHash;
     std::unordered_map<GoalStmt, std::vector<Predicate>> _goalHash;
-    std::unordered_map<std::string, Type> _objects;
+    std::unordered_map<std::string, Type*> _objects;
 
    public:
     TraversePDDLProblem() {}
@@ -668,9 +673,9 @@ class TraversePDDLProblem : public PDDLVisitor {
         std::cout << "Print out 's objects" << std::endl;
         for (auto& obp : _objects) {
             std::cout << obp.first << " ";
-            std::cout << obp.second.name << " ";
-            if (obp.second.parent != nullptr) {
-                std::cout << obp.second.parent->name;
+            std::cout << obp.second->name << " ";
+            if (obp.second->parent != nullptr) {
+                std::cout << obp.second->parent->name;
             }
             std::cout << std::endl;
         }
@@ -682,9 +687,9 @@ class TraversePDDLProblem : public PDDLVisitor {
         std::cout << "Print out problemdef's objects" << std::endl;
         for (auto& obp : _problemDef->objects) {
             std::cout << obp.first << " ";
-            std::cout << obp.second.name << " ";
-            if (obp.second.parent != nullptr) {
-                std::cout << obp.second.parent->name;
+            std::cout << obp.second->name << " ";
+            if (obp.second->parent != nullptr) {
+                std::cout << obp.second->parent->name;
             }
             std::cout << std::endl;
         }
@@ -714,18 +719,18 @@ class TraversePDDLProblem : public PDDLVisitor {
                                          " used in object definition!");
             }
             std::cout << "domain_type is "
-                      << _domain->types[node->typeName].name << " ";
-            if (_domain->types[node->typeName].parent != nullptr) {
-                std::cout << _domain->types[node->typeName].parent->name;
+                      << _domain->types[node->typeName]->name << " ";
+            if (_domain->types[node->typeName]->parent != nullptr) {
+                std::cout << _domain->types[node->typeName]->parent->name;
             }
             std::cout << std::endl;
 
             _objects[node->name] = _domain->types[node->typeName];
 
-            std::cout << "99999 domain_type is " << _objects[node->name].name
+            std::cout << "99999 domain_type is " << _objects[node->name]->name
                       << " ";
-            if (_objects[node->name].parent != nullptr) {
-                std::cout << _objects[node->name].parent->name;
+            if (_objects[node->name]->parent != nullptr) {
+                std::cout << _objects[node->name]->parent->name;
             }
             std::cout << std::endl;
         }
@@ -763,7 +768,7 @@ class TraversePDDLProblem : public PDDLVisitor {
 
         // Get predicate from the domain data structure.
         Predicate predDef = this->_domain->predicates_dict[c.key];
-        std::vector<std::pair<std::string, std::vector<Type>>> signature;
+        std::vector<std::pair<std::string, std::vector<Type*>>> signature;
         size_t count = 0;
 
         // Check whether the predicate uses the correct signature.
@@ -813,10 +818,10 @@ class TraversePDDLProblem : public PDDLVisitor {
     }
 
     void visit_predicate_instance(PredicateInstance* node) override {
-        std::vector<pair<std::string, std::vector<Type>>> signature;
+        std::vector<pair<std::string, std::vector<Type*>>> signature;
         // Visit all parameters.
         for (std::string o : node->parameters) {
-            Type o_type = Type("<NULL>", nullptr);
+            Type* o_type = new Type("<NULL>", nullptr);
             // Check whether predicate was introduced in objects or domain
             // constants.
             if (!(_objects.count(o) || _domain->constants.count(o))) {
@@ -828,7 +833,7 @@ class TraversePDDLProblem : public PDDLVisitor {
             } else if (_domain->constants.count(o)) {
                 o_type = _domain->constants[o];
             }
-            std::vector<Type> tmp_o_type_vec = {o_type};
+            std::vector<Type*> tmp_o_type_vec = {o_type};
             signature.emplace_back(make_pair(o, tmp_o_type_vec));
         }
         _predicateHash[*node] = Predicate(node->name, signature);

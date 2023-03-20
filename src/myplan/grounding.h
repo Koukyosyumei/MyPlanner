@@ -169,47 +169,47 @@ inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
 }
 */
 
-inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
-    std::unordered_map<std::string, Type>& objects) {
+inline std::unordered_map<std::string, std::vector<std::string>>
+_create_type_map(std::unordered_map<std::string, Type*>& objects) {
     std::cout << "obkects is " << std::endl;
     for (auto& kv : objects) {
-        std::cout << kv.first << " " << kv.second.name << std::endl;
+        std::cout << kv.first << " " << kv.second->name << std::endl;
     }
 
     std::cout << "888888" << std::endl;
     for (auto& kv : objects) {
-        std::cout << kv.second.name << " ";
-        if (kv.second.parent != nullptr) {
-            std::cout << " " << kv.second.parent->name;
+        std::cout << kv.second->name << " ";
+        if (kv.second->parent != nullptr) {
+            std::cout << " " << kv.second->parent->name;
         }
         std::cout << std::endl;
     }
     std::cout << "888888" << std::endl;
 
-    std::unordered_map<Type, std::vector<std::string>> type_map;
+    std::unordered_map<std::string, std::vector<std::string>> type_map;
     for (auto& [object_name, object_type] : objects) {
         // std::string object_name = kv.first;
         // Type object_type = kv.second;
-        Type* parent_type = object_type.parent;
+        Type* parent_type = object_type->parent;
         std::cout << "aa--- " << object_name << std::endl;
         while (true) {
             std::cout << 1 << std::endl;
             // if (object_type == nullptr) {
             //     std::cout << "null!!!!!" << std::endl;
             // }
-            std::cout << "?????--- " << object_name << " " << object_type.name
+            std::cout << "?????--- " << object_name << " " << object_type->name
                       << std::endl;
-            if (type_map.find(object_type) != type_map.end()) {
-                type_map[object_type].push_back(object_name);
+            if (type_map.find(object_type->name) != type_map.end()) {
+                type_map[object_type->name].push_back(object_name);
             } else {
-                type_map.insert({object_type, {object_name}});
+                type_map.insert({object_type->name, {object_name}});
             }
             std::cout << 2 << std::endl;
-            auto next_parent_type = object_type.parent;
+            auto next_parent_type = object_type->parent;
             std::cout << 3 << std::endl;
             auto next_object_type = parent_type;
             std::cout << 4 << std::endl;
-            object_type = *next_object_type;
+            object_type = next_object_type;
             parent_type = next_parent_type;
             // std::cout << parent_type->name << " " << object_type.name
             //           << std::endl;
@@ -429,7 +429,8 @@ inline Operator* _create_operator(
 }
 
 inline std::vector<Operator> _ground_action(
-    Action action, std::unordered_map<Type, std::vector<std::string>> type_map,
+    Action action,
+    std::unordered_map<std::string, std::vector<std::string>> type_map,
     std::vector<std::string> statics, std::unordered_set<std::string> init) {
     std::vector<Operator> operators;
     std::unordered_map<std::string, std::unordered_set<std::string>>
@@ -437,7 +438,7 @@ inline std::vector<Operator> _ground_action(
 
     std::cout << "type_map is" << std::endl;
     for (auto tmp : type_map) {
-        std::cout << tmp.first.name << ": ";
+        std::cout << tmp.first << ": ";
         for (auto s : tmp.second) {
             std::cout << s << " ";
         }
@@ -449,7 +450,7 @@ inline std::vector<Operator> _ground_action(
         // List of sets of objects for this parameter
         std::vector<std::vector<std::string>> objects;
         for (auto& type : param_types) {
-            objects.push_back(type_map[type]);
+            objects.push_back(type_map[type->name]);
         }
         // Combine the sets into one set
         std::unordered_set<std::string> objects_set;
@@ -541,7 +542,7 @@ inline std::vector<Operator> _ground_action(
 
 inline std::vector<Operator> _ground_actions(
     std::vector<Action> actions,
-    std::unordered_map<Type, std::vector<std::string>> type_map,
+    std::unordered_map<std::string, std::vector<std::string>> type_map,
     std::vector<string> statics, std::unordered_set<std::string> init) {
     /*
     Ground a list of actions and return the resulting list of operators.
@@ -572,16 +573,16 @@ inline Task ground(Problem& problem,
     std::cout << "Print out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
 
     // Objects
     for (auto& obp : problem.objects) {
-        std::cout << "po is nullptr ?: " << (obp.second.parent == nullptr)
+        std::cout << "po is nullptr ?: " << (obp.second->parent == nullptr)
                   << std::endl;
     }
     // std::unordered_map<std::string, Type>* objects = &(problem.objects);
@@ -593,9 +594,9 @@ inline Task ground(Problem& problem,
     std::cout << "Print 1 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
@@ -608,9 +609,9 @@ inline Task ground(Problem& problem,
     std::cout << "Print 2 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
@@ -625,13 +626,13 @@ inline Task ground(Problem& problem,
     std::cout << "Print 3 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
-    std::unordered_map<Type, std::vector<std::string>> type_map =
+    std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(problem.objects);
     // Get the names of the static predicates
     std::vector<std::string> statics =
@@ -640,9 +641,9 @@ inline Task ground(Problem& problem,
     std::cout << "Print 4 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
-        std::cout << obp.second.name << " ";
-        if (obp.second.parent != nullptr) {
-            std::cout << obp.second.parent->name;
+        std::cout << obp.second->name << " ";
+        if (obp.second->parent != nullptr) {
+            std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
     }
