@@ -141,21 +141,6 @@ inline std::vector<std::string> _get_statics(
 
 inline std::unordered_map<std::string, std::vector<std::string>>
 _create_type_map(std::unordered_map<std::string, Type*>& objects) {
-    std::cout << "obkects is " << std::endl;
-    for (auto& kv : objects) {
-        std::cout << kv.first << " " << kv.second->name << std::endl;
-    }
-
-    std::cout << "888888" << std::endl;
-    for (auto& kv : objects) {
-        std::cout << kv.second->name << " ";
-        if (kv.second->parent != nullptr) {
-            std::cout << " " << kv.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "888888" << std::endl;
-
     std::unordered_map<std::string, std::vector<std::string>> type_map;
     for (auto& [object_name, object_type] : objects) {
         // std::string object_name = kv.first;
@@ -176,7 +161,6 @@ _create_type_map(std::unordered_map<std::string, Type*>& objects) {
             }
         }
     }
-    std::cout << "successuflyy construct type_map" << std::endl;
     return type_map;
 }
 
@@ -453,7 +437,6 @@ inline std::vector<Operator> _ground_action(
         }
         domain_lists.push_back(tuples);
     }
-    std::cout << std::endl;
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
         product<std::pair<std::string, std::string>>(domain_lists);
@@ -493,7 +476,6 @@ inline std::vector<Operator> _ground_actions(
         for (Operator op : op_list) {
             operators.push_back(op);
         }
-        std::cout << std::endl;
     }
     return operators;
 }
@@ -501,55 +483,19 @@ inline std::vector<Operator> _ground_actions(
 inline Task ground(Problem& problem,
                    bool remove_statics_from_initial_state = true,
                    bool remove_irrelevant_operators = true) {
-    std::cout << "Print out ground parser problemdef's objects" << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
-
     // Objects
-    for (auto& obp : problem.objects) {
-        std::cout << "po is nullptr ?: " << (obp.second->parent == nullptr)
-                  << std::endl;
-    }
-
-    std::cout << "^^^^^^^^^^^" << (problem.domain == nullptr) << std::endl;
     // std::unordered_map<std::string, Type>* objects = &(problem.objects);
     for (auto& constant : problem.domain->constants) {
-        std::cout << "Try to access constatns" << std::endl;
-        std::cout << "constants is " << constant.first << std::endl;
         problem.objects.insert({constant.first, constant.second});
     }
-    std::cout << "^^^^^^^^^^" << std::endl;
 
-    std::cout << "Print 1 out ground parser problemdef's objects" << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
     // std::vector<Action> domain_actions = problem.domain->actions;
     if (problem.domain->actions.size() == 0) {
         for (auto ap : problem.domain->actions_dict) {
             problem.domain->actions.push_back(ap.second);
         }
     }
-    std::cout << "Print 2 out ground parser problemdef's objects" << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
+
     // problem.domain.actions = domain_actions;
     // std::vector<Predicate> domain_predicates = problem.domain->predicates;
     if (problem.domain->predicates.size() == 0) {
@@ -558,31 +504,11 @@ inline Task ground(Problem& problem,
         }
     }
 
-    std::cout << "Print 3 out ground parser problemdef's objects" << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
     std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(problem.objects);
     // Get the names of the static predicates
     std::vector<std::string> statics =
         _get_statics(problem.domain->predicates, problem.domain->actions);
-
-    /*
-    std::cout << "Print 4 out ground parser problemdef's objects" << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }*/
 
     // Create a map from types to objects
     // std::unordered_map<Type, std::vector<std::string>> type_map =
@@ -591,8 +517,6 @@ inline Task ground(Problem& problem,
     // Transform initial state into a specific state
     std::unordered_set<string> init = _get_partial_state(problem.init);
 
-    // std::cout << "len of domain_actions is " << domain_actions.size()
-    //           << std::endl;
     //  Ground actions
     std::vector<Operator> operators =
         _ground_actions(problem.domain->actions, type_map, statics, init);

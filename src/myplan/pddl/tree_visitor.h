@@ -274,14 +274,11 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
             // Type* t = &kv.second;
             if (kv.second->parent != nullptr) {
-                std::cout << "kv is " << kv.second->name << " "
-                          << kv.second->parent->name << " ";
                 if (_types.find(kv.second->parent->name) == _types.end()) {
                     throw SemanticError("Error unknown parent type: " +
                                         kv.second->parent->name);
                 }
                 kv.second->parent = _types[kv.second->parent->name];
-                std::cout << kv.second->parent->name << std::endl;
             }
         }
 
@@ -316,15 +313,6 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
         domain = new Domain(node->name, _types, tmp_predicates, tmp_actions,
                             _constants);
-        std::cout << "Print out domain.types" << std::endl;
-        for (auto tpp : domain->types) {
-            std::cout << tpp.first << ": ";
-            std::cout << tpp.second->name << " ";
-            if (tpp.second->parent != nullptr) {
-                std::cout << tpp.second->parent->name;
-            }
-            std::cout << std::endl;
-        }
         domain->predicates_dict = _predicates;
         domain->actions_dict = _actions;
     }
@@ -669,29 +657,9 @@ class TraversePDDLProblem : public PDDLVisitor {
         node->goal.accept(this);
         std::vector<Predicate> goal_list = _goalHash[node->goal];
 
-        std::cout << "Print out 's objects" << std::endl;
-        for (auto& obp : _objects) {
-            std::cout << obp.first << " ";
-            std::cout << obp.second->name << " ";
-            if (obp.second->parent != nullptr) {
-                std::cout << obp.second->parent->name;
-            }
-            std::cout << std::endl;
-        }
-
         // Create the problem data structure.
         _problemDef =
             new Problem(node->name, _domain, _objects, init_list, goal_list);
-
-        std::cout << "Print out problemdef's objects" << std::endl;
-        for (auto& obp : _problemDef->objects) {
-            std::cout << obp.first << " ";
-            std::cout << obp.second->name << " ";
-            if (obp.second->parent != nullptr) {
-                std::cout << obp.second->parent->name;
-            }
-            std::cout << std::endl;
-        }
     }
 
     void visit_formula(Formula* node) override {

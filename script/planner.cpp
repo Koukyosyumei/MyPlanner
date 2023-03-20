@@ -59,26 +59,7 @@ int main(int argc, char* argv[]) {
     printf("%d Constants parsed \n", (int)domain->constants.size());
 
     Problem* problem_ptr = parser.parse_problem(domain, true);
-    std::cout << "Print out parser problemdef's objects" << std::endl;
-    for (auto& obp : problem_ptr->objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
     Problem problem = *problem_ptr;
-    std::cout << "Print out referecend parser problemdef's objects"
-              << std::endl;
-    for (auto& obp : problem.objects) {
-        std::cout << obp.first << " ";
-        std::cout << obp.second->name << " ";
-        if (obp.second->parent != nullptr) {
-            std::cout << obp.second->parent->name;
-        }
-        std::cout << std::endl;
-    }
     printf("%d Objects parsed \n", (int)problem.objects.size());
 
     printf("Grounding start: %s \n", problem.name.c_str());

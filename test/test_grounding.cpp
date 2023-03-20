@@ -333,12 +333,7 @@ TEST(grounding, Operators) {
     Problem problem =
         Problem("test_problem", &domain, objects, initial_state, goal_state);
 
-    std::cout
-        << "!st "
-           "GRRRRRRRRRRRRRRRRRRRRRROUUUUUUUUUUUUUUUUUUUUNNNNNNNNNNNNNNDDDDDDDD"
-        << std::endl;
     Task task = ground(problem);
-    std::cout << "SUCCCCCCCCCCCCCCCCCCCEEEEEEEEEEEEEEEESSSSSSSSS" << std::endl;
 
     std::unordered_map<std::string, std::vector<Operator>> expected = {
         {"(DRIVE-CAR red_car freiburg basel )", grounded_drive_car},
@@ -351,12 +346,10 @@ TEST(grounding, Operators) {
     for (auto e : expected) {
         bool tmp_flag = false;
         for (auto op : e.second) {
-            // std::cout << e.first << "," << op.name << std::endl;
             if (op.name == e.first) {
                 tmp_flag = true;
             }
         }
-        // std::cout << std::endl;
         ASSERT_TRUE(tmp_flag);
     }
 
@@ -377,8 +370,6 @@ TEST(grounding, Operators) {
             ASSERT_FALSE(starts_with(dee, "car_color"));
         }
     }
-
-    std::cout << "||||||||||||||||||||||" << std::endl;
 
     Parser parser = Parser("");
 
