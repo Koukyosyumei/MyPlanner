@@ -47,16 +47,16 @@ int main(int argc, char* argv[]) {
 
     Parser parser = Parser(domain_file_path, problem_file_path);
     printf("Parsing Domain %s \n", domain_file_path.c_str());
-    Domain domain = parser.parse_domain(true);
+    Domain* domain = parser.parse_domain(true);
     printf("Parsing Problem %s \n", problem_file_path.c_str());
     printf("%d Predicates parsed (list style) \n",
-           (int)domain.predicates.size());
+           (int)domain->predicates.size());
     printf("%d Predicates parsed (dict style) \n",
-           (int)domain.predicates_dict.size());
-    printf("%d Actions parsed (list style) \n", (int)domain.actions.size());
+           (int)domain->predicates_dict.size());
+    printf("%d Actions parsed (list style) \n", (int)domain->actions.size());
     printf("%d Actions parsed (dict style) \n",
-           (int)domain.actions_dict.size());
-    printf("%d Constants parsed \n", (int)domain.constants.size());
+           (int)domain->actions_dict.size());
+    printf("%d Constants parsed \n", (int)domain->constants.size());
 
     Problem* problem_ptr = parser.parse_problem(domain, true);
     std::cout << "Print out parser problemdef's objects" << std::endl;

@@ -11,29 +11,10 @@ using namespace std;
 
 class Type {
    public:
-    //    Type(string name_, std::vector<string> parents_) : name(name_) {
-    //        transform(name.begin(), name.end(), name.begin(), ::tolower);
-    //        if (parents_.size() > 0) {
-    //            parent = parents_[0];
-    //        }
-    //    }
     Type(string name_ = "<NULL>", Type* parent_ = nullptr)
         : name(name_), parent(parent_) {
-        // if (parent != nullptr) {
-        //     name = parent->name;
         transform(name.begin(), name.end(), name.begin(), ::tolower);
-        if (parent_ == nullptr) {
-            std::cout << "Type Construction - " << name << std::endl;
-        } else {
-            std::cout << "Type Construction - " << name << " " << parent->name
-                      << std::endl;
-        }
-        //}
     }
-    //    Type(string name_ = "<NULL>", string parent_ = "<NULL>")
-    //        : name(name_), parent(parent_) {
-    //        transform(name.begin(), name.end(), name.begin(), ::tolower);
-    //    }
     bool operator==(const Type& other) const { return name == other.name; }
 
     string name;
@@ -85,7 +66,7 @@ class Domain {
     Domain(){};
     Domain(string name_, unordered_map<string, Type*>& types_,
            vector<Predicate> predicates_, vector<Action> actions_,
-           unordered_map<string, Type*> constants_ = {})
+           unordered_map<string, Type*>& constants_)
         : name(name_),
           types(types_),
           predicates(predicates_),
@@ -105,7 +86,7 @@ class Problem {
    public:
     Problem(){};
     Problem(std::string name, Domain* domain,
-            std::unordered_map<std::string, Type*>& objects,
+            std::unordered_map<std::string, Type*> objects,
             std::vector<Predicate> init, std::vector<Predicate> goal)
         : name(name),
           domain(domain),

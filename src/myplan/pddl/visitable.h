@@ -310,7 +310,7 @@ class DomainDef : public Visitable {
    public:
     DomainDef(std::string name,
               RequirementsStmt requirements = RequirementsStmt(),
-              std::vector<Type> types = {},
+              std::vector<Type*> types = {},
               PredicatesStmt predicates = PredicatesStmt({}),
               std::vector<ActionStmt> actions = {},
               std::vector<Object> constants = {})
@@ -325,7 +325,7 @@ class DomainDef : public Visitable {
 
     std::string name;
     RequirementsStmt requirements;
-    std::vector<Type> types;
+    std::vector<Type*> types;
     PredicatesStmt predicates;
     std::vector<ActionStmt> actions;
     std::vector<Object> constants;

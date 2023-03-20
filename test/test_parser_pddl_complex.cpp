@@ -81,7 +81,7 @@ TEST(parser_pddl_complex, Types) {
         "location - place city place physobj - object)";
 
     LispIterator iter = parse_lisp_iterator({test});
-    std::vector<Type> types = parse_types_stmt(iter);
+    std::vector<Type*> types = parse_types_stmt(iter);
     std::vector<std::string> test_names = {"truck",   "airplane", "package",
                                            "vehicle", "airport",  "location",
                                            "city",    "place",    "physobj"};
@@ -90,8 +90,8 @@ TEST(parser_pddl_complex, Types) {
         "place",   "object",  "object",  "object",
     };
     for (int i = 0; i < types.size(); i++) {
-        ASSERT_EQ(types[i].name, test_names[i]);
-        ASSERT_EQ(types[i].parent->name, test_types[i]);
+        ASSERT_EQ(types[i]->name, test_names[i]);
+        ASSERT_EQ(types[i]->parent->name, test_types[i]);
     }
 }
 
@@ -167,7 +167,7 @@ TEST(parser_pddl_complex, DomainDef) {
     ASSERT_EQ(dom.name, "blocks");
     ASSERT_EQ(dom.requirements.keywords[0].name, "strips");
     ASSERT_EQ(dom.requirements.keywords[1].name, "typing");
-    ASSERT_EQ(dom.types[0].name, "block");
+    ASSERT_EQ(dom.types[0]->name, "block");
 
     PredicatesStmt pred = dom.predicates;
     std::vector<std::string> test_names_1 = {"on", "ontable", "clear",

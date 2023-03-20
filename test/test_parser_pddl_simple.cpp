@@ -84,9 +84,9 @@ TEST(parser_pddl_simple, Types) {
     std::string test = "(:types block plane key)";
     std::vector<std::string> test_names = {"block", "plane", "key"};
     LispIterator iter = parse_lisp_iterator({test});
-    std::vector<Type> tlist = parse_types_stmt(iter);
+    std::vector<Type*> tlist = parse_types_stmt(iter);
     for (int i = 0; i < tlist.size(); i++) {
-        ASSERT_EQ(tlist[i].name, test_names[i]);
+        ASSERT_EQ(tlist[i]->name, test_names[i]);
     }
 }
 

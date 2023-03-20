@@ -85,8 +85,8 @@ inline std::vector<T> _parse_type_helper(LispIterator& iter) {
     return result;
 }
 
-inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
-    std::vector<Type> result;
+inline std::vector<Type*> _parse_types_helper(LispIterator& iter) {
+    std::vector<Type*> result;
     std::vector<std::string> tmpList;
     while (!iter.empty()) {
         std::string var = iter.next().get_word();
@@ -107,19 +107,16 @@ inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
                     parse_string_helper_list(types_iter);
                 Type* tmp_parent = new Type(tlist[0], nullptr);
                 while (!tmpList.empty()) {
-                    result.push_back(Type(tmpList.back(), tmp_parent));
-                    std::cout << "1-Type " << result[result.size() - 1].name
-                              << std::endl;
+                    Type* t = new Type(tmpList.back(), tmp_parent);
+                    result.push_back(t);
                     tmpList.pop_back();
                 }
             } else {
                 std::string ctype = iter.next().get_word();
                 Type* tmp_parent = new Type(ctype, nullptr);
-                std::cout << "2.5-Type " << ctype << std::endl;
                 while (!tmpList.empty()) {
-                    result.push_back(Type(tmpList.back(), tmp_parent));
-                    std::cout << "2-Type " << result[result.size() - 1].name
-                              << std::endl;
+                    Type* t = new Type(tmpList.back(), tmp_parent);
+                    result.push_back(t);
                     tmpList.pop_back();
                 }
             }
@@ -128,8 +125,8 @@ inline std::vector<Type> _parse_types_helper(LispIterator& iter) {
         }
     }
     while (tmpList.size() != 0) {
-        result.push_back(Type(tmpList.back(), nullptr));
-        std::cout << "3-Type " << result[result.size() - 1].name << std::endl;
+        Type* t = new Type(tmpList.back(), nullptr);
+        result.push_back(t);
         tmpList.pop_back();
     }
     return result;
@@ -202,8 +199,8 @@ inline std::vector<T> _parse_type_with_error(LispIterator& iter,
     return _parse_type_helper<T>(iter);
 }
 
-inline std::vector<Type> _parse_types_with_error(LispIterator& iter,
-                                                 std::string keyword) {
+inline std::vector<Type*> _parse_types_with_error(LispIterator& iter,
+                                                  std::string keyword) {
     if (!iter.try_match(keyword)) {
         throw invalid_argument("Error keyword" + keyword +
                                " required before type");
@@ -211,7 +208,7 @@ inline std::vector<Type> _parse_types_with_error(LispIterator& iter,
     return _parse_types_helper(iter);
 }
 
-inline std::vector<Type> parse_types_stmt(LispIterator& iter) {
+inline std::vector<Type*> parse_types_stmt(LispIterator& iter) {
     return _parse_types_with_error(iter, ":types");
 }
 
@@ -393,7 +390,7 @@ inline DomainDef parse_domain_def(LispIterator& iter) {
             RequirementsStmt req = parse_requirements_stmt(next_iter);
             domain.requirements = req;
         } else if (key.name == "types") {
-            std::vector<Type> types = parse_types_stmt(next_iter);
+            std::vector<Type*> types = parse_types_stmt(next_iter);
             domain.types = types;
         } else if (key.name == "predicates") {
             PredicatesStmt pred = parse_predicates_stmt(next_iter);
@@ -505,7 +502,7 @@ struct Parser {
         return result;
     }
 
-    Domain parse_domain(bool read_from_file = false) {
+    Domain* parse_domain(bool read_from_file = false) {
         std::vector<std::string> source;
         if (read_from_file) {
             std::ifstream domain_file;
@@ -519,24 +516,12 @@ struct Parser {
         }
         LispIterator iter = _read_input(source);
         DomainDef domAST = parse_domain_def(iter);
-        std::cout << "parse domain def!" << std::endl;
         TraversePDDLDomain visitor = TraversePDDLDomain();
         domAST.accept(&visitor);
-        std::cout << "successufly accept" << std::endl;
         return visitor.domain;
     }
 
-    Problem* parse_problem(Domain& dom, bool read_from_file = false) {
-        std::cout << "Print out given domain.types" << std::endl;
-        for (auto tpp : dom.types) {
-            std::cout << tpp.first << ": ";
-            std::cout << tpp.second->name << " ";
-            if (tpp.second->parent != nullptr) {
-                std::cout << tpp.second->parent->name;
-            }
-            std::cout << std::endl;
-        }
-
+    Problem* parse_problem(Domain* dom, bool read_from_file = false) {
         std::vector<std::string> source;
         if (read_from_file) {
             std::ifstream problem_file;
@@ -550,7 +535,7 @@ struct Parser {
         }
         LispIterator iter = _read_input(source);
         ProblemDef probAST = parse_problem_def(iter);
-        TraversePDDLProblem visitor = TraversePDDLProblem(&dom);
+        TraversePDDLProblem visitor = TraversePDDLProblem(dom);
         probAST.accept(&visitor);
         return visitor.get_problem();
     }

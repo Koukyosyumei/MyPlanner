@@ -37,7 +37,7 @@ std::string problem_input =
     "(ON D C))) )";
 
 Parser _parser = Parser("");
-Domain _domain;
+Domain* _domain;
 Problem* _problem;
 
 TEST(tree_visitor, ActionsSetAndParameters) {
@@ -51,7 +51,7 @@ TEST(tree_visitor, ActionsSetAndParameters) {
                                                "unstack"};
 
     size_t tmp_cnt_0 = 0;
-    for (auto a : _domain.actions_dict) {
+    for (auto a : _domain->actions_dict) {
         ASSERT_TRUE(test_us.find(a.first) != test_us.end());
         for (auto s : a.second.signature) {
             ASSERT_EQ(s.second[0]->name, "block");
@@ -72,7 +72,7 @@ TEST(tree_visitor, ActionPrecondition) {
         "clear", "ontable", "handempty", "holding",  "holding",
         "clear", "on",      "clear",     "handempty"};
     std::unordered_set<std::string> precond_names;
-    for (auto ap : _domain.actions_dict) {
+    for (auto ap : _domain->actions_dict) {
         Action a = ap.second;
         for (auto p : a.precondition) {
             ASSERT_TRUE(test_precond_names.find(p.name) !=
@@ -98,7 +98,7 @@ TEST(tree_visitor, ActionEffect) {
         "holding", "clear", "handempty", "on"};
     size_t tmp_cnt_2 = 0;
     size_t tmp_cnt_3 = 0;
-    for (auto ap : _domain.actions_dict) {
+    for (auto ap : _domain->actions_dict) {
         Action a = ap.second;
         for (auto p : a.effect.addlist) {
             ASSERT_TRUE(std::find(all_effects_add.begin(),
@@ -124,7 +124,7 @@ TEST(tree_visitor, DomainName) {
     _problem = _parser.parse_problem(_domain, false);
 
     // test action domain name
-    ASSERT_EQ(_domain.name, "blocks");
+    ASSERT_EQ(_domain->name, "blocks");
 }
 
 TEST(tree_visitor, Predicates) {
@@ -137,7 +137,7 @@ TEST(tree_visitor, Predicates) {
     std::unordered_set<std::string> test_pred_names = {"on", "ontable", "clear",
                                                        "handempty", "holding"};
     std::unordered_set<std::string> pred_names;
-    for (auto p : _domain.predicates_dict) {
+    for (auto p : _domain->predicates_dict) {
         pred_names.insert(p.first);
         for (auto s : p.second.signature) {
             ASSERT_EQ(s.second[0]->name, "block");
@@ -156,7 +156,7 @@ TEST(tree_visitor, Constatns) {
     std::unordered_set<std::string> test_constants_key = {"horst", "block1",
                                                           "block2"};
     std::unordered_set<std::string> constants_key;
-    for (auto c : _domain.constants) {
+    for (auto c : _domain->constants) {
         constants_key.insert(c.first);
         ASSERT_EQ(c.second->name, "block");
     }

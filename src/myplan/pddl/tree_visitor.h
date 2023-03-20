@@ -216,7 +216,7 @@ class TraversePDDLDomain : public PDDLVisitor {
     std::unordered_map<std::string, Action> _actions;
     std::unordered_map<std::string, Type*> _constants;
     std::set<std::string> _requirements;
-    Domain domain;
+    Domain* domain;
     Type* _objectType = new Type("object", nullptr);
 
     void visit_problem_def(ProblemDef* node) override {
@@ -254,12 +254,12 @@ class TraversePDDLDomain : public PDDLVisitor {
         }
 
         if (node->types.size() != 0) {
-            for (Type& t : node->types) {
-                if (t.name == "object") {
+            for (Type* t : node->types) {
+                if (t->name == "object") {
                     explicitObjectDef = true;
                 }
-                this->visit_type(&t);
-                Type* type = _typeHash[t.name];
+                this->visit_type(t);
+                Type* type = _typeHash[t->name];
                 _types[type->name] = type;
             }
         }
@@ -314,10 +314,10 @@ class TraversePDDLDomain : public PDDLVisitor {
         for (auto ap : _actions) {
             tmp_actions.push_back(ap.second);
         }
-        domain =
-            Domain(node->name, _types, tmp_predicates, tmp_actions, _constants);
+        domain = new Domain(node->name, _types, tmp_predicates, tmp_actions,
+                            _constants);
         std::cout << "Print out domain.types" << std::endl;
-        for (auto tpp : domain.types) {
+        for (auto tpp : domain->types) {
             std::cout << tpp.first << ": ";
             std::cout << tpp.second->name << " ";
             if (tpp.second->parent != nullptr) {
@@ -325,8 +325,8 @@ class TraversePDDLDomain : public PDDLVisitor {
             }
             std::cout << std::endl;
         }
-        domain.predicates_dict = _predicates;
-        domain.actions_dict = _actions;
+        domain->predicates_dict = _predicates;
+        domain->actions_dict = _actions;
     }
 
     void visit_object(Object* node) override {
@@ -354,7 +354,6 @@ class TraversePDDLDomain : public PDDLVisitor {
             Type* t = new Type(node->name, node->parent);
             _typeHash[node->name] = t;
         }
-        std::cout << "4-Type " << node->name << std::endl;
     }
 
     void visit_requirements_stmt(RequirementsStmt* node) override {
@@ -590,8 +589,8 @@ class TraversePDDLProblem : public PDDLVisitor {
         node->requirements.accept(this);
 
         if (node->types.size() != 0) {
-            for (Type& t : node->types) {
-                this->visit_type(&t);
+            for (Type* t : node->types) {
+                this->visit_type(t);
             }
         }
         if (node->constants.size() != 0) {
@@ -718,28 +717,9 @@ class TraversePDDLProblem : public PDDLVisitor {
                                          node->typeName +
                                          " used in object definition!");
             }
-            std::cout << "domain_type is "
-                      << _domain->types[node->typeName]->name << " ";
-            if (_domain->types[node->typeName]->parent != nullptr) {
-                std::cout << _domain->types[node->typeName]->parent->name;
-            }
-            std::cout << std::endl;
 
             _objects[node->name] = _domain->types[node->typeName];
-
-            std::cout << "99999 domain_type is " << _objects[node->name]->name
-                      << " ";
-            if (_objects[node->name]->parent != nullptr) {
-                std::cout << _objects[node->name]->parent->name;
-            }
-            std::cout << std::endl;
         }
-        // std::cout << "Visit objects: " << type_def.name;
-        //  if (type_def.parent != nullptr) {
-        //      std::cout << " " << type_def.parent->name;
-        //  }
-        // std::cout << std::endl;
-        //_objects[node->name] = type_def;
     }
 
     void visit_init_stmt(InitStmt* node) override {

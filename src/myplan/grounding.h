@@ -139,36 +139,6 @@ inline std::vector<std::string> _get_statics(
     return statics;
 }
 
-/*
-inline std::unordered_map<Type, std::vector<std::string>> _create_type_map(
-    const std::unordered_map<std::string, Type>& objects) {
-    std::unordered_map<Type, std::vector<std::string>> type_map;
-
-    // for every type we append the corresponding object
-    std::cout << "**" << std::endl;
-    for (const auto& [object_name, object_type] : objects) {
-        std::cout << 1 << std::endl;
-        Type* parent_type = object_type.parent;
-        while (parent_type != nullptr) {
-            std::cout << 2 << std::endl;
-            if (type_map.find(*parent_type) != type_map.end()) {
-                type_map[object_type].push_back(object_name);
-            } else {
-                type_map.insert({*parent_type, {object_name}});
-            }
-            //type_map[*parent_type].push_back(object_name);
-            std::cout << 3 << std::endl;
-            parent_type = parent_type->parent;
-        }
-        type_map[object_type].push_back(object_name);
-    }
-    std::cout << "--" << std::endl;
-
-    // TODO vectors in map should be ordered lists
-    return type_map;
-}
-*/
-
 inline std::unordered_map<std::string, std::vector<std::string>>
 _create_type_map(std::unordered_map<std::string, Type*>& objects) {
     std::cout << "obkects is " << std::endl;
@@ -191,29 +161,16 @@ _create_type_map(std::unordered_map<std::string, Type*>& objects) {
         // std::string object_name = kv.first;
         // Type object_type = kv.second;
         Type* parent_type = object_type->parent;
-        std::cout << "aa--- " << object_name << std::endl;
         while (true) {
-            std::cout << 1 << std::endl;
-            // if (object_type == nullptr) {
-            //     std::cout << "null!!!!!" << std::endl;
-            // }
-            std::cout << "?????--- " << object_name << " " << object_type->name
-                      << std::endl;
             if (type_map.find(object_type->name) != type_map.end()) {
                 type_map[object_type->name].push_back(object_name);
             } else {
                 type_map.insert({object_type->name, {object_name}});
             }
-            std::cout << 2 << std::endl;
             auto next_parent_type = object_type->parent;
-            std::cout << 3 << std::endl;
             auto next_object_type = parent_type;
-            std::cout << 4 << std::endl;
             object_type = next_object_type;
             parent_type = next_parent_type;
-            // std::cout << parent_type->name << " " << object_type.name
-            //           << std::endl;
-            std::cout << "---" << std::endl;
             if (parent_type == nullptr) {
                 break;
             }
@@ -436,16 +393,6 @@ inline std::vector<Operator> _ground_action(
     std::unordered_map<std::string, std::unordered_set<std::string>>
         param_to_objects;
 
-    std::cout << "type_map is" << std::endl;
-    for (auto tmp : type_map) {
-        std::cout << tmp.first << ": ";
-        for (auto s : tmp.second) {
-            std::cout << s << " ";
-        }
-        std::cout << endl;
-    }
-    std::cout << "===" << std::endl;
-
     for (auto& [param_name, param_types] : action.signature) {
         // List of sets of objects for this parameter
         std::vector<std::vector<std::string>> objects;
@@ -459,16 +406,6 @@ inline std::vector<Operator> _ground_action(
         }
         param_to_objects[param_name] = objects_set;
     }
-
-    std::cout << "param_to_objects is" << std::endl;
-    for (auto pop : param_to_objects) {
-        std::cout << pop.first << ": ";
-        for (auto ps : pop.second) {
-            std::cout << ps << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "----" << std::endl;
 
     // For each parameter that is not constant,
     // remove all invalid static preconditions
@@ -512,17 +449,14 @@ inline std::vector<Operator> _ground_action(
     for (auto& [name, objects] : param_to_objects) {
         std::vector<std::pair<std::string, std::string>> tuples;
         for (auto& object : objects) {
-            std::cout << name << ":" << object << " ";
             tuples.emplace_back(name, object);
         }
         domain_lists.push_back(tuples);
     }
     std::cout << std::endl;
-    std::cout << "len of domain lists is " << domain_lists.size() << std::endl;
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
         product<std::pair<std::string, std::string>>(domain_lists);
-    std::cout << "len of assignments is " << assignments.size() << std::endl;
     std::unordered_set<std::string> statics_set(statics.begin(), statics.end());
     // Create a new operator for each possible assignment of parameters
     for (auto& assign : assignments) {
@@ -530,7 +464,6 @@ inline std::vector<Operator> _ground_action(
         for (auto tmp : assign) {
             tmp_dict.insert({tmp.first, tmp.second});
         }
-        std::cout << action.name << std::endl;
         Operator* op = _create_operator(&action, tmp_dict, statics_set, init);
         if (op != nullptr) {
             operators.push_back(*op);
@@ -558,12 +491,10 @@ inline std::vector<Operator> _ground_actions(
     std::vector<Operator> operators;
     for (std::vector<Operator> op_list : op_lists) {
         for (Operator op : op_list) {
-            std::cout << "Op: " << op.name << " ";
             operators.push_back(op);
         }
         std::cout << std::endl;
     }
-    std::cout << "len of ope " << operators.size() << std::endl;
     return operators;
 }
 
@@ -585,11 +516,15 @@ inline Task ground(Problem& problem,
         std::cout << "po is nullptr ?: " << (obp.second->parent == nullptr)
                   << std::endl;
     }
+
+    std::cout << "^^^^^^^^^^^" << (problem.domain == nullptr) << std::endl;
     // std::unordered_map<std::string, Type>* objects = &(problem.objects);
-    for (const auto& constant : problem.domain->constants) {
+    for (auto& constant : problem.domain->constants) {
+        std::cout << "Try to access constatns" << std::endl;
         std::cout << "constants is " << constant.first << std::endl;
         problem.objects.insert({constant.first, constant.second});
     }
+    std::cout << "^^^^^^^^^^" << std::endl;
 
     std::cout << "Print 1 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
@@ -638,6 +573,7 @@ inline Task ground(Problem& problem,
     std::vector<std::string> statics =
         _get_statics(problem.domain->predicates, problem.domain->actions);
 
+    /*
     std::cout << "Print 4 out ground parser problemdef's objects" << std::endl;
     for (auto& obp : problem.objects) {
         std::cout << obp.first << " ";
@@ -646,7 +582,8 @@ inline Task ground(Problem& problem,
             std::cout << obp.second->parent->name;
         }
         std::cout << std::endl;
-    }
+    }*/
+
     // Create a map from types to objects
     // std::unordered_map<Type, std::vector<std::string>> type_map =
     //    _create_type_map(problem.objects);

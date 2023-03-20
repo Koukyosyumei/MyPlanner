@@ -147,7 +147,7 @@ TEST(grounding, GetGroundedString) {
 Problem parse_problem(Parser& parser, std::string dom, std::string prob) {
     parser.domInput = dom;
     parser.probInput = prob;
-    Domain domain = parser.parse_domain(false);
+    Domain* domain = parser.parse_domain(false);
     return *parser.parse_problem(domain, false);
 }
 
@@ -255,8 +255,10 @@ TEST(grounding, Operators) {
 
     std::unordered_map<std::string, Action> actions = {
         {"drive-car", action_drive_car}};
+    std::unordered_map<std::string, Type*> emp_constants;
 
-    Domain standard_domain = Domain("test_domain_statics", types, {}, {});
+    Domain standard_domain =
+        Domain("test_domain_statics", types, {}, {}, emp_constants);
     standard_domain.predicates_dict = predicates;
     standard_domain.actions_dict = actions;
 
@@ -317,7 +319,12 @@ TEST(grounding, Operators) {
     std::vector<Operator> grounded_delete =
         _ground_action(action_delete, type_map, {}, grounded_initial_state);
 
-    Domain domain = Domain("test_domain", types, {}, {}, {});
+    std::vector<Predicate> emp_predicates;
+    std::vector<Action> emp_actions;
+    // std::unordered_map<std::string, Type*> emp_constants;
+
+    Domain domain = Domain("test_domain", types, emp_predicates, emp_actions,
+                           emp_constants);
     domain.predicates_dict = {
         {"in", Predicate("in", {{"city", {types["city"]}},
                                 {"country", {types["country"]}}})}};
@@ -326,7 +333,12 @@ TEST(grounding, Operators) {
     Problem problem =
         Problem("test_problem", &domain, objects, initial_state, goal_state);
 
+    std::cout
+        << "!st "
+           "GRRRRRRRRRRRRRRRRRRRRRROUUUUUUUUUUUUUUUUUUUUNNNNNNNNNNNNNNDDDDDDDD"
+        << std::endl;
     Task task = ground(problem);
+    std::cout << "SUCCCCCCCCCCCCCCCCCCCEEEEEEEEEEEEEEEESSSSSSSSS" << std::endl;
 
     std::unordered_map<std::string, std::vector<Operator>> expected = {
         {"(DRIVE-CAR red_car freiburg basel )", grounded_drive_car},
@@ -366,6 +378,8 @@ TEST(grounding, Operators) {
         }
     }
 
+    std::cout << "||||||||||||||||||||||" << std::endl;
+
     Parser parser = Parser("");
 
     std::string prob_05 =
@@ -402,19 +416,20 @@ TEST(grounding, Operators) {
     Problem parsed_problem7 = parse_problem(parser, dom_07, prob_07);
     Problem parsed_problem8 = parse_problem(parser, dom_08, prob_08);
 
-    type_object = Type("object", nullptr);
+    // type_object = Type("object", nullptr);
     types = {{"object", &type_object}};
     predicates = {{"the_predicate",
-                   Predicate("the-predicate",
-                             {{"v1", {&type_object}}, {"v2", {&type_object}}})}};
+                   Predicate("the-predicate", {{"v1", {&type_object}},
+                                               {"v2", {&type_object}}})}};
     std::unordered_map<std::string, Type*> constants = {{"x", &type_object}};
     actions = {
         {"theaction",
          get_action("theaction", {{"?x", {&type_object}}}, {},
-                    {Predicate("the-predicate",
-                               {{"x", {&type_object}}, {"?x", {&type_object}}})},
+                    {Predicate("the-predicate", {{"x", {&type_object}},
+                                                 {"?x", {&type_object}}})},
                     {})}};
-    domain = Domain("regression-test", types, {}, {}, {});
+    domain = Domain("regression-test", types, emp_predicates, emp_actions,
+                    emp_constants);
     domain.predicates_dict = predicates;
     domain.actions_dict = actions;
     domain.constants = constants;
