@@ -49,13 +49,11 @@ int main(int argc, char* argv[]) {
     printf("Parsing Domain %s \n", domain_file_path.c_str());
     Domain* domain = parser.parse_domain(true);
     printf("Parsing Problem %s \n", problem_file_path.c_str());
-    printf("%d Predicates parsed (list style) \n",
-           (int)domain->predicates.size());
-    printf("%d Predicates parsed (dict style) \n",
-           (int)domain->predicates_dict.size());
-    printf("%d Actions parsed (list style) \n", (int)domain->actions.size());
-    printf("%d Actions parsed (dict style) \n",
-           (int)domain->actions_dict.size());
+    // printf("%d Predicates parsed (list style) \n",
+    //        (int)domain->predicates.size());
+    printf("%d Predicates parsed \n", (int)domain->predicates_dict.size());
+    // printf("%d Actions parsed (list style) \n", (int)domain->actions.size());
+    printf("%d Actions parsed \n", (int)domain->actions_dict.size());
     printf("%d Constants parsed \n", (int)domain->constants.size());
 
     Problem* problem_ptr = parser.parse_problem(domain, true);
