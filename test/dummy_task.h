@@ -20,9 +20,10 @@ class DummyTask : public BaseTask {
     get_successor_states(std::unordered_set<std::string>& state) override {
         std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             succesors;
-        Operator* sub1 = new Operator("sub1", {}, {}, {});
-        Operator* add2 = new Operator("add2", {}, {}, {});
-        Operator* add1 = new Operator("add1", {}, {}, {});
+        std::vector<std::string> emp_vec;
+        Operator* sub1 = new Operator("sub1", emp_vec, emp_vec, emp_vec);
+        Operator* add2 = new Operator("add2", emp_vec, emp_vec, emp_vec);
+        Operator* add1 = new Operator("add1", emp_vec, emp_vec, emp_vec);
         for (std::string s : state) {
             if (0 < std::stoi(s)) {
                 std::unordered_set<std::string> tmp_u = {

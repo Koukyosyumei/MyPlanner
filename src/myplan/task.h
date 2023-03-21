@@ -15,8 +15,8 @@ class Operator {
     set<string> add_effects;
     set<string> del_effects;
 
-    Operator(string name, vector<string> preconditions,
-             vector<string> add_effects, vector<string> del_effects) {
+    Operator(string name, vector<string>& preconditions,
+             vector<string>& add_effects, vector<string>& del_effects) {
         this->name = name;
         this->preconditions =
             set<string>(preconditions.begin(), preconditions.end());
@@ -126,9 +126,9 @@ class Task : public BaseTask {
     */
    public:
     Task() {}
-    Task(std::string name, std::unordered_set<std::string> facts,
-         std::unordered_set<std::string> initial_state,
-         std::unordered_set<std::string> goals,
+    Task(std::string name, std::unordered_set<std::string>& facts,
+         std::unordered_set<std::string>& initial_state,
+         std::unordered_set<std::string>& goals,
          std::vector<Operator> operators) {
         this->name = name;
         this->facts = facts;

@@ -129,9 +129,18 @@ TEST(grounding, Map2) {
 }
 
 TEST(grounding, Facts) {
-    Operator op1 = Operator("op1", {"var1"}, {}, {"var3"});
-    Operator op2 = Operator("op2", {"var2"}, {"var3"}, {});
-    Operator op3 = Operator("op3", {}, {"var1"}, {"var4"});
+    std::vector<std::string> pre1 = {"var1"};
+    std::vector<std::string> pre2 = {"var2"};
+    std::vector<std::string> pre3 = {};
+    std::vector<std::string> ade1 = {};
+    std::vector<std::string> ade2 = {"var3"};
+    std::vector<std::string> ade3 = {"var1"};
+    std::vector<std::string> dee1 = {"var3"};
+    std::vector<std::string> dee2 = {};
+    std::vector<std::string> dee3 = {"var4"};
+    Operator op1 = Operator("op1", pre1, ade1, dee1);
+    Operator op2 = Operator("op2", pre2, ade2, dee2);
+    Operator op3 = Operator("op3", pre3, ade3, dee3);
     std::vector<Operator> ops = {op1, op2, op3};
     std::unordered_set<std::string> test_facts = {"var1", "var2", "var3",
                                                   "var4"};
