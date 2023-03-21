@@ -57,10 +57,11 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
             std::set<std::string> successor_state(opss.second.begin(),
                                                   opss.second.end());
             if (closed.find(successor_state) == closed.end()) {
-                nodes.push_back(make_child_node(node_idx, nodes[node_idx].g,
-                                                opss.first->name, opss.second));
+                nodes.emplace_back(make_child_node(node_idx, nodes[node_idx].g,
+                                                   opss.first->name,
+                                                   opss.second));
                 queue.push(nodes.size() - 1);
-                closed.insert(successor_state);
+                closed.emplace(successor_state);
             }
         }
     }
