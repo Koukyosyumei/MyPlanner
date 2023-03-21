@@ -116,7 +116,7 @@ class BaseTask {
     std::vector<Operator> operators;
 
     virtual bool goal_reached(std::unordered_set<std::string>& state) = 0;
-    virtual std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+    virtual std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
     get_successor_states(std::unordered_set<std::string>& state) = 0;
 };
 
@@ -151,18 +151,18 @@ class Task : public BaseTask {
         return true;
     }
 
-    std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
     get_successor_states(std::unordered_set<std::string>& state) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied
         in state "state".
         */
-        std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors;
-        for (Operator op : operators) {
+        for (Operator& op : operators) {
             if (op.applicable(state)) {
-                successors.push_back(std::make_pair(op, op.apply(state)));
+                successors.push_back(std::make_pair(&op, op.apply(state)));
             }
         }
         return successors;

@@ -16,28 +16,28 @@ class DummyTask : public BaseTask {
         return goals == state;
     }
 
-    std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
     get_successor_states(std::unordered_set<std::string>& state) override {
-        std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             succesors;
+        Operator* sub1 = new Operator("sub1", {}, {}, {});
+        Operator* add2 = new Operator("add2", {}, {}, {});
+        Operator* add1 = new Operator("add1", {}, {}, {});
         for (std::string s : state) {
             if (0 < std::stoi(s)) {
                 std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) - 1)};
-                succesors.push_back(
-                    std::make_pair(Operator("sub1", {}, {}, {}), tmp_u));
+                succesors.push_back(std::make_pair(sub1, tmp_u));
             }
             if (std::stoi(s) < 9) {
                 std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) + 2)};
-                succesors.push_back(
-                    std::make_pair(Operator("add2", {}, {}, {}), tmp_u));
+                succesors.push_back(std::make_pair(add2, tmp_u));
             }
             if (std::stoi(s) < 10) {
                 std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) + 1)};
-                succesors.push_back(
-                    std::make_pair(Operator("add1", {}, {}, {}), tmp_u));
+                succesors.push_back(std::make_pair(add1, tmp_u));
             }
         }
         return succesors;

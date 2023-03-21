@@ -50,7 +50,7 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
             // return solution;
             //
         }
-        std::vector<std::pair<Operator, std::unordered_set<std::string>>>
+        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors =
                 planning_task.get_successor_states(nodes[node_idx].state);
         for (auto& opss : successors) {
@@ -58,7 +58,7 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
                                                   opss.second.end());
             if (closed.find(successor_state) == closed.end()) {
                 nodes.push_back(make_child_node(node_idx, nodes[node_idx].g,
-                                                opss.first.name, opss.second));
+                                                opss.first->name, opss.second));
                 queue.push(nodes.size() - 1);
                 closed.insert(successor_state);
             }
