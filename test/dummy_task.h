@@ -12,12 +12,12 @@ class DummyTask : public BaseTask {
         this->goals = goals;
     }
 
-    bool goal_reached(std::unordered_set<std::string> state) override {
+    bool goal_reached(std::unordered_set<std::string>& state) override {
         return goals == state;
     }
 
     std::vector<std::pair<Operator, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string> state) override {
+    get_successor_states(std::unordered_set<std::string>& state) override {
         std::vector<std::pair<Operator, std::unordered_set<std::string>>>
             succesors;
         for (std::string s : state) {

@@ -6,14 +6,20 @@
 
 #include "myplan/search/searchspace.h"
 
-SearchNode root = make_root_node({"state1"});
-SearchNode child1 = make_child_node(0, root.g, "action1", {"state2"});
-SearchNode child2 = make_child_node(0, root.g, "action2", {"state3"});
-SearchNode grandchild1 = make_child_node(1, child1.g, "action3", {"state4"});
-SearchNode grandchild2 = make_child_node(2, child2.g, "action4", {"state5"});
+std::unordered_set<std::string> state1 = {"state1"};
+std::unordered_set<std::string> state2 = {"state2"};
+std::unordered_set<std::string> state3 = {"state3"};
+std::unordered_set<std::string> state4 = {"state4"};
+std::unordered_set<std::string> state5 = {"state5"};
+SearchNode root = make_root_node(state1);
+SearchNode child1 = make_child_node(0, root.g, "action1", state2);
+SearchNode child2 = make_child_node(0, root.g, "action2", state3);
+SearchNode grandchild1 = make_child_node(1, child1.g, "action3", state4);
+SearchNode grandchild2 = make_child_node(2, child2.g, "action4", state5);
 
 TEST(searchspace, ExtractSolution) {
-    std::vector<SearchNode> nodes = {root, child1, child2, grandchild1, grandchild2};
+    std::vector<SearchNode> nodes = {root, child1, child2, grandchild1,
+                                     grandchild2};
     std::vector<std::string> solution_0;
     solution_0 = extract_solution(0, nodes);
     ASSERT_EQ(solution_0.size(), 0);

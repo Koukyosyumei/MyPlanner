@@ -33,7 +33,7 @@ class Operator {
         return true;
     }
 
-    unordered_set<string> apply(const unordered_set<string> state) {
+    unordered_set<string> apply(const unordered_set<string>& state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
         for (const string& fact : del_effects) {
@@ -115,9 +115,9 @@ class BaseTask {
     std::unordered_set<std::string> goals;
     std::vector<Operator> operators;
 
-    virtual bool goal_reached(std::unordered_set<std::string> state) = 0;
+    virtual bool goal_reached(std::unordered_set<std::string>& state) = 0;
     virtual std::vector<std::pair<Operator, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string> state) = 0;
+    get_successor_states(std::unordered_set<std::string>& state) = 0;
 };
 
 class Task : public BaseTask {
@@ -137,7 +137,7 @@ class Task : public BaseTask {
         this->operators = operators;
     }
 
-    bool goal_reached(std::unordered_set<std::string> state) override {
+    bool goal_reached(std::unordered_set<std::string>& state) override {
         /*
         The goal has been reached if all facts that are true in "goals"
         are true in "state".
@@ -152,7 +152,7 @@ class Task : public BaseTask {
     }
 
     std::vector<std::pair<Operator, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string> state) override {
+    get_successor_states(std::unordered_set<std::string>& state) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied

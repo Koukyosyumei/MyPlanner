@@ -8,8 +8,8 @@
 class SearchNode {
    public:
     // Constructo
-    SearchNode() {}
-    SearchNode(std::unordered_set<std::string> state, int parent_id,
+    //SearchNode() {}
+    SearchNode(std::unordered_set<std::string>& state, int parent_id,
                std::string action, int g)
         : state(state), parent_id(parent_id), action(action), g(g) {}
 
@@ -21,7 +21,7 @@ class SearchNode {
 
 // Extract the solution from the search space
 inline std::vector<std::string> extract_solution(
-    int this_id, std::vector<SearchNode> nodes) {
+    int this_id, std::vector<SearchNode>& nodes) {
     int node_id = this_id;
     std::vector<std::string> solution;
     while (nodes[node_id].parent_id != -1) {
@@ -35,14 +35,14 @@ inline std::vector<std::string> extract_solution(
 
 // Construct an initial search node
 inline SearchNode make_root_node(
-    std::unordered_set<std::string> initial_state) {
+    std::unordered_set<std::string>& initial_state) {
     return SearchNode(initial_state, -1, "", 0);
 }
 
 // Construct a new search node linked to a parent node
 inline SearchNode make_child_node(int parent_id, int parent_g,
                                   std::string action,
-                                  std::unordered_set<std::string> state) {
+                                  std::unordered_set<std::string>& state) {
     return SearchNode(state, parent_id, action, parent_g + 1);
 }
 

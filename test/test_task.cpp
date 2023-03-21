@@ -52,9 +52,11 @@ TEST(OperatorTest, Successors) {
     std::vector<std::pair<Operator, std::unordered_set<std::string>>> ss = {
         {op1, {"var1", "var2"}}, {op2, {"var1"}}};
     ASSERT_EQ(task1.get_successor_states(init), ss);
-    ASSERT_EQ(task1.get_successor_states({"var3"}).size(), 0);
+    std::unordered_set<std::string> test_v3 = {"var3"};
+    ASSERT_EQ(task1.get_successor_states(test_v3).size(), 0);
 
     ASSERT_FALSE(task1.goal_reached(init));
-    ASSERT_TRUE(task1.goal_reached({"var1", "var2"}));
+    std::unordered_set<std::string> test_goal = {"var1", "var2"};
+    ASSERT_TRUE(task1.goal_reached(test_goal));
 }
 
