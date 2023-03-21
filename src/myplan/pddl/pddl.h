@@ -31,8 +31,35 @@ class Predicate {
     string name;
     vector<pair<string, vector<Type*>>> signature;
 
-    bool operator<(const Predicate& rhs) const { return name < rhs.name; }
-    bool operator==(const Predicate& rhs) const { return name == rhs.name; }
+    bool operator<(const Predicate& rhs) const {
+        if (name != rhs.name) {
+            name < rhs.name;
+        }
+        if (signature.size() != rhs.signature.size()) {
+            return signature.size() < rhs.signature.size();
+        }
+        for (int i = 0; i < signature.size(); i++) {
+            if (signature[i].first < rhs.signature[i].first) {
+                return true;
+            }
+        }
+        return false;
+    }
+    bool operator==(const Predicate& rhs) const {
+        if (name != rhs.name) {
+            return false;
+        }
+        if (signature.size() != rhs.signature.size()) {
+            return false;
+        } else {
+            for (int i = 0; i < signature.size(); i++) {
+                if (signature[i].first != rhs.signature[i].first) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 };
 
 class Effect {

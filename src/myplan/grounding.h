@@ -171,7 +171,7 @@ inline std::unordered_set<std::string> _collect_facts(
     effects and delete effects).
     */
     std::unordered_set<std::string> facts;
-    for (Operator& op : operators) {
+    for (Operator op : operators) {
         for (std::string p : op.preconditions) {
             facts.insert(p);
         }
@@ -365,12 +365,13 @@ inline Operator* _create_operator(
     std::vector<std::string> del_effects_vec =
         std::vector<std::string>(del_effects.begin(), del_effects.end());
 
-    return new Operator(name, precondition_facts_vec, add_effects_vec,
-                        del_effects_vec);
+    Operator* result = new Operator(name, precondition_facts_vec,
+                                    add_effects_vec, del_effects_vec);
+    return result;
 }
 
 inline std::vector<Operator> _ground_action(
-    Action action,
+    Action& action,
     std::unordered_map<std::string, std::vector<std::string>> type_map,
     std::vector<std::string> statics, std::unordered_set<std::string> init) {
     std::vector<Operator> operators;
@@ -457,7 +458,7 @@ inline std::vector<Operator> _ground_action(
 }
 
 inline std::vector<Operator> _ground_actions(
-    std::vector<Action> actions,
+    std::vector<Action>& actions,
     std::unordered_map<std::string, std::vector<std::string>> type_map,
     std::vector<string> statics, std::unordered_set<std::string> init) {
     /*

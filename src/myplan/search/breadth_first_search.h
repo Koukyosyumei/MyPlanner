@@ -43,6 +43,15 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
 
         queue.pop();
 
+        // std::cout << "State: ";
+        // std::set<std::string> tmp_set(nodes[node_idx].state.begin(),
+        //                               nodes[node_idx].state.end());
+        // for (std::string s : tmp_set) {
+        //     std::cout << s << " ";
+        // }
+        std::cout << nodes[node_idx].state.size() << std::endl;
+        // std::cout << endl;
+
         if (planning_task.goal_reached(nodes[node_idx].state)) {
             // std::vector<std::string> solution;
             std::cout << iteration << " Nodes expanded" << std::endl;
