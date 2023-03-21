@@ -33,7 +33,7 @@ class Predicate {
 
     bool operator<(const Predicate& rhs) const {
         if (name != rhs.name) {
-            name < rhs.name;
+            return name < rhs.name;
         }
         if (signature.size() != rhs.signature.size()) {
             return signature.size() < rhs.signature.size();

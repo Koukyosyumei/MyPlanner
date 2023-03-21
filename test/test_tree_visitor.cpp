@@ -98,15 +98,14 @@ TEST(tree_visitor, ActionEffect) {
         "holding", "clear", "handempty", "on"};
     size_t tmp_cnt_2 = 0;
     size_t tmp_cnt_3 = 0;
-    for (auto ap : _domain->actions_dict) {
-        Action a = ap.second;
-        for (auto p : a.effect.addlist) {
+    for (const auto& ap : _domain->actions_dict) {
+        for (auto p : ap.second.effect.addlist) {
             ASSERT_TRUE(std::find(all_effects_add.begin(),
                                   all_effects_add.end(),
                                   p.name) != all_effects_add.end());
             tmp_cnt_2++;
         }
-        for (auto p : a.effect.dellist) {
+        for (auto p : ap.second.effect.dellist) {
             ASSERT_TRUE(std::find(all_effects_del.begin(),
                                   all_effects_del.end(),
                                   p.name) != all_effects_del.end());

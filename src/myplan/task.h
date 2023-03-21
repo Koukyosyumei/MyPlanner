@@ -46,10 +46,9 @@ class Operator {
     }
 
     bool operator==(const Operator& other) const {
-        return (name ==
-                other.name);  //&& (preconditions == other.preconditions) &&
-                              //(add_effects == other.add_effects) &&
-                              //(del_effects == other.del_effects);
+        return (name == other.name) && (preconditions == other.preconditions) &&
+               (add_effects == other.add_effects) &&
+               (del_effects == other.del_effects);
     }
 
     // size_t operator()(const Operator& op) const {
