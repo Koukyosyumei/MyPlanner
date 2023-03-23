@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "trie.h"
+
 using namespace std;
 
 class Operator {
@@ -45,6 +47,18 @@ class Operator {
     unordered_set<string> apply(const unordered_set<string>& state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
+        for (const string& fact : del_effects) {
+            new_state.erase(fact);
+        }
+        for (const string& fact : add_effects) {
+            new_state.insert(fact);
+        }
+        return new_state;
+    }
+
+    unordered_set<string> apply(const set<string>& state) {
+        // assert(applicable(state));
+        unordered_set<string> new_state(state.begin(), state.end());
         for (const string& fact : del_effects) {
             new_state.erase(fact);
         }
@@ -134,6 +148,8 @@ class Task : public BaseTask {
     A STRIPS planning task
     */
    public:
+    Trie<Operator> trie;
+
     Task() {}
     Task(std::string name, std::unordered_set<std::string>& facts,
          std::unordered_set<std::string>& initial_state,
@@ -144,6 +160,7 @@ class Task : public BaseTask {
         this->initial_state = initial_state;
         this->goals = goals;
         this->operators = operators;
+        trie = Trie<Operator>(&this->operators);
     }
 
     bool goal_reached(std::unordered_set<std::string>& state) override {
@@ -167,6 +184,9 @@ class Task : public BaseTask {
         operator and "new_state" the state that results when "op" is applied
         in state "state".
         */
+        std::set<std::string> tmp_state(state.begin(), state.end());
+        return trie.search(tmp_state);
+        /*
         std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors;
         for (Operator& op : operators) {
@@ -175,6 +195,7 @@ class Task : public BaseTask {
             }
         }
         return successors;
+        */
     }
 
     std::string str() {
