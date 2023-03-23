@@ -33,6 +33,15 @@ class Operator {
         return true;
     }
 
+    bool applicable(const set<string>& state) {
+        for (string p : preconditions) {
+            if (state.find(p) == state.end()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     unordered_set<string> apply(const unordered_set<string>& state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
