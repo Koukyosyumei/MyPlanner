@@ -10,8 +10,9 @@ struct Trie {
         std::unordered_map<std::string, int>
             next;    // vertex index of child state
         int common;  // the number of predicates that share this node
+        bool is_examined;
         std::vector<T *> applicables;
-        Node() : common(0) {}
+        Node() : common(0), is_examined(false) {}
     };
 
     std::vector<T> *operators;
@@ -33,7 +34,7 @@ struct Trie {
             if (nodes[node_id].next.find(s) != nodes[node_id].next.end()) {
                 next_id = nodes[node_id].next[s];
             } else {
-                int new_state_id = nodes[node_id].next.size();
+                int new_state_id = nodes.size();
                 nodes[node_id].next.emplace(s, new_state_id);
                 next_id = nodes[node_id].next[s];
                 nodes.push_back(Node());
@@ -51,6 +52,7 @@ struct Trie {
                     &operators->at(i), operators->at(i).apply(state)));
             }
         }
+        nodes[node_id].is_examined = true;
         return successors;
     }
 
@@ -68,8 +70,19 @@ struct Trie {
         }
 
         std::vector<std::pair<T *, std::unordered_set<std::string>>> successors;
-        for (auto op : nodes[node_id].applicables) {
-            successors.push_back(std::make_pair(op, op->apply(state)));
+        if (!nodes[node_id].is_examined) {
+            for (int i = 0; i < num_operators; i++) {
+                if (operators->at(i).applicable(state)) {
+                    nodes[node_id].applicables.push_back(&operators->at(i));
+                    successors.push_back(std::make_pair(
+                        &operators->at(i), operators->at(i).apply(state)));
+                }
+            }
+            nodes[node_id].is_examined = true;
+        } else {
+            for (auto op : nodes[node_id].applicables) {
+                successors.push_back(std::make_pair(op, op->apply(state)));
+            }
         }
         return successors;
     }
