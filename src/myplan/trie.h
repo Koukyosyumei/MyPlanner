@@ -4,8 +4,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "task.h"
-
 struct Trie {
     struct Node {
         std::unordered_map<std::string, int>
@@ -15,10 +13,14 @@ struct Trie {
         Node() : common(0) {}
     };
 
-    Task *task;
+    std::vector<Operator> *operators;
     std::vector<Node> nodes;
     int root;
-    Trie(Task *task_) : task(task_), root(0) { nodes.push_back(Node()); }
+    int num_operators;
+    Trie(std::vector<Operator> *operators_)
+        : operators(operators_), root(0), num_operators(operators_->size()) {
+        nodes.push_back(Node());
+    }
 
     void insert(const std::set<std::string> &states) {
         int node_id = 0;
@@ -36,9 +38,9 @@ struct Trie {
             node_id = next_id;
         }
         nodes[node_id].common++;
-        for (Operator &op : task->operators) {
-            if (op.applicable(states)) {
-                nodes[node_id].applicables.push_back(&op);
+        for (int i = 0; i < num_operators; i++) {
+            if (operators->at(i).applicable(states)) {
+                nodes[node_id].applicables.push_back(&operators->at(i));
             }
         }
     }
