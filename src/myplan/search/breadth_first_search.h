@@ -35,6 +35,7 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
     queue.push(0);
 
     std::unordered_set<std::set<std::string>> closed = {initial_state_set};
+    std::vector<std::pair<Operator*, std::set<std::string>>> successors;
     while (!queue.empty()) {
         ++iteration;
 
@@ -46,8 +47,7 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
             std::cout << iteration << " Nodes expanded" << std::endl;
             return extract_solution(node_idx, nodes);
         }
-        std::vector<std::pair<Operator*, std::set<std::string>>> successors =
-            planning_task.get_successor_states(nodes[node_idx].state);
+        successors = planning_task.get_successor_states(nodes[node_idx].state);
         for (auto& opss : successors) {
             if (closed.find(opss.second) == closed.end()) {
                 nodes.emplace_back(make_child_node(node_idx, nodes[node_idx].g,
