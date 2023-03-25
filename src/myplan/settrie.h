@@ -1,3 +1,4 @@
+#pragma once
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -36,7 +37,7 @@ class SetTrie {
         }
     }
 
-    ~SetTrie() { destroy(root); }
+    //~SetTrie() { destroy(root); }
 
     void assign(std::set<KeyType> keyset, ValueType value) {
         int valcnt = 0;
@@ -61,12 +62,14 @@ class SetTrie {
    private:
     Node* root;
 
+    /*
     void destroy(Node* node) {
         for (auto child : node->children) {
             destroy(child);
         }
         delete node;
     }
+    */
 
     void assignHelper(Node* node, typename std::set<KeyType>::const_iterator it,
                       typename std::set<KeyType>::const_iterator end,

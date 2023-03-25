@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "trie.h"
+#include "settrie.h"
 
 using namespace std;
 
@@ -148,19 +148,26 @@ class Task : public BaseTask {
     A STRIPS planning task
     */
    public:
-    Trie<Operator> trie;
+    SetTrie<std::string, Operator*> settrie;
 
     Task() {}
     Task(std::string name, std::unordered_set<std::string>& facts,
          std::unordered_set<std::string>& initial_state,
          std::unordered_set<std::string>& goals,
-         std::vector<Operator> operators) {
+         std::vector<Operator> operators)
+        : settrie(SetTrie<std::string, Operator*>()) {
         this->name = name;
         this->facts = facts;
         this->initial_state = initial_state;
         this->goals = goals;
         this->operators = operators;
-        trie = Trie<Operator>(&this->operators);
+        initialize_settrie();
+    }
+
+    void initialize_settrie() {
+        for (Operator& op : operators) {
+            settrie.assign(op.preconditions, &op);
+        }
     }
 
     bool goal_reached(std::unordered_set<std::string>& state) override {
@@ -185,17 +192,15 @@ class Task : public BaseTask {
         in state "state".
         */
         std::set<std::string> tmp_state(state.begin(), state.end());
-        return trie.search(tmp_state);
-        /*
+        std::vector<Operator*> applicable_operators =
+            settrie.subsets(tmp_state);
         std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors;
-        for (Operator& op : operators) {
-            if (op.applicable(state)) {
-                successors.push_back(std::make_pair(&op, op.apply(state)));
-            }
+        for (Operator* op : applicable_operators) {
+            successors.push_back(make_pair(op, op->apply(tmp_state)));
         }
+
         return successors;
-        */
     }
 
     std::string str() {
