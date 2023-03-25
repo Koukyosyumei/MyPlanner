@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
 
+#include <set>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include "myplan/search/searchspace.h"
 
-std::unordered_set<std::string> state1 = {"state1"};
-std::unordered_set<std::string> state2 = {"state2"};
-std::unordered_set<std::string> state3 = {"state3"};
-std::unordered_set<std::string> state4 = {"state4"};
-std::unordered_set<std::string> state5 = {"state5"};
+std::set<std::string> state1 = {"state1"};
+std::set<std::string> state2 = {"state2"};
+std::set<std::string> state3 = {"state3"};
+std::set<std::string> state4 = {"state4"};
+std::set<std::string> state5 = {"state5"};
 SearchNode root = make_root_node(state1);
 SearchNode child1 = make_child_node(0, root.g, "action1", state2);
 SearchNode child2 = make_child_node(0, root.g, "action2", state3);

@@ -29,12 +29,11 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
     int iteration = 0;
     std::queue<int> queue;
     std::vector<SearchNode> nodes;
-    // SearchNode root_node = make_root_node(planning_task.initial_state);
-    nodes.push_back(make_root_node(planning_task.initial_state));
-    queue.push(0);
-
     std::set<std::string> initial_state_set(planning_task.initial_state.begin(),
                                             planning_task.initial_state.end());
+    nodes.push_back(make_root_node(initial_state_set));
+    queue.push(0);
+
     std::unordered_set<std::set<std::string>> closed = {initial_state_set};
     while (!queue.empty()) {
         ++iteration;
@@ -44,24 +43,18 @@ inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
         queue.pop();
 
         if (planning_task.goal_reached(nodes[node_idx].state)) {
-            // std::vector<std::string> solution;
             std::cout << iteration << " Nodes expanded" << std::endl;
             return extract_solution(node_idx, nodes);
-            // return solution;
-            //
         }
-        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-            successors =
-                planning_task.get_successor_states(nodes[node_idx].state);
+        std::vector<std::pair<Operator*, std::set<std::string>>> successors =
+            planning_task.get_successor_states(nodes[node_idx].state);
         for (auto& opss : successors) {
-            std::set<std::string> successor_state(opss.second.begin(),
-                                                  opss.second.end());
-            if (closed.find(successor_state) == closed.end()) {
+            if (closed.find(opss.second) == closed.end()) {
                 nodes.emplace_back(make_child_node(node_idx, nodes[node_idx].g,
                                                    opss.first->name,
                                                    opss.second));
                 queue.push(nodes.size() - 1);
-                closed.emplace(successor_state);
+                closed.emplace(opss.second);
             }
         }
     }

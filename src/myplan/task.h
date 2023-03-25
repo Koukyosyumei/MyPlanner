@@ -56,9 +56,9 @@ class Operator {
         return new_state;
     }
 
-    unordered_set<string> apply(const set<string>& state) {
+    set<string> apply(const set<string>& state) {
         // assert(applicable(state));
-        unordered_set<string> new_state(state.begin(), state.end());
+        set<string> new_state(state.begin(), state.end());
         for (const string& fact : del_effects) {
             new_state.erase(fact);
         }
@@ -138,9 +138,9 @@ class BaseTask {
     std::unordered_set<std::string> goals;
     std::vector<Operator> operators;
 
-    virtual bool goal_reached(std::unordered_set<std::string>& state) = 0;
-    virtual std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string>& state) = 0;
+    virtual bool goal_reached(std::set<std::string>& state) = 0;
+    virtual std::vector<std::pair<Operator*, std::set<std::string>>>
+    get_successor_states(std::set<std::string>& state) = 0;
 };
 
 class Task : public BaseTask {
@@ -170,7 +170,7 @@ class Task : public BaseTask {
         }
     }
 
-    bool goal_reached(std::unordered_set<std::string>& state) override {
+    bool goal_reached(std::set<std::string>& state) override {
         /*
         The goal has been reached if all facts that are true in "goals"
         are true in "state".
@@ -182,22 +182,20 @@ class Task : public BaseTask {
             }
         }
         return true;
+        // return state == goals;
     }
 
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-    get_successor_states(std::unordered_set<std::string>& state) override {
+    std::vector<std::pair<Operator*, std::set<std::string>>>
+    get_successor_states(std::set<std::string>& state) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied
         in state "state".
         */
-        std::set<std::string> tmp_state(state.begin(), state.end());
-        std::vector<Operator*> applicable_operators =
-            settrie.subsets(tmp_state);
-        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-            successors;
+        std::vector<Operator*> applicable_operators = settrie.subsets(state);
+        std::vector<std::pair<Operator*, std::set<std::string>>> successors;
         for (Operator* op : applicable_operators) {
-            successors.push_back(make_pair(op, op->apply(tmp_state)));
+            successors.push_back(make_pair(op, op->apply(state)));
         }
 
         return successors;
