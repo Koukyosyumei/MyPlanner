@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "settrie.h"
+
 using namespace std;
 
 class Operator {
@@ -33,9 +35,30 @@ class Operator {
         return true;
     }
 
+    bool applicable(const set<string>& state) {
+        for (string p : preconditions) {
+            if (state.find(p) == state.end()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     unordered_set<string> apply(const unordered_set<string>& state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
+        for (const string& fact : del_effects) {
+            new_state.erase(fact);
+        }
+        for (const string& fact : add_effects) {
+            new_state.insert(fact);
+        }
+        return new_state;
+    }
+
+    unordered_set<string> apply(const set<string>& state) {
+        // assert(applicable(state));
+        unordered_set<string> new_state(state.begin(), state.end());
         for (const string& fact : del_effects) {
             new_state.erase(fact);
         }
@@ -125,16 +148,26 @@ class Task : public BaseTask {
     A STRIPS planning task
     */
    public:
+    SetTrie<std::string, Operator*> settrie;
+
     Task() {}
     Task(std::string name, std::unordered_set<std::string>& facts,
          std::unordered_set<std::string>& initial_state,
          std::unordered_set<std::string>& goals,
-         std::vector<Operator> operators) {
+         std::vector<Operator> operators)
+        : settrie(SetTrie<std::string, Operator*>()) {
         this->name = name;
         this->facts = facts;
         this->initial_state = initial_state;
         this->goals = goals;
         this->operators = operators;
+        initialize_settrie();
+    }
+
+    void initialize_settrie() {
+        for (Operator& op : operators) {
+            settrie.assign(op.preconditions, &op);
+        }
     }
 
     bool goal_reached(std::unordered_set<std::string>& state) override {
@@ -158,13 +191,15 @@ class Task : public BaseTask {
         operator and "new_state" the state that results when "op" is applied
         in state "state".
         */
+        std::set<std::string> tmp_state(state.begin(), state.end());
+        std::vector<Operator*> applicable_operators =
+            settrie.subsets(tmp_state);
         std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors;
-        for (Operator& op : operators) {
-            if (op.applicable(state)) {
-                successors.push_back(std::make_pair(&op, op.apply(state)));
-            }
+        for (Operator* op : applicable_operators) {
+            successors.push_back(make_pair(op, op->apply(tmp_state)));
         }
+
         return successors;
     }
 
