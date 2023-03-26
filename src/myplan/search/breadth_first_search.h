@@ -11,20 +11,6 @@
 #include "../task.h"
 #include "searchspace.h"
 
-namespace std {
-template <>
-struct hash<std::set<std::string>> {
-    size_t operator()(const std::set<std::string>& hoge) const {
-        size_t seed = 0;
-        for (std::string s : hoge) {
-            auto n_hash = hash<std::string>()(s);
-            seed ^= n_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        }
-        return seed;
-    }
-};
-};  // namespace std
-
 struct hash_unordered_set {
     size_t operator()(const std::unordered_set<std::string>& s) const {
         size_t result = 0;
