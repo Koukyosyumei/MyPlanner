@@ -25,17 +25,27 @@ struct hash<std::set<std::string>> {
 };
 };  // namespace std
 
+struct hash_unordered_set {
+    size_t operator()(const std::unordered_set<std::string>& s) const {
+        size_t result = 0;
+        for (const auto& str : s) {
+            result ^= std::hash<std::string>{}(str);
+        }
+        return result;
+    }
+};
+
 inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
     int iteration = 0;
     std::queue<int> queue;
     std::vector<SearchNode> nodes;
-    std::set<std::string> initial_state_set(planning_task.initial_state.begin(),
-                                            planning_task.initial_state.end());
-    nodes.push_back(make_root_node(initial_state_set));
+    nodes.push_back(make_root_node(planning_task.initial_state));
     queue.push(0);
 
-    std::unordered_set<std::set<std::string>> closed = {initial_state_set};
-    std::vector<std::pair<Operator*, std::set<std::string>>> successors;
+    std::unordered_set<std::unordered_set<std::string>, hash_unordered_set>
+        closed = {planning_task.initial_state};
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
+        successors;
     while (!queue.empty()) {
         ++iteration;
 

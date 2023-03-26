@@ -50,19 +50,19 @@ TEST(OperatorTest, Successors) {
     std::vector<Operator> operators = {op1, op2, op3};
     Task task1("task1", facts, init, goals, operators);
 
-    std::vector<std::pair<Operator*, std::set<std::string>>> test_ss = {
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>> test_ss = {
         {&op1, {"var1", "var2"}}, {&op2, {"var1"}}};
-    std::vector<std::pair<Operator*, std::set<std::string>>> ss =
-        task1.get_successor_states(init_set);
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>> ss =
+        task1.get_successor_states(init);
     ASSERT_EQ(ss[0].first->name, test_ss[0].first->name);
     ASSERT_EQ(ss[1].first->name, test_ss[1].first->name);
     ASSERT_EQ(ss[0].second, test_ss[0].second);
     ASSERT_EQ(ss[1].second, test_ss[1].second);
-    std::set<std::string> test_v3 = {"var3"};
+    std::unordered_set<std::string> test_v3 = {"var3"};
     ASSERT_EQ(task1.get_successor_states(test_v3).size(), 0);
 
-    ASSERT_FALSE(task1.goal_reached(init_set));
-    std::set<std::string> test_goal = {"var1", "var2"};
+    ASSERT_FALSE(task1.goal_reached(init));
+    std::unordered_set<std::string> test_goal = {"var1", "var2"};
     ASSERT_TRUE(task1.goal_reached(test_goal));
 }
 

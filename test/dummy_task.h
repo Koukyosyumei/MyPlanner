@@ -13,7 +13,7 @@ class DummyTask : public BaseTask {
         this->goals = goals;
     }
 
-    bool goal_reached(std::set<std::string>& state) override {
+    bool goal_reached(std::unordered_set<std::string>& state) override {
         for (std::string g : goals) {
             if (state.find(g) == state.end()) {
                 return false;
@@ -22,26 +22,27 @@ class DummyTask : public BaseTask {
         return true;
     }
 
-    std::vector<std::pair<Operator*, std::set<std::string>>>
-    get_successor_states(std::set<std::string>& state) override {
-        std::vector<std::pair<Operator*, std::set<std::string>>> succesors;
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
+    get_successor_states(std::unordered_set<std::string>& state) override {
+        std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
+            succesors;
         std::vector<std::string> emp_vec;
         Operator* sub1 = new Operator("sub1", emp_vec, emp_vec, emp_vec);
         Operator* add2 = new Operator("add2", emp_vec, emp_vec, emp_vec);
         Operator* add1 = new Operator("add1", emp_vec, emp_vec, emp_vec);
         for (std::string s : state) {
             if (0 < std::stoi(s)) {
-                std::set<std::string> tmp_u = {
+                std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) - 1)};
                 succesors.push_back(std::make_pair(sub1, tmp_u));
             }
             if (std::stoi(s) < 9) {
-                std::set<std::string> tmp_u = {
+                std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) + 2)};
                 succesors.push_back(std::make_pair(add2, tmp_u));
             }
             if (std::stoi(s) < 10) {
-                std::set<std::string> tmp_u = {
+                std::unordered_set<std::string> tmp_u = {
                     std::to_string(std::stoi(s) + 1)};
                 succesors.push_back(std::make_pair(add1, tmp_u));
             }
