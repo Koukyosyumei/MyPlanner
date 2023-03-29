@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -8,7 +9,7 @@
 class SearchNode {
    public:
     // Constructo
-    //SearchNode() {}
+    // SearchNode() {}
     SearchNode(std::unordered_set<std::string>& state, int parent_id,
                std::string action, int g)
         : state(state), parent_id(parent_id), action(action), g(g) {}

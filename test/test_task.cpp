@@ -45,12 +45,13 @@ TEST(OperatorTest, Successors) {
     Operator op3("op1", v2, v1, v3);
     std::unordered_set<std::string> facts = {"var1", "var2", "var3"};
     std::unordered_set<std::string> init = {"var1"};
+    std::set<std::string> init_set = {"var1"};
     std::unordered_set<std::string> goals = {"var1", "var2"};
     std::vector<Operator> operators = {op1, op2, op3};
     Task task1("task1", facts, init, goals, operators);
 
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>> test_ss =
-        {{&op1, {"var1", "var2"}}, {&op2, {"var1"}}};
+    std::vector<std::pair<Operator*, std::unordered_set<std::string>>> test_ss = {
+        {&op1, {"var1", "var2"}}, {&op2, {"var1"}}};
     std::vector<std::pair<Operator*, std::unordered_set<std::string>>> ss =
         task1.get_successor_states(init);
     ASSERT_EQ(ss[0].first->name, test_ss[0].first->name);

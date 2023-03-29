@@ -35,30 +35,9 @@ class Operator {
         return true;
     }
 
-    bool applicable(const set<string>& state) {
-        for (string p : preconditions) {
-            if (state.find(p) == state.end()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     unordered_set<string> apply(const unordered_set<string>& state) {
         // assert(applicable(state));
         unordered_set<string> new_state = state;
-        for (const string& fact : del_effects) {
-            new_state.erase(fact);
-        }
-        for (const string& fact : add_effects) {
-            new_state.insert(fact);
-        }
-        return new_state;
-    }
-
-    unordered_set<string> apply(const set<string>& state) {
-        // assert(applicable(state));
-        unordered_set<string> new_state(state.begin(), state.end());
         for (const string& fact : del_effects) {
             new_state.erase(fact);
         }
@@ -73,13 +52,6 @@ class Operator {
                (add_effects == other.add_effects) &&
                (del_effects == other.del_effects);
     }
-
-    // size_t operator()(const Operator& op) const {
-    //     return hash<string>()(op.name) ^
-    //            hash<unordered_set<string>>()(op.preconditions) ^
-    //            hash<unordered_set<string>>()(op.add_effects) ^
-    //            hash<unordered_set<string>>()(op.del_effects);
-    // }
 
     string str() const {
         string s = name + "\n";
@@ -182,6 +154,7 @@ class Task : public BaseTask {
             }
         }
         return true;
+        // return state == goals;
     }
 
     std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
@@ -191,13 +164,13 @@ class Task : public BaseTask {
         operator and "new_state" the state that results when "op" is applied
         in state "state".
         */
-        std::set<std::string> tmp_state(state.begin(), state.end());
+        std::set<std::string> sorted_state(state.begin(), state.end());
         std::vector<Operator*> applicable_operators =
-            settrie.subsets(tmp_state);
+            settrie.subsets(sorted_state);
         std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
             successors;
         for (Operator* op : applicable_operators) {
-            successors.push_back(make_pair(op, op->apply(tmp_state)));
+            successors.push_back(make_pair(op, op->apply(state)));
         }
 
         return successors;

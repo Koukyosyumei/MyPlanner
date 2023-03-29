@@ -1,3 +1,4 @@
+#include <set>
 #include <string>
 #include <unordered_set>
 
@@ -13,7 +14,12 @@ class DummyTask : public BaseTask {
     }
 
     bool goal_reached(std::unordered_set<std::string>& state) override {
-        return goals == state;
+        for (std::string g : goals) {
+            if (state.find(g) == state.end()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
