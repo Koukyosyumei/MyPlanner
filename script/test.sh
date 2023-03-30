@@ -10,3 +10,4 @@ ctest -V
 cd ..
 
 cp build/script/myplan myplan
+cp ./myplan /usr/bin/myplan

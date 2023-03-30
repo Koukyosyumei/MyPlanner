@@ -15,6 +15,7 @@ class SearchNode {
         : state(state), parent_id(parent_id), action(action), g(g) {}
 
     std::unordered_set<std::string> state;
+    std::unordered_set<std::string> unreached;
     int parent_id;
     std::string action;
     int g;

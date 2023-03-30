@@ -7,36 +7,45 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "myplan/grounding.h"
+#include "myplan/heuristic/base.h"
+#include "myplan/heuristic/landmarks.h"
 #include "myplan/pddl/parser.h"
+#include "myplan/search/astar.h"
 #include "myplan/search/breadth_first_search.h"
 
 using namespace std;
 
+string search_algorithm = "bfs";
+string heuristic_type = "blind";
 string domain_file_path = "domain.pddl";
 string problem_file_path = "task.pddl";
 string solution_file_path = "task.soln";
 
 void parse_args(int argc, char* argv[]) {
     int opt;
-    while ((opt = getopt(argc, argv, "d:p:s:")) != -1) {
+    domain_file_path = argv[1];
+    problem_file_path = argv[2];
+    while ((opt = getopt(argc, argv, "s:h:o:")) != -1) {
         switch (opt) {
-            case 'd':
-                domain_file_path = string(optarg);
-                break;
-            case 'p':
-                problem_file_path = string(optarg);
-                break;
             case 's':
+                search_algorithm = string(optarg);
+                break;
+            case 'h':
+                heuristic_type = string(optarg);
+                break;
+            case 'o':
                 solution_file_path = string(optarg);
                 break;
             default:
                 printf("unknown parameter %s is specified", optarg);
-                printf("Usage: %s [-d] [-p] [-s] ...\n", argv[0]);
+                printf("Usage: %s [-s] [-h] [-o] ...\n", argv[0]);
                 break;
         }
     }
@@ -69,7 +78,25 @@ int main(int argc, char* argv[]) {
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;
     start = chrono::system_clock::now();
-    vector<string> solution = breadth_first_search(task);
+    vector<string> solution;
+    if (search_algorithm == "bfs") {
+        solution = breadth_first_search(task);
+    } else if (search_algorithm == "astar") {
+        if (heuristic_type == "blind") {
+            BlindHeuristic heuristic(task);
+            solution = astar(task, heuristic);
+        } else if (heuristic_type == "goalcount") {
+            GoalCountHeuristic heuristic(task);
+            solution = astar(task, heuristic);
+        } else if (heuristic_type == "landmark") {
+            LandmarkHeuristic heuristic(task);
+            solution = astar(task, heuristic);
+        } else {
+            throw invalid_argument("given heuristic type is not supported");
+        }
+    } else {
+        throw invalid_argument("given search algorithm is not supported");
+    }
     end = chrono::system_clock::now();
     float elapsed =
         chrono::duration_cast<chrono::milliseconds>(end - start).count();
@@ -81,4 +108,16 @@ int main(int argc, char* argv[]) {
     for (string op : solution) {
         solution_file << op << "\n";
     }
+
+    /*
+    std::string validate_cmd = "validate " + domain_file_path + " " +
+                               problem_file_path + " " + solution_file_path;
+    std::cout << validate_cmd << std::endl;
+    auto ret = system(validate_cmd.c_str());
+    if (ret == -1) {
+        cout << "a child process for validator could not be created, or"
+                "its status could not be retrieved!"
+             << endl;
+    }
+    */
 }
