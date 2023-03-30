@@ -11,13 +11,12 @@ cd MyPlan
 
 ## Usage
 
-Example
+- example
 ```bash
 myplan benchmarks/transport/domain.pddl benchmarks/transport/task01.pddl
 ```
 
-Options
-
+- options
 ```
 -s type of search algorithm (`bfs` | `astar`). Default to `bfs`.
 -h type of heuristic function (`blind` | `goalcount` | `landmark`). Default to `blind`.
