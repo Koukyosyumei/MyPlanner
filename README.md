@@ -22,4 +22,8 @@ myplan benchmarks/transport/domain.pddl benchmarks/transport/task01.pddl
 -h type of heuristic function (`blind` | `goalcount` | `landmark`). Default to `blind`.
 -o path to output file. Default to `task.soln`.
 ```
+## Test
 
+```bash
+./script/test.sh
+```
