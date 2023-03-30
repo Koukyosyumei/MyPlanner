@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
             GoalCountHeuristic heuristic(task);
             solution = astar(task, heuristic);
         } else if (heuristic_type == "landmark") {
-             LandmarkHeuristic heuristic(task);
+            LandmarkHeuristic heuristic(task);
             solution = astar(task, heuristic);
         } else {
             throw invalid_argument("given heuristic type is not supported");
@@ -108,4 +108,16 @@ int main(int argc, char* argv[]) {
     for (string op : solution) {
         solution_file << op << "\n";
     }
+
+    /*
+    std::string validate_cmd = "validate " + domain_file_path + " " +
+                               problem_file_path + " " + solution_file_path;
+    std::cout << validate_cmd << std::endl;
+    auto ret = system(validate_cmd.c_str());
+    if (ret == -1) {
+        cout << "a child process for validator could not be created, or"
+                "its status could not be retrieved!"
+             << endl;
+    }
+    */
 }
