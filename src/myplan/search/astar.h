@@ -7,6 +7,7 @@
 #include <queue>
 #include <set>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 #include <vector>
 
@@ -21,26 +22,24 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
                                       Heuristic& heuristic) {
     int iteration = 0;
     int expansions = 0;
-    std::priority_queue<pair<int, int>> queue;
+    std::priority_queue<tuple<int, int, int>> queue;
     std::vector<SearchNode> nodes;
     nodes.push_back(make_root_node(planning_task.initial_state));
-    queue.push({-1 * (heuristic.calculate_h(&nodes[0]) + nodes[0].g), 0});
+    int h = heuristic.calculate_h(&nodes[0]);
+    queue.push({-1 * (h + nodes[0].g), -h, 0});
 
-    // std::unordered_set<std::unordered_set<std::string>, hash_unordered_set>
-    //     closed = {planning_task.initial_state};
-    std::unordered_map<std::unordered_set<std::string>, int> state_cost = {
-        {nodes[0].state, 0}};
+    std::unordered_map<std::unordered_set<std::string>, int, hash_unordered_set>
+        state_cost = {{nodes[0].state, 0}};
     std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
         successors;
-    pair<int, int> front_status;
-    int f, node_idx;
+    tuple<int, int, int> front_status;
+    int node_idx, old_succ_g;
 
     while (!queue.empty()) {
         ++iteration;
 
         front_status = queue.top();
-        f = -1 * front_status.first;
-        node_idx = front_status.second;
+        node_idx = get<2>(front_status);
         queue.pop();
 
         if (state_cost[nodes[node_idx].state] == nodes[node_idx].g) {
@@ -55,18 +54,18 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
             for (auto& opss : successors) {
                 SearchNode succ_node = make_child_node(
                     node_idx, nodes[node_idx].g, opss.first->name, opss.second);
-                int h = heuristic.calculate_h(&succ_node);
-                int old_succ_g = INF;
-                if (state_cost.find(succ_node.state) != state_cost.end()) {
-                    old_succ_g = state_cost[succ_node.state];
+                h = heuristic.calculate_h(&succ_node);
+                old_succ_g = INF;
+                if (state_cost.find(opss.second) != state_cost.end()) {
+                    old_succ_g = state_cost[opss.second];
                 }
                 // std::cout << "succ_node.g " << succ_node.g << " " <<
                 // old_succ_g
                 //          << " " << INF << std::endl;
                 if (succ_node.g < old_succ_g) {
                     nodes.emplace_back(succ_node);
-                    queue.push({(h + succ_node.g), nodes.size() - 1});
-                    state_cost.emplace(succ_node.state, succ_node.g);
+                    queue.push({-1 * (h + succ_node.g), -h, nodes.size() - 1});
+                    state_cost.emplace(opss.second, succ_node.g);
                 }
             }
         }
