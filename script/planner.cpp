@@ -12,7 +12,9 @@
 #include <vector>
 
 #include "myplan/grounding.h"
+#include "myplan/heuristic/base.h"
 #include "myplan/pddl/parser.h"
+#include "myplan/search/astar.h"
 #include "myplan/search/breadth_first_search.h"
 
 using namespace std;
@@ -69,7 +71,11 @@ int main(int argc, char* argv[]) {
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;
     start = chrono::system_clock::now();
-    vector<string> solution = breadth_first_search(task);
+    vector<string> solution;
+    // solution = breadth_first_search(task);
+    // BlindHeuristic heuristic(&task);
+
+    solution = astar(task, heuristic);
     end = chrono::system_clock::now();
     float elapsed =
         chrono::duration_cast<chrono::milliseconds>(end - start).count();
