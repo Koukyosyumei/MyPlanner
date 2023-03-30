@@ -7,14 +7,15 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <stdexcept>
 
 #include "myplan/grounding.h"
 #include "myplan/heuristic/base.h"
+#include "myplan/heuristic/landmarks.h"
 #include "myplan/pddl/parser.h"
 #include "myplan/search/astar.h"
 #include "myplan/search/breadth_first_search.h"
@@ -82,10 +83,13 @@ int main(int argc, char* argv[]) {
         solution = breadth_first_search(task);
     } else if (search_algorithm == "astar") {
         if (heuristic_type == "blind") {
-            BlindHeuristic heuristic(&task);
+            BlindHeuristic heuristic(task);
             solution = astar(task, heuristic);
         } else if (heuristic_type == "goalcount") {
-            GoalCountHeuristic heuristic(&task);
+            GoalCountHeuristic heuristic(task);
+            solution = astar(task, heuristic);
+        } else if (heuristic_type == "landmark") {
+             LandmarkHeuristic heuristic(task);
             solution = astar(task, heuristic);
         } else {
             throw invalid_argument("given heuristic type is not supported");

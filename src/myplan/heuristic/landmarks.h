@@ -1,11 +1,11 @@
 #pragma once
 
-#include "numeric_limits"
 #include "../search/searchspace.h"
 #include "../task.h"
 #include "base.h"
+#include "limits"
 
-const int INF =  
+const float FLOAT_INF = std::numeric_limits<float>::max();
 
 Task _get_relaxed_task(Task task) {
     Task relaxed_task = task;
@@ -77,8 +77,8 @@ std::unordered_set<std::string> get_landmarks(Task& _task) {
     return landmarks;
 }
 
-int compute_landmark_costs(Task& task,
-                           std::unordered_set<std::string>& landmarks) {
+std::unordered_map<std::string, float> compute_landmark_costs(
+    Task& task, std::unordered_set<std::string>& landmarks) {
     std::unordered_map<Operator, std::vector<std::string>> op_to_lm;
     for (Operator& op : task.operators) {
         for (std::string landmark : landmarks) {
@@ -88,10 +88,65 @@ int compute_landmark_costs(Task& task,
         }
     }
 
+    std::unordered_map<std::string, float> min_cost;
     for (auto& item : op_to_lm) {
         int landmarks_achieving = item.second.size();
         for (std::string landmark : landmarks) {
-            int tmp_cost = INF;
+            if (min_cost.find(landmark) == min_cost.end()) {
+                min_cost[landmark] = FLOAT_INF;
+            }
+            min_cost[landmark] = min(min_cost[landmark],
+                                     (float)(1.0) / float(landmarks_achieving));
         }
     }
+
+    return min_cost;
 }
+
+struct LandmarkHeuristic : Heuristic {
+    Task task;
+    std::unordered_set<std::string> landmarks;
+    std::unordered_map<std::string, float> costs;
+    LandmarkHeuristic(Task& task_) {
+        task = task_;
+        landmarks = get_landmarks(task);
+        costs = compute_landmark_costs(task, landmarks);
+    }
+
+    float calculate_h(int this_id, std::vector<SearchNode>& nodes) {
+        std::unordered_set<std::string> unreached;
+        if (nodes[this_id].parent_id == -1) {
+            unreached = landmarks;
+            for (std::string s : task.initial_state) {
+                if (unreached.count(s) > 0) {
+                    unreached.erase(s);
+                }
+            }
+        } else {
+            unreached = nodes[nodes[this_id].parent_id].unreached;
+            if (unreached.count(nodes[this_id].action) > 0) {
+                unreached.erase(nodes[this_id].action);
+            }
+        }
+
+        nodes[this_id].unreached = unreached;
+
+        for (std::string s : task.goals) {
+            if (unreached.count(s) > 0) {
+                unreached.emplace(s);
+            }
+        }
+        for (std::string s : nodes[this_id].state) {
+            if (unreached.count(s) > 0) {
+                unreached.erase(s);
+            }
+        }
+
+        float h = 0;
+        for (std::string landmark : unreached) {
+            h += costs[landmark];
+        }
+
+        return h;
+    }
+};

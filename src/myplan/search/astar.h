@@ -22,17 +22,17 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
                                       Heuristic& heuristic) {
     int iteration = 0;
     int expansions = 0;
-    std::priority_queue<tuple<int, int, int>> queue;
+    std::priority_queue<tuple<float, float, int>> queue;
     std::vector<SearchNode> nodes;
     nodes.push_back(make_root_node(planning_task.initial_state));
-    int h = heuristic.calculate_h(&nodes[0]);
-    queue.push({-1 * (h + nodes[0].g), -h, 0});
+    float h = heuristic.calculate_h(0, nodes);
+    queue.push({-1.0 * (h + (float)nodes[0].g), -h, 0});
 
     std::unordered_map<std::unordered_set<std::string>, int, hash_unordered_set>
         state_cost = {{nodes[0].state, 0}};
     std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
         successors;
-    tuple<int, int, int> front_status;
+    tuple<float, float, int> front_status;
     int node_idx, old_succ_g;
 
     while (!queue.empty()) {
@@ -54,17 +54,15 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
             for (auto& opss : successors) {
                 SearchNode succ_node = make_child_node(
                     node_idx, nodes[node_idx].g, opss.first->name, opss.second);
-                h = heuristic.calculate_h(&succ_node);
+                nodes.emplace_back(succ_node);
+                h = heuristic.calculate_h(nodes.size() - 1, nodes);
                 old_succ_g = INF;
                 if (state_cost.find(opss.second) != state_cost.end()) {
                     old_succ_g = state_cost[opss.second];
                 }
-                // std::cout << "succ_node.g " << succ_node.g << " " <<
-                // old_succ_g
-                //          << " " << INF << std::endl;
                 if (succ_node.g < old_succ_g) {
-                    nodes.emplace_back(succ_node);
-                    queue.push({-1 * (h + succ_node.g), -h, nodes.size() - 1});
+                    queue.push(
+                        {-1 * (h + (float)succ_node.g), -h, nodes.size() - 1});
                     state_cost.emplace(opss.second, succ_node.g);
                 }
             }

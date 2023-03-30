@@ -4,33 +4,33 @@
 #include "../task.h"
 
 struct Heuristic {
-    virtual int calculate_h(SearchNode *node) = 0;
+    virtual float calculate_h(int this_id, std::vector<SearchNode> &nodes) = 0;
 };
 
 struct BlindHeuristic : Heuristic {
-    Task *task;
-    BlindHeuristic(Task *task) : task(task) {}
+    Task task;
+    BlindHeuristic(Task &task_) { task = task_; }
 
-    int calculate_h(SearchNode *node) {
-        if (task->goal_reached(node->state)) {
-            return 1;
+    float calculate_h(int this_id, std::vector<SearchNode> &nodes) {
+        if (task.goal_reached(nodes[this_id].state)) {
+            return 1.0;
         } else {
-            return 0;
+            return 0.0;
         }
     }
 };
 
 struct GoalCountHeuristic : Heuristic {
-    Task *task;
-    GoalCountHeuristic(Task *task) : task(task) {}
+    Task task;
+    GoalCountHeuristic(Task &task_) { task = task_; }
 
-    int calculate_h(SearchNode *node) {
+    float calculate_h(int this_id, std::vector<SearchNode> &nodes) {
         int cnt_unsatisfied_cond = 0;
-        for (std::string g : task->goals) {
-            if (node->state.find(g) == node->state.end()) {
+        for (std::string g : task.goals) {
+            if (nodes[this_id].state.find(g) == nodes[this_id].state.end()) {
                 cnt_unsatisfied_cond++;
             }
         }
-        return cnt_unsatisfied_cond;
+        return (float)cnt_unsatisfied_cond;
     }
 };
