@@ -107,25 +107,25 @@ struct LandmarkHeuristic : Heuristic {
     }
 
     float calculate_h(int this_id, std::vector<SearchNode>& nodes) {
-        std::unordered_set<std::string> unreached;
         if (nodes[this_id].parent_id == -1) {
-            unreached = landmarks;
+            nodes[this_id].unreached = landmarks;
             for (std::string s : task.initial_state) {
-                if (unreached.count(s) > 0) {
-                    unreached.erase(s);
+                if (nodes[this_id].unreached.count(s) > 0) {
+                    nodes[this_id].unreached.erase(s);
                 }
             }
         } else {
-            unreached = nodes[nodes[this_id].parent_id].unreached;
-            if (unreached.count(nodes[this_id].action) > 0) {
-                unreached.erase(nodes[this_id].action);
+            nodes[this_id].unreached =
+                nodes[nodes[this_id].parent_id].unreached;
+            if (nodes[this_id].unreached.count(nodes[this_id].action) > 0) {
+                nodes[this_id].unreached.erase(nodes[this_id].action);
             }
         }
 
-        nodes[this_id].unreached = unreached;
-
+        std::unordered_set<std::string> unreached(
+            nodes[this_id].unreached.begin(), nodes[this_id].unreached.end());
         for (std::string s : task.goals) {
-            if (unreached.count(s) > 0) {
+            if (unreached.count(s) == 0) {
                 unreached.emplace(s);
             }
         }

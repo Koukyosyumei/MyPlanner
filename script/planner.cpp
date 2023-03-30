@@ -77,19 +77,22 @@ int main(int argc, char* argv[]) {
 
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;
-    start = chrono::system_clock::now();
     vector<string> solution;
     if (search_algorithm == "bfs") {
+        start = chrono::system_clock::now();
         solution = breadth_first_search(task);
     } else if (search_algorithm == "astar") {
         if (heuristic_type == "blind") {
             BlindHeuristic heuristic(task);
+            start = chrono::system_clock::now();
             solution = astar(task, heuristic);
         } else if (heuristic_type == "goalcount") {
             GoalCountHeuristic heuristic(task);
+            start = chrono::system_clock::now();
             solution = astar(task, heuristic);
         } else if (heuristic_type == "landmark") {
             LandmarkHeuristic heuristic(task);
+            start = chrono::system_clock::now();
             solution = astar(task, heuristic);
         } else {
             throw invalid_argument("given heuristic type is not supported");
