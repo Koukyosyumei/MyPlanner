@@ -117,14 +117,12 @@ class EncodedOperator {
         // assert(applicable(state));
         unordered_set<int> new_state = state;
         for (const int& fact : del_effects) {
-            if (new_state.find(fact) != new_state.end()) {
-                new_state.erase(fact);
+            if (new_state.erase(fact)) {
                 hash_val ^= std::hash<std::string>{}(std::to_string(fact));
             }
         }
         for (const int& fact : add_effects) {
-            if (new_state.find(fact) == new_state.end()) {
-                new_state.insert(fact);
+            if (new_state.insert(fact).second) {
                 hash_val ^= std::hash<std::string>{}(std::to_string(fact));
             }
         }
