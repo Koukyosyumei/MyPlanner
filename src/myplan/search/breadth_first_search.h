@@ -12,25 +12,25 @@
 #include "searchspace.h"
 
 struct hash_unordered_set {
-    size_t operator()(const std::unordered_set<std::string>& s) const {
+    size_t operator()(const std::unordered_set<int>& s) const {
         size_t result = 0;
         for (const auto& str : s) {
-            result ^= std::hash<std::string>{}(str);
+            result ^= std::hash<int>{}(str);
         }
         return result;
     }
 };
 
-inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
+inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
     int iteration = 0;
     std::queue<int> queue;
     std::vector<SearchNode> nodes;
     nodes.push_back(make_root_node(planning_task.initial_state));
     queue.push(0);
 
-    std::unordered_set<std::unordered_set<std::string>, hash_unordered_set>
-        closed = {planning_task.initial_state};
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
+    std::unordered_set<std::unordered_set<int>, hash_unordered_set> closed = {
+        planning_task.initial_state};
+    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
         successors;
     while (!queue.empty()) {
         ++iteration;

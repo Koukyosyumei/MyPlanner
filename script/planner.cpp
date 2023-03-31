@@ -32,12 +32,12 @@ void parse_args(int argc, char* argv[]) {
     int opt;
     domain_file_path = argv[1];
     problem_file_path = argv[2];
-    while ((opt = getopt(argc, argv, "s:h:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:H:o:")) != -1) {
         switch (opt) {
             case 's':
                 search_algorithm = string(optarg);
                 break;
-            case 'h':
+            case 'H':
                 heuristic_type = string(optarg);
                 break;
             case 'o':
@@ -45,7 +45,7 @@ void parse_args(int argc, char* argv[]) {
                 break;
             default:
                 printf("unknown parameter %s is specified", optarg);
-                printf("Usage: %s [-s] [-h] [-o] ...\n", argv[0]);
+                printf("Usage: %s [-s] [-H] [-o] ...\n", argv[0]);
                 break;
         }
     }
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;
-    vector<string> solution;
+    vector<int> solution;
     if (search_algorithm == "bfs") {
         start = chrono::system_clock::now();
         solution = breadth_first_search(task);
@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
     printf("Length of solution is %d \n", (int)solution.size());
     ofstream solution_file;
     solution_file.open(solution_file_path, ios::out);
-    for (string op : solution) {
-        solution_file << op << "\n";
+    for (int op : solution) {
+        solution_file << task.action_id2name[op] << "\n";
     }
 
     /*

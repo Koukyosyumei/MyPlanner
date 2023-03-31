@@ -6,26 +6,26 @@
 
 #include "myplan/search/searchspace.h"
 
-std::unordered_set<std::string> state1 = {"state1"};
-std::unordered_set<std::string> state2 = {"state2"};
-std::unordered_set<std::string> state3 = {"state3"};
-std::unordered_set<std::string> state4 = {"state4"};
-std::unordered_set<std::string> state5 = {"state5"};
+std::unordered_set<int> state1 = {1};
+std::unordered_set<int> state2 = {2};
+std::unordered_set<int> state3 = {3};
+std::unordered_set<int> state4 = {4};
+std::unordered_set<int> state5 = {5};
 SearchNode root = make_root_node(state1);
-SearchNode child1 = make_child_node(0, root.g, "action1", state2);
-SearchNode child2 = make_child_node(0, root.g, "action2", state3);
-SearchNode grandchild1 = make_child_node(1, child1.g, "action3", state4);
-SearchNode grandchild2 = make_child_node(2, child2.g, "action4", state5);
+SearchNode child1 = make_child_node(0, root.g, 6, state2);
+SearchNode child2 = make_child_node(0, root.g, 7, state3);
+SearchNode grandchild1 = make_child_node(1, child1.g, 8, state4);
+SearchNode grandchild2 = make_child_node(2, child2.g, 9, state5);
 
 TEST(searchspace, ExtractSolution) {
     std::vector<SearchNode> nodes = {root, child1, child2, grandchild1,
                                      grandchild2};
-    std::vector<std::string> solution_0;
+    std::vector<int> solution_0;
     solution_0 = extract_solution(0, nodes);
     ASSERT_EQ(solution_0.size(), 0);
-    std::vector<std::string> test1 = {"action1", "action3"};
-    std::vector<std::string> test2 = {"action2", "action4"};
-    std::vector<std::string> solution_1, solution_2;
+    std::vector<int> test1 = {6, 8};
+    std::vector<int> test2 = {7, 9};
+    std::vector<int> solution_1, solution_2;
     solution_1 = extract_solution(3, nodes);
     solution_2 = extract_solution(4, nodes);
     ASSERT_EQ(solution_1, test1);
@@ -39,13 +39,13 @@ TEST(searchspace, GValues) {
 }
 
 TEST(searchspace, States) {
-    for (std::string s : root.state) {
-        ASSERT_EQ(s, "state1");
+    for (int s : root.state) {
+        ASSERT_EQ(s, 1);
     }
-    for (std::string s : child2.state) {
-        ASSERT_EQ(s, "state3");
+    for (int s : child2.state) {
+        ASSERT_EQ(s, 3);
     }
-    for (std::string s : grandchild1.state) {
-        ASSERT_EQ(s, "state4");
+    for (int s : grandchild1.state) {
+        ASSERT_EQ(s, 4);
     }
 }

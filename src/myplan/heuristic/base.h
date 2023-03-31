@@ -26,7 +26,7 @@ struct GoalCountHeuristic : Heuristic {
 
     float calculate_h(int this_id, std::vector<SearchNode> &nodes) {
         int cnt_unsatisfied_cond = 0;
-        for (std::string g : task.goals) {
+        for (int g : task.goals) {
             if (nodes[this_id].state.find(g) == nodes[this_id].state.end()) {
                 cnt_unsatisfied_cond++;
             }

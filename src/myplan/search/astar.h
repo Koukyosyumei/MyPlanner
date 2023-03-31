@@ -18,8 +18,7 @@
 
 const int INF = std::numeric_limits<int>::max();
 
-inline std::vector<std::string> astar(BaseTask& planning_task,
-                                      Heuristic& heuristic) {
+inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
     int iteration = 0;
     int expansions = 0;
     std::priority_queue<tuple<float, float, int>> queue;
@@ -28,9 +27,9 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
     float h = heuristic.calculate_h(0, nodes);
     queue.push({-1.0 * (h + (float)nodes[0].g), -h, 0});
 
-    std::unordered_map<std::unordered_set<std::string>, int, hash_unordered_set>
+    std::unordered_map<std::unordered_set<int>, int, hash_unordered_set>
         state_cost = {{nodes[0].state, 0}};
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
+    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
         successors;
     tuple<float, float, int> front_status;
     int node_idx, old_succ_g;

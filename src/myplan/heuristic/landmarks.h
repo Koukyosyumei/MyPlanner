@@ -20,34 +20,33 @@ bool is_subset(const std::unordered_set<T>& set1,
 
 Task _get_relaxed_task(Task task) {
     Task relaxed_task = task;
-    for (Operator& op : relaxed_task.operators) {
+    for (EncodedOperator& op : relaxed_task.operators) {
         op.del_effects = {};
     }
     return relaxed_task;
 }
 
-std::unordered_set<std::string> get_landmarks(Task& task_) {
+std::unordered_set<int> get_landmarks(Task& task_) {
     Task task = _get_relaxed_task(task_);
-    std::unordered_set<std::string> landmarks(task.goals.begin(),
-                                              task.goals.end());
-    std::unordered_set<std::string> possible_landmarks(task.facts.begin(),
-                                                       task.facts.end());
-    for (std::string s : task.goals) {
+    std::unordered_set<int> landmarks(task.goals.begin(), task.goals.end());
+    std::unordered_set<int> possible_landmarks(task.facts.begin(),
+                                               task.facts.end());
+    for (int s : task.goals) {
         if (possible_landmarks.count(s) > 0) {
             possible_landmarks.erase(s);
         }
     }
 
-    for (std::string fact : possible_landmarks) {
-        std::unordered_set<std::string> current_state(
-            task.initial_state.begin(), task.initial_state.end());
+    for (int fact : possible_landmarks) {
+        std::unordered_set<int> current_state(task.initial_state.begin(),
+                                              task.initial_state.end());
         bool goal_reached = is_subset(task.goals, current_state);
 
         while (!goal_reached) {
-            std::unordered_set<std::string> previous_state(
-                current_state.begin(), current_state.end());
+            std::unordered_set<int> previous_state(current_state.begin(),
+                                                   current_state.end());
 
-            for (Operator op : task.operators) {
+            for (EncodedOperator op : task.operators) {
                 if (op.applicable(current_state) &&
                     (op.add_effects.find(fact) == op.add_effects.end())) {
                     current_state = op.apply(current_state);
@@ -70,21 +69,21 @@ std::unordered_set<std::string> get_landmarks(Task& task_) {
     return landmarks;
 }
 
-std::unordered_map<std::string, float> compute_landmark_costs(
-    Task& task, std::unordered_set<std::string>& landmarks) {
-    std::unordered_map<std::string, std::unordered_set<std::string>> op_to_lm;
-    for (Operator& op : task.operators) {
-        for (std::string landmark : landmarks) {
+std::unordered_map<int, float> compute_landmark_costs(
+    Task& task, std::unordered_set<int>& landmarks) {
+    std::unordered_map<int, std::unordered_set<int>> op_to_lm;
+    for (EncodedOperator& op : task.operators) {
+        for (int landmark : landmarks) {
             if (op.add_effects.find(landmark) != op.add_effects.end()) {
                 op_to_lm[op.name].emplace(landmark);
             }
         }
     }
 
-    std::unordered_map<std::string, float> min_cost;
+    std::unordered_map<int, float> min_cost;
     for (auto& item : op_to_lm) {
         int landmarks_achieving = item.second.size();
-        for (std::string landmark : item.second) {
+        for (int landmark : item.second) {
             if (min_cost.find(landmark) == min_cost.end()) {
                 min_cost[landmark] = FLOAT_INF;
             }
@@ -98,8 +97,8 @@ std::unordered_map<std::string, float> compute_landmark_costs(
 
 struct LandmarkHeuristic : Heuristic {
     Task task;
-    std::unordered_set<std::string> landmarks;
-    std::unordered_map<std::string, float> costs;
+    std::unordered_set<int> landmarks;
+    std::unordered_map<int, float> costs;
     LandmarkHeuristic(Task& task_) {
         task = task_;
         landmarks = get_landmarks(task);
@@ -109,7 +108,7 @@ struct LandmarkHeuristic : Heuristic {
     float calculate_h(int this_id, std::vector<SearchNode>& nodes) {
         if (nodes[this_id].parent_id == -1) {
             nodes[this_id].unreached = landmarks;
-            for (std::string s : task.initial_state) {
+            for (int s : task.initial_state) {
                 if (nodes[this_id].unreached.count(s) > 0) {
                     nodes[this_id].unreached.erase(s);
                 }
@@ -122,21 +121,21 @@ struct LandmarkHeuristic : Heuristic {
             }
         }
 
-        std::unordered_set<std::string> unreached(
-            nodes[this_id].unreached.begin(), nodes[this_id].unreached.end());
-        for (std::string s : task.goals) {
+        std::unordered_set<int> unreached(nodes[this_id].unreached.begin(),
+                                          nodes[this_id].unreached.end());
+        for (int s : task.goals) {
             if (unreached.count(s) == 0) {
                 unreached.emplace(s);
             }
         }
-        for (std::string s : nodes[this_id].state) {
+        for (int s : nodes[this_id].state) {
             if (unreached.count(s) > 0) {
                 unreached.erase(s);
             }
         }
 
         float h = 0;
-        for (std::string landmark : unreached) {
+        for (int landmark : unreached) {
             h += costs[landmark];
         }
 

@@ -549,5 +549,41 @@ inline Task ground(Problem& problem,
         operators = relevance_analysis(operators, goals);
     }
 
-    return Task(problem.name, facts, init, goals, operators);
+    int i = 0;
+    std::unordered_map<std::string, int> encoding_map;
+    std::unordered_map<int, std::string> reverse_encoding_map;
+    for (std::string s : facts) {
+        encoding_map.insert({s, i});
+        reverse_encoding_map.insert({i, s});
+        i++;
+    }
+
+    std::unordered_map<int, std::string> action_id2name;
+    for (Operator& op : operators) {
+        encoding_map.insert({op.name, i});
+        reverse_encoding_map.insert({i, op.name});
+        action_id2name.insert({i, op.name});
+        i++;
+    }
+
+    std::unordered_set<int> encoded_facts;
+    std::unordered_set<int> encoded_init;
+    std::unordered_set<int> encoded_goals;
+    std::vector<EncodedOperator> encoded_operators;
+
+    for (std::string s : init) {
+        encoded_init.emplace(encoding_map[s]);
+    }
+    for (std::string s : goals) {
+        encoded_goals.emplace(encoding_map[s]);
+    }
+    for (Operator& op : operators) {
+        encoded_operators.push_back(EncodedOperator(op, encoding_map));
+    }
+
+    Task task(problem.name, encoded_facts, encoded_init, encoded_goals,
+              encoded_operators);
+    task.encoding_map = encoding_map;
+    task.action_id2name = action_id2name;
+    return task;
 }

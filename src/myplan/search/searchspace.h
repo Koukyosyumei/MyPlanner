@@ -3,6 +3,7 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -10,22 +11,21 @@ class SearchNode {
    public:
     // Constructo
     // SearchNode() {}
-    SearchNode(std::unordered_set<std::string>& state, int parent_id,
-               std::string action, int g)
+    SearchNode(std::unordered_set<int>& state, int parent_id, int action, int g)
         : state(state), parent_id(parent_id), action(action), g(g) {}
 
-    std::unordered_set<std::string> state;
-    std::unordered_set<std::string> unreached;
+    std::unordered_set<int> state;
+    std::unordered_set<int> unreached;
     int parent_id;
-    std::string action;
+    int action;
     int g;
 };
 
 // Extract the solution from the search space
-inline std::vector<std::string> extract_solution(
-    int this_id, std::vector<SearchNode>& nodes) {
+inline std::vector<int> extract_solution(int this_id,
+                                         std::vector<SearchNode>& nodes) {
     int node_id = this_id;
-    std::vector<std::string> solution;
+    std::vector<int> solution;
     while (nodes[node_id].parent_id != -1) {
         // std::cout << node->action << std::endl;
         solution.push_back(nodes[node_id].action);
@@ -36,15 +36,13 @@ inline std::vector<std::string> extract_solution(
 }
 
 // Construct an initial search node
-inline SearchNode make_root_node(
-    std::unordered_set<std::string>& initial_state) {
-    return SearchNode(initial_state, -1, "", 0);
+inline SearchNode make_root_node(std::unordered_set<int>& initial_state) {
+    return SearchNode(initial_state, -1, -1, 0);
 }
 
 // Construct a new search node linked to a parent node
-inline SearchNode make_child_node(int parent_id, int parent_g,
-                                  std::string action,
-                                  std::unordered_set<std::string>& state) {
+inline SearchNode make_child_node(int parent_id, int parent_g, int action,
+                                  std::unordered_set<int>& state) {
     return SearchNode(state, parent_id, action, parent_g + 1);
 }
 
