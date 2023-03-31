@@ -22,26 +22,28 @@ class DummyTask : public BaseTask {
         return true;
     }
 
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-    get_successor_states(std::unordered_set<int>& state) override {
-        std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-            succesors;
+    std::vector<std::pair<int, std::unordered_set<int>>> get_successor_states(
+        std::unordered_set<int>& state) override {
+        std::vector<std::pair<int, std::unordered_set<int>>> succesors;
         std::vector<int> emp_vec;
-        EncodedOperator* sub1 = new EncodedOperator(0, emp_vec, emp_vec, emp_vec);
-        EncodedOperator* add2 = new EncodedOperator(2, emp_vec, emp_vec, emp_vec);
-        EncodedOperator* add1 = new EncodedOperator(1, emp_vec, emp_vec, emp_vec);
+        EncodedOperator* sub1 =
+            new EncodedOperator(0, emp_vec, emp_vec, emp_vec);
+        EncodedOperator* add2 =
+            new EncodedOperator(2, emp_vec, emp_vec, emp_vec);
+        EncodedOperator* add1 =
+            new EncodedOperator(1, emp_vec, emp_vec, emp_vec);
         for (int s : state) {
             if (0 < s) {
                 std::unordered_set<int> tmp_u = {s - 1};
-                succesors.push_back(std::make_pair(sub1, tmp_u));
+                succesors.push_back(std::make_pair(sub1->name, tmp_u));
             }
             if (s < 9) {
                 std::unordered_set<int> tmp_u = {s + 2};
-                succesors.push_back(std::make_pair(add2, tmp_u));
+                succesors.push_back(std::make_pair(add2->name, tmp_u));
             }
             if (s < 10) {
                 std::unordered_set<int> tmp_u = {s + 1};
-                succesors.push_back(std::make_pair(add1, tmp_u));
+                succesors.push_back(std::make_pair(add1->name, tmp_u));
             }
         }
         return succesors;

@@ -184,7 +184,7 @@ class BaseTask {
     std::unordered_map<int, std::string> action_id2name;
 
     virtual bool goal_reached(std::unordered_set<int>& state) = 0;
-    virtual std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
+    virtual std::vector<std::pair<int, std::unordered_set<int>>>
     get_successor_states(std::unordered_set<int>& state) = 0;
 };
 
@@ -229,8 +229,8 @@ class Task : public BaseTask {
         // return state == goals;
     }
 
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-    get_successor_states(std::unordered_set<int>& state) override {
+    std::vector<std::pair<int, std::unordered_set<int>>> get_successor_states(
+        std::unordered_set<int>& state) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied
@@ -239,10 +239,10 @@ class Task : public BaseTask {
         std::set<int> sorted_state(state.begin(), state.end());
         std::vector<EncodedOperator*> applicable_operators =
             settrie.subsets(sorted_state);
-        std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-            successors;
+        std::vector<std::pair<int, std::unordered_set<int>>> successors;
+        successors.reserve(applicable_operators.size());
         for (EncodedOperator* op : applicable_operators) {
-            successors.push_back(make_pair(op, op->apply(state)));
+            successors.push_back(make_pair(op->name, op->apply(state)));
         }
 
         return successors;

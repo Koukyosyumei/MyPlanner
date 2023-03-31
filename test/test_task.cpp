@@ -50,12 +50,12 @@ TEST(EncodedOperatorTest, Successors) {
     std::vector<EncodedOperator> operators = {op1, op2, op3};
     Task task1("task1", facts, init, goals, operators);
 
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>> test_ss = {
-        {&op1, {1, 2}}, {&op2, {1}}};
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>> ss =
+    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>> test_ss =
+        {{&op1, {1, 2}}, {&op2, {1}}};
+    std::vector<std::pair<int, std::unordered_set<int>>> ss =
         task1.get_successor_states(init);
-    ASSERT_EQ(ss[0].first->name, test_ss[0].first->name);
-    ASSERT_EQ(ss[1].first->name, test_ss[1].first->name);
+    ASSERT_EQ(ss[0].first, test_ss[0].first->name);
+    ASSERT_EQ(ss[1].first, test_ss[1].first->name);
     ASSERT_EQ(ss[0].second, test_ss[0].second);
     ASSERT_EQ(ss[1].second, test_ss[1].second);
     std::unordered_set<int> test_v3 = {3};

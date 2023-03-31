@@ -3,7 +3,7 @@ project("libmyplan" LANGUAGES C CXX)
 
 # find_package(Threads REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -mtune=native -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg -O3 -mtune=native -march=native")
 
 set(SOURCE_DIR  "src/myplan")
 set(SCRIPT_DIR "script")

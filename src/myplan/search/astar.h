@@ -29,8 +29,7 @@ inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
 
     std::unordered_map<std::unordered_set<int>, int, hash_unordered_set>
         state_cost = {{nodes[0].state, 0}};
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-        successors;
+    std::vector<std::pair<int, std::unordered_set<int>>> successors;
     tuple<float, float, int> front_status;
     int node_idx, old_succ_g;
 
@@ -52,7 +51,7 @@ inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
                 planning_task.get_successor_states(nodes[node_idx].state);
             for (auto& opss : successors) {
                 SearchNode succ_node = make_child_node(
-                    node_idx, nodes[node_idx].g, opss.first->name, opss.second);
+                    node_idx, nodes[node_idx].g, opss.first, opss.second);
                 nodes.emplace_back(succ_node);
                 h = heuristic.calculate_h(nodes.size() - 1, nodes);
                 old_succ_g = INF;

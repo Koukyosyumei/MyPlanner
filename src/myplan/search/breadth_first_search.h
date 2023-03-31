@@ -30,8 +30,7 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
 
     std::unordered_set<std::unordered_set<int>, hash_unordered_set> closed = {
         planning_task.initial_state};
-    std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>>
-        successors;
+    std::vector<std::pair<int, std::unordered_set<int>>> successors;
     while (!queue.empty()) {
         ++iteration;
 
@@ -47,8 +46,7 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
         for (auto& opss : successors) {
             if (closed.find(opss.second) == closed.end()) {
                 nodes.emplace_back(make_child_node(node_idx, nodes[node_idx].g,
-                                                   opss.first->name,
-                                                   opss.second));
+                                                   opss.first, opss.second));
                 queue.push(nodes.size() - 1);
                 closed.emplace(opss.second);
             }
