@@ -28,8 +28,8 @@ TEST(EncodedOperatorTest, Application) {
     std::vector<int> v4 = {2};
     EncodedOperator op1(4, v1, v2, v3);
     EncodedOperator op4(4, v1, v2, v4);
-    ASSERT_EQ(op1.apply(s1), s3);
-    ASSERT_EQ(op4.apply(s1), s3);
+    ASSERT_EQ(op1.apply(s1, 1).second, s3);
+    ASSERT_EQ(op4.apply(s1, 1).second, s3);
 }
 
 TEST(EncodedOperatorTest, Successors) {
@@ -52,14 +52,14 @@ TEST(EncodedOperatorTest, Successors) {
 
     std::vector<std::pair<EncodedOperator*, std::unordered_set<int>>> test_ss =
         {{&op1, {1, 2}}, {&op2, {1}}};
-    std::vector<std::pair<int, std::unordered_set<int>>> ss =
-        task1.get_successor_states(init);
+    std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>> ss =
+        task1.get_successor_states(init, 1);
     ASSERT_EQ(ss[0].first, test_ss[0].first->name);
     ASSERT_EQ(ss[1].first, test_ss[1].first->name);
-    ASSERT_EQ(ss[0].second, test_ss[0].second);
-    ASSERT_EQ(ss[1].second, test_ss[1].second);
+    ASSERT_EQ(ss[0].second.second, test_ss[0].second);
+    ASSERT_EQ(ss[1].second.second, test_ss[1].second);
     std::unordered_set<int> test_v3 = {3};
-    ASSERT_EQ(task1.get_successor_states(test_v3).size(), 0);
+    ASSERT_EQ(task1.get_successor_states(test_v3, 0).size(), 0);
 
     ASSERT_FALSE(task1.goal_reached(init));
     std::unordered_set<int> test_goal = {1, 2};

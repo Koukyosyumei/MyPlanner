@@ -101,7 +101,8 @@ int main(int argc, char* argv[]) {
         throw invalid_argument("given search algorithm is not supported");
     }
     end = chrono::system_clock::now();
-    float elapsed = chrono::duration_cast<chrono::seconds>(end - start).count();
+    float elapsed =
+        chrono::duration_cast<chrono::milliseconds>(end - start).count();
     printf("Search time is complete %f [ms] \n", elapsed);
 
     printf("Length of solution is %d \n", (int)solution.size());

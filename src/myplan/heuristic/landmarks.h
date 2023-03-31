@@ -49,7 +49,7 @@ std::unordered_set<int> get_landmarks(Task& task_) {
             for (EncodedOperator op : task.operators) {
                 if (op.applicable(current_state) &&
                     (op.add_effects.find(fact) == op.add_effects.end())) {
-                    current_state = op.apply(current_state);
+                    current_state = op.apply(current_state, 0).second;
                     if (is_subset(task.goals, current_state)) {
                         break;
                     }

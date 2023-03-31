@@ -12,10 +12,12 @@ std::unordered_set<int> state3 = {3};
 std::unordered_set<int> state4 = {4};
 std::unordered_set<int> state5 = {5};
 SearchNode root = make_root_node(state1);
-SearchNode child1 = make_child_node(0, root.g, 6, state2);
-SearchNode child2 = make_child_node(0, root.g, 7, state3);
-SearchNode grandchild1 = make_child_node(1, child1.g, 8, state4);
-SearchNode grandchild2 = make_child_node(2, child2.g, 9, state5);
+SearchNode child1 = make_child_node(0, root.g, 6, state2, root.hash_value);
+SearchNode child2 = make_child_node(0, root.g, 7, state3, root.hash_value);
+SearchNode grandchild1 =
+    make_child_node(1, child1.g, 8, state4, child1.hash_value);
+SearchNode grandchild2 =
+    make_child_node(2, child2.g, 9, state5, child2.hash_value);
 
 TEST(searchspace, ExtractSolution) {
     std::vector<SearchNode> nodes = {root, child1, child2, grandchild1,
