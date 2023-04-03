@@ -132,6 +132,23 @@ class EncodedOperator {
         return make_pair(hash_val, new_state);
     }
 
+    void apply(const flat_hash_set<int>& state,
+               pair<size_t, flat_hash_set<int>>& result, size_t hash_val) {
+        // assert(applicable(state));
+        result.second = state;
+        for (const int& fact : del_effects) {
+            if (result.second.erase(fact)) {
+                hash_val ^= std::hash<std::string>{}(std::to_string(fact));
+            }
+        }
+        for (const int& fact : add_effects) {
+            if (result.second.insert(fact).second) {
+                hash_val ^= std::hash<std::string>{}(std::to_string(fact));
+            }
+        }
+        result.first = hash_val;
+    }
+
     bool operator==(const EncodedOperator& other) const {
         return (name == other.name) && (preconditions == other.preconditions) &&
                (add_effects == other.add_effects) &&
@@ -255,10 +272,12 @@ class Task : public BaseTask {
         std::set<int> sorted_state(state.begin(), state.end());
         std::vector<EncodedOperator*> applicable_operators =
             settrie.subsets(sorted_state);
-        successors.reserve(applicable_operators.size());
+        successors.resize(applicable_operators.size());
+        size_t i = 0;
         for (EncodedOperator* op : applicable_operators) {
-            successors.push_back(
-                make_pair(op->name, op->apply(state, hash_val)));
+            successors[i].first = op->name;
+            op->apply(state, successors[i].second, hash_val);
+            i++;
         }
     }
 };
