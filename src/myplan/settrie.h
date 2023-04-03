@@ -48,14 +48,14 @@ class SetTrie {
         std::vector<ValueType> result;
         std::vector<KeyType> path;
 
-        subsetsHelper(root, keyset, path, nested_result);
+        subsetsHelper(root, keyset, path, result);
 
-        for (int i = 0; i < nested_result.size(); i++) {
-            for (int j = 0; j < nested_result[i].size(); j++) {
-                result.push_back(nested_result[i][j]);
-            }
-        }
-        nested_result.clear();
+        // for (int i = 0; i < nested_result.size(); i++) {
+        //     for (int j = 0; j < nested_result[i].size(); j++) {
+        //         result.push_back(nested_result[i][j]);
+        //     }
+        // }
+        // nested_result.clear();
         return result;
     }
 
@@ -98,11 +98,13 @@ class SetTrie {
 
     void subsetsHelper(Node* node, std::set<KeyType>& keyset,
                        std::vector<KeyType>& path,
-                       std::vector<std::vector<ValueType>>& result) {
+                       std::vector<ValueType>& result) {
         path.push_back(node->data);
 
         if (node->flag_last) {
-            result.push_back(node->values);
+            result.insert(result.end(), node->values.begin(),
+                          node->values.end());
+            // result.emplace_back(node->values);
         }
 
         for (Node* child : node->children) {
