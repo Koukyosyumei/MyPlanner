@@ -8,8 +8,7 @@
 const float FLOAT_INF = std::numeric_limits<float>::max();
 
 template <typename T>
-bool is_subset(const flat_hash_set<T>& set1,
-               const flat_hash_set<T>& set2) {
+bool is_subset(const flat_hash_set<T>& set1, const flat_hash_set<T>& set2) {
     for (const T& elem : set1) {
         if (set2.find(elem) == set2.end()) {
             return false;
@@ -29,8 +28,7 @@ Task _get_relaxed_task(Task task) {
 flat_hash_set<int> get_landmarks(Task& task_) {
     Task task = _get_relaxed_task(task_);
     flat_hash_set<int> landmarks(task.goals.begin(), task.goals.end());
-    flat_hash_set<int> possible_landmarks(task.facts.begin(),
-                                               task.facts.end());
+    flat_hash_set<int> possible_landmarks(task.facts.begin(), task.facts.end());
     for (int s : task.goals) {
         if (possible_landmarks.count(s) > 0) {
             possible_landmarks.erase(s);
@@ -39,12 +37,12 @@ flat_hash_set<int> get_landmarks(Task& task_) {
 
     for (int fact : possible_landmarks) {
         flat_hash_set<int> current_state(task.initial_state.begin(),
-                                              task.initial_state.end());
+                                         task.initial_state.end());
         bool goal_reached = is_subset(task.goals, current_state);
 
         while (!goal_reached) {
             flat_hash_set<int> previous_state(current_state.begin(),
-                                                   current_state.end());
+                                              current_state.end());
 
             for (EncodedOperator op : task.operators) {
                 if (op.applicable(current_state) &&
@@ -69,9 +67,9 @@ flat_hash_set<int> get_landmarks(Task& task_) {
     return landmarks;
 }
 
-std::unordered_map<int, float> compute_landmark_costs(
+flat_hash_map<int, float> compute_landmark_costs(
     Task& task, flat_hash_set<int>& landmarks) {
-    std::unordered_map<int, flat_hash_set<int>> op_to_lm;
+    flat_hash_map<int, flat_hash_set<int>> op_to_lm;
     for (EncodedOperator& op : task.operators) {
         for (int landmark : landmarks) {
             if (op.add_effects.find(landmark) != op.add_effects.end()) {
@@ -80,7 +78,7 @@ std::unordered_map<int, float> compute_landmark_costs(
         }
     }
 
-    std::unordered_map<int, float> min_cost;
+    flat_hash_map<int, float> min_cost;
     for (auto& item : op_to_lm) {
         int landmarks_achieving = item.second.size();
         for (int landmark : item.second) {
@@ -98,7 +96,7 @@ std::unordered_map<int, float> compute_landmark_costs(
 struct LandmarkHeuristic : Heuristic {
     Task task;
     flat_hash_set<int> landmarks;
-    std::unordered_map<int, float> costs;
+    flat_hash_map<int, float> costs;
     LandmarkHeuristic(Task& task_) {
         task = task_;
         landmarks = get_landmarks(task);
@@ -109,29 +107,29 @@ struct LandmarkHeuristic : Heuristic {
         if (nodes[this_id].parent_id == -1) {
             nodes[this_id].unreached = landmarks;
             for (int s : task.initial_state) {
-                if (nodes[this_id].unreached.count(s) > 0) {
-                    nodes[this_id].unreached.erase(s);
-                }
+                // if (nodes[this_id].unreached.count(s) > 0) {
+                nodes[this_id].unreached.erase(s);
+                //}
             }
         } else {
             nodes[this_id].unreached =
                 nodes[nodes[this_id].parent_id].unreached;
-            if (nodes[this_id].unreached.count(nodes[this_id].action) > 0) {
-                nodes[this_id].unreached.erase(nodes[this_id].action);
-            }
+            // if (nodes[this_id].unreached.count(nodes[this_id].action) > 0) {
+            nodes[this_id].unreached.erase(nodes[this_id].action);
+            //}
         }
 
         flat_hash_set<int> unreached(nodes[this_id].unreached.begin(),
-                                          nodes[this_id].unreached.end());
+                                     nodes[this_id].unreached.end());
         for (int s : task.goals) {
             if (unreached.count(s) == 0) {
                 unreached.emplace(s);
             }
         }
         for (int s : nodes[this_id].state) {
-            if (unreached.count(s) > 0) {
-                unreached.erase(s);
-            }
+            // if (unreached.count(s) > 0) {
+            unreached.erase(s);
+            //}
         }
 
         float h = 0;
