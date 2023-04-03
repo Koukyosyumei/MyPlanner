@@ -7,9 +7,10 @@
 #include <ranges>
 #include <regex>
 #include <string>
-#include <unordered_set>
+//#include <flat_hash_set>
 #include <vector>
 
+#include "parallel_hashmap/phmap.h"
 #include "pddl/pddl.h"
 #include "pddl/tree_visitor.h"
 #include "pddl/visitable.h"
@@ -18,7 +19,7 @@
 using namespace std;
 
 inline std::vector<Operator> relevance_analysis(
-    std::vector<Operator>& operators, std::unordered_set<std::string>& goals,
+    std::vector<Operator>& operators, flat_hash_set<std::string>& goals,
     bool verbose_logging = false) {
     /* This implements a relevance analysis of operators.
      * We start with all facts within the goal and iteratively compute
@@ -28,7 +29,7 @@ inline std::vector<Operator> relevance_analysis(
     bool debug = true;
     std::set<std::string> relevant_facts;
     std::set<std::string> old_relevant_facts;
-    std::unordered_set<Predicate> debug_pruned_op;
+    flat_hash_set<Predicate> debug_pruned_op;
     bool changed = true;
     for (const auto& goal : goals) {
         relevant_facts.insert(goal);
@@ -61,7 +62,7 @@ inline std::vector<Operator> relevance_analysis(
     }
 
     // delete all irrelevant effects
-    std::unordered_set<Operator> del_operators;
+    flat_hash_set<Operator> del_operators;
     for (auto& op : operators) {
         // calculate new effects
         std::set<std::string> new_addlist;
@@ -108,18 +109,18 @@ inline std::vector<Operator> relevance_analysis(
 inline std::vector<std::string> _get_statics(
     const std::vector<Predicate>& predicates,
     const std::vector<Action>& actions) {
-    std::vector<std::unordered_set<Predicate>> effects;
+    std::vector<flat_hash_set<Predicate>> effects;
     std::transform(actions.begin(), actions.end(), back_inserter(effects),
                    [](const Action& a) {
-                       return std::unordered_set<Predicate>{
-                           a.effect.addlist.begin(), a.effect.addlist.end()};
+                       return flat_hash_set<Predicate>{a.effect.addlist.begin(),
+                                                       a.effect.addlist.end()};
                    });
     std::transform(actions.begin(), actions.end(), back_inserter(effects),
                    [](const Action& a) {
-                       return std::unordered_set<Predicate>{
-                           a.effect.dellist.begin(), a.effect.dellist.end()};
+                       return flat_hash_set<Predicate>{a.effect.dellist.begin(),
+                                                       a.effect.dellist.end()};
                    });
-    std::unordered_set<Predicate> flattened_effects;
+    flat_hash_set<Predicate> flattened_effects;
     for (const auto& es : effects) {
         flattened_effects.insert(es.begin(), es.end());
     }
@@ -164,13 +165,13 @@ _create_type_map(std::unordered_map<std::string, Type*>& objects) {
     return type_map;
 }
 
-inline std::unordered_set<std::string> _collect_facts(
+inline flat_hash_set<std::string> _collect_facts(
     std::vector<Operator>& operators) {
     /*
     Collect all facts from grounded operators (precondition, add
     effects and delete effects).
     */
-    std::unordered_set<std::string> facts;
+    flat_hash_set<std::string> facts;
     for (Operator op : operators) {
         for (std::string p : op.preconditions) {
             facts.insert(p);
@@ -214,10 +215,10 @@ std::string _ground_atom(
 }
 
 // Helper function to ground atoms
-inline std::unordered_set<std::string> _ground_atoms(
+inline flat_hash_set<std::string> _ground_atoms(
     const set<Predicate>& atoms,
     const std::unordered_map<std::string, std::string>& assignment) {
-    std::unordered_set<std::string> grounded_atoms;
+    flat_hash_set<std::string> grounded_atoms;
     for (auto atom : atoms) {
         grounded_atoms.insert(_ground_atom(atom, assignment));
     }
@@ -234,9 +235,9 @@ inline std::string _get_fact(const Predicate& atom) {
 }
 
 // Helper function to get partial state
-inline unordered_set<string> _get_partial_state(
+inline flat_hash_set<string> _get_partial_state(
     const vector<Predicate>& atoms) {
-    unordered_set<string> partial_state;
+    flat_hash_set<string> partial_state;
     for (auto atom : atoms) {
         partial_state.insert(_get_fact(atom));
     }
@@ -244,7 +245,7 @@ inline unordered_set<string> _get_partial_state(
 }
 
 inline bool _find_pred_in_init(string pred_name, string param, int sig_pos,
-                               std::unordered_set<std::string> init) {
+                               flat_hash_set<std::string> init) {
     /*
     This method is used to check whether an instantiation of the predicate
     denoted by pred_name with the parameter param at position sig_pos is
@@ -315,9 +316,8 @@ inline std::vector<std::vector<T>> product(
 
 inline Operator* _create_operator(
     Action* action, std::unordered_map<std::string, std::string>& assignment,
-    std::unordered_set<std::string>& statics,
-    std::unordered_set<std::string>& init) {
-    std::unordered_set<std::string> precondition_facts;
+    flat_hash_set<std::string>& statics, flat_hash_set<std::string>& init) {
+    flat_hash_set<std::string> precondition_facts;
     for (Predicate precondition : action->precondition) {
         std::string fact = _ground_atom(precondition, assignment);
         std::string predicate_name = precondition.name;
@@ -333,9 +333,9 @@ inline Operator* _create_operator(
         }
     }
 
-    std::unordered_set<std::string> add_effects =
+    flat_hash_set<std::string> add_effects =
         _ground_atoms(action->effect.addlist, assignment);
-    std::unordered_set<std::string> del_effects =
+    flat_hash_set<std::string> del_effects =
         _ground_atoms(action->effect.dellist, assignment);
     // If the same fact is added and deleted by an operator the STRIPS formalism
     // adds it.
@@ -373,9 +373,9 @@ inline Operator* _create_operator(
 inline std::vector<Operator> _ground_action(
     Action& action,
     std::unordered_map<std::string, std::vector<std::string>> type_map,
-    std::vector<std::string> statics, std::unordered_set<std::string> init) {
+    std::vector<std::string> statics, flat_hash_set<std::string> init) {
     std::vector<Operator> operators;
-    std::unordered_map<std::string, std::unordered_set<std::string>>
+    std::unordered_map<std::string, flat_hash_set<std::string>>
         param_to_objects;
 
     for (auto& [param_name, param_types] : action.signature) {
@@ -385,7 +385,7 @@ inline std::vector<Operator> _ground_action(
             objects.push_back(type_map[type->name]);
         }
         // Combine the sets into one set
-        std::unordered_set<std::string> objects_set;
+        flat_hash_set<std::string> objects_set;
         for (auto& object_set : objects) {
             objects_set.insert(object_set.begin(), object_set.end());
         }
@@ -411,7 +411,7 @@ inline std::vector<Operator> _ground_action(
                 }
                 if (sig_pos != -1) {
                     // remove if no instantiation present in initial state
-                    std::unordered_set<std::string> obj_copy(objects);
+                    flat_hash_set<std::string> obj_copy(objects);
                     for (auto& o : obj_copy) {
                         if (!_find_pred_in_init(pred.name, o, sig_pos, init)) {
                             // if (verbose_logging) {
@@ -441,7 +441,7 @@ inline std::vector<Operator> _ground_action(
     // Calculate all possible assignments
     std::vector<std::vector<std::pair<std::string, std::string>>> assignments =
         product<std::pair<std::string, std::string>>(domain_lists);
-    std::unordered_set<std::string> statics_set(statics.begin(), statics.end());
+    flat_hash_set<std::string> statics_set(statics.begin(), statics.end());
     // Create a new operator for each possible assignment of parameters
     for (auto& assign : assignments) {
         std::unordered_map<std::string, std::string> tmp_dict;
@@ -460,7 +460,7 @@ inline std::vector<Operator> _ground_action(
 inline std::vector<Operator> _ground_actions(
     std::vector<Action>& actions,
     std::unordered_map<std::string, std::vector<std::string>> type_map,
-    std::vector<string> statics, std::unordered_set<std::string> init) {
+    std::vector<string> statics, flat_hash_set<std::string> init) {
     /*
     Ground a list of actions and return the resulting list of operators.
     @param actions: List of actions
@@ -516,7 +516,7 @@ inline Task ground(Problem& problem,
     //    _create_type_map(problem.objects);
 
     // Transform initial state into a specific state
-    std::unordered_set<string> init = _get_partial_state(problem.init);
+    flat_hash_set<string> init = _get_partial_state(problem.init);
 
     //  Ground actions
     std::vector<Operator> operators =
@@ -527,14 +527,14 @@ inline Task ground(Problem& problem,
     //       initial state
     // TODO: Return simple unsolvable problem if goal contains a fact that can
     //       only become false and is false in the initial state
-    std::unordered_set<std::string> goals = _get_partial_state(problem.goal);
+    flat_hash_set<std::string> goals = _get_partial_state(problem.goal);
 
     // Collect facts from operators and include the ones from the goal
-    std::unordered_set<std::string> facts = _collect_facts(operators);
+    flat_hash_set<std::string> facts = _collect_facts(operators);
     facts.insert(goals.begin(), goals.end());
 
     // Remove statics from initial state
-    std::unordered_set<std::string> new_init;
+    flat_hash_set<std::string> new_init;
     if (remove_statics_from_initial_state) {
         for (std::string i : init) {
             if (facts.count(i) > 0) {
@@ -566,9 +566,9 @@ inline Task ground(Problem& problem,
         i++;
     }
 
-    std::unordered_set<int> encoded_facts;
-    std::unordered_set<int> encoded_init;
-    std::unordered_set<int> encoded_goals;
+    flat_hash_set<int> encoded_facts;
+    flat_hash_set<int> encoded_init;
+    flat_hash_set<int> encoded_goals;
     std::vector<EncodedOperator> encoded_operators;
 
     for (std::string s : init) {

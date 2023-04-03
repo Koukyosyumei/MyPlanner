@@ -8,8 +8,8 @@
 const float FLOAT_INF = std::numeric_limits<float>::max();
 
 template <typename T>
-bool is_subset(const std::unordered_set<T>& set1,
-               const std::unordered_set<T>& set2) {
+bool is_subset(const flat_hash_set<T>& set1,
+               const flat_hash_set<T>& set2) {
     for (const T& elem : set1) {
         if (set2.find(elem) == set2.end()) {
             return false;
@@ -26,10 +26,10 @@ Task _get_relaxed_task(Task task) {
     return relaxed_task;
 }
 
-std::unordered_set<int> get_landmarks(Task& task_) {
+flat_hash_set<int> get_landmarks(Task& task_) {
     Task task = _get_relaxed_task(task_);
-    std::unordered_set<int> landmarks(task.goals.begin(), task.goals.end());
-    std::unordered_set<int> possible_landmarks(task.facts.begin(),
+    flat_hash_set<int> landmarks(task.goals.begin(), task.goals.end());
+    flat_hash_set<int> possible_landmarks(task.facts.begin(),
                                                task.facts.end());
     for (int s : task.goals) {
         if (possible_landmarks.count(s) > 0) {
@@ -38,12 +38,12 @@ std::unordered_set<int> get_landmarks(Task& task_) {
     }
 
     for (int fact : possible_landmarks) {
-        std::unordered_set<int> current_state(task.initial_state.begin(),
+        flat_hash_set<int> current_state(task.initial_state.begin(),
                                               task.initial_state.end());
         bool goal_reached = is_subset(task.goals, current_state);
 
         while (!goal_reached) {
-            std::unordered_set<int> previous_state(current_state.begin(),
+            flat_hash_set<int> previous_state(current_state.begin(),
                                                    current_state.end());
 
             for (EncodedOperator op : task.operators) {
@@ -70,8 +70,8 @@ std::unordered_set<int> get_landmarks(Task& task_) {
 }
 
 std::unordered_map<int, float> compute_landmark_costs(
-    Task& task, std::unordered_set<int>& landmarks) {
-    std::unordered_map<int, std::unordered_set<int>> op_to_lm;
+    Task& task, flat_hash_set<int>& landmarks) {
+    std::unordered_map<int, flat_hash_set<int>> op_to_lm;
     for (EncodedOperator& op : task.operators) {
         for (int landmark : landmarks) {
             if (op.add_effects.find(landmark) != op.add_effects.end()) {
@@ -97,7 +97,7 @@ std::unordered_map<int, float> compute_landmark_costs(
 
 struct LandmarkHeuristic : Heuristic {
     Task task;
-    std::unordered_set<int> landmarks;
+    flat_hash_set<int> landmarks;
     std::unordered_map<int, float> costs;
     LandmarkHeuristic(Task& task_) {
         task = task_;
@@ -121,7 +121,7 @@ struct LandmarkHeuristic : Heuristic {
             }
         }
 
-        std::unordered_set<int> unreached(nodes[this_id].unreached.begin(),
+        flat_hash_set<int> unreached(nodes[this_id].unreached.begin(),
                                           nodes[this_id].unreached.end());
         for (int s : task.goals) {
             if (unreached.count(s) == 0) {

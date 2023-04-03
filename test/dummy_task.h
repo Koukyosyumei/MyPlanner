@@ -6,14 +6,14 @@
 
 class DummyTask : public BaseTask {
    public:
-    DummyTask(std::string name, std::unordered_set<int> initial_state,
-              std::unordered_set<int> goals) {
+    DummyTask(std::string name, flat_hash_set<int> initial_state,
+              flat_hash_set<int> goals) {
         this->name = name;
         this->initial_state = initial_state;
         this->goals = goals;
     }
 
-    bool goal_reached(std::unordered_set<int>& state) override {
+    bool goal_reached(flat_hash_set<int>& state) override {
         for (int g : goals) {
             if (state.find(g) == state.end()) {
                 return false;
@@ -22,10 +22,10 @@ class DummyTask : public BaseTask {
         return true;
     }
 
-    std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
-    get_successor_states(std::unordered_set<int>& state,
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
+    get_successor_states(flat_hash_set<int>& state,
                          size_t hash_val) override {
-        std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
+        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
             succesors;
         std::vector<int> emp_vec;
         EncodedOperator* sub1 =
@@ -36,17 +36,17 @@ class DummyTask : public BaseTask {
             new EncodedOperator(1, emp_vec, emp_vec, emp_vec);
         for (int s : state) {
             if (0 < s) {
-                std::unordered_set<int> tmp_u = {s - 1};
+                flat_hash_set<int> tmp_u = {s - 1};
                 succesors.push_back(
                     std::make_pair(sub1->name, make_pair(s - 1, tmp_u)));
             }
             if (s < 9) {
-                std::unordered_set<int> tmp_u = {s + 2};
+                flat_hash_set<int> tmp_u = {s + 2};
                 succesors.push_back(
                     std::make_pair(add2->name, make_pair(s + 2, tmp_u)));
             }
             if (s < 10) {
-                std::unordered_set<int> tmp_u = {s + 1};
+                flat_hash_set<int> tmp_u = {s + 1};
                 succesors.push_back(
                     std::make_pair(add1->name, make_pair(s + 1, tmp_u)));
             }

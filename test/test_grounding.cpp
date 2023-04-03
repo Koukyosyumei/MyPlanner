@@ -142,7 +142,7 @@ TEST(grounding, Facts) {
     Operator op2 = Operator("op2", pre2, ade2, dee2);
     Operator op3 = Operator("op3", pre3, ade3, dee3);
     std::vector<Operator> ops = {op1, op2, op3};
-    std::unordered_set<std::string> test_facts = {"var1", "var2", "var3",
+    flat_hash_set<std::string> test_facts = {"var1", "var2", "var3",
                                                   "var4"};
     ASSERT_EQ(test_facts, _collect_facts(ops));
 }
@@ -314,7 +314,7 @@ TEST(grounding, Operators) {
     std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(objects);
 
-    std::unordered_set<std::string> grounded_initial_state =
+    flat_hash_set<std::string> grounded_initial_state =
         _get_partial_state(initial_state);
 
     std::vector<Operator> grounded_drive_car =
@@ -513,7 +513,7 @@ TEST(grounding, Operators) {
         std::vector<std::string> statics =
             _get_statics(predicates_vec, actions);
         type_map = _create_type_map(objects);
-        std::unordered_set<std::string> init = _get_partial_state(problem.init);
+        flat_hash_set<std::string> init = _get_partial_state(problem.init);
 
         std::vector<Operator> operators =
             _ground_actions(actions, type_map, statics, init);

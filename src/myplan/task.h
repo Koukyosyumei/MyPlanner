@@ -1,16 +1,19 @@
 #pragma once
 #include <any>
+//#include <flat_hash_set>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <set>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
+#include "parallel_hashmap/phmap.h"
 #include "settrie.h"
 
 using namespace std;
+using phmap::flat_hash_map;
+using phmap::flat_hash_set;
 
 class Operator {
    public:
@@ -28,7 +31,7 @@ class Operator {
         this->del_effects = set<string>(del_effects.begin(), del_effects.end());
     }
 
-    bool applicable(const unordered_set<string>& state) {
+    bool applicable(const flat_hash_set<string>& state) {
         for (string p : preconditions) {
             if (state.find(p) == state.end()) {
                 return false;
@@ -37,9 +40,9 @@ class Operator {
         return true;
     }
 
-    unordered_set<string> apply(const unordered_set<string>& state) {
+    flat_hash_set<string> apply(const flat_hash_set<string>& state) {
         // assert(applicable(state));
-        unordered_set<string> new_state = state;
+        flat_hash_set<string> new_state = state;
         for (const string& fact : del_effects) {
             new_state.erase(fact);
         }
@@ -103,7 +106,7 @@ class EncodedOperator {
         }
     }
 
-    bool applicable(const unordered_set<int>& state) {
+    bool applicable(const flat_hash_set<int>& state) {
         for (int p : preconditions) {
             if (state.find(p) == state.end()) {
                 return false;
@@ -112,10 +115,10 @@ class EncodedOperator {
         return true;
     }
 
-    pair<size_t, unordered_set<int>> apply(const unordered_set<int>& state,
+    pair<size_t, flat_hash_set<int>> apply(const flat_hash_set<int>& state,
                                            size_t hash_val) {
         // assert(applicable(state));
-        unordered_set<int> new_state = state;
+        flat_hash_set<int> new_state = state;
         for (const int& fact : del_effects) {
             if (new_state.erase(fact)) {
                 hash_val ^= std::hash<std::string>{}(std::to_string(fact));
@@ -138,8 +141,8 @@ class EncodedOperator {
 
 namespace std {
 template <>
-struct hash<std::unordered_set<std::string>> {
-    size_t operator()(const std::unordered_set<std::string>& us) const {
+struct hash<flat_hash_set<std::string>> {
+    size_t operator()(const flat_hash_set<std::string>& us) const {
         size_t seed = 0;
         for (std::string s : us) {
             auto hash_v = hash<std::string>()(s);
@@ -160,8 +163,8 @@ struct hash<Operator> {
 };
 
 template <>
-struct hash<std::unordered_set<int>> {
-    size_t operator()(const std::unordered_set<int>& us) const {
+struct hash<flat_hash_set<int>> {
+    size_t operator()(const flat_hash_set<int>& us) const {
         size_t seed = 0;
         for (int s : us) {
             auto hash_v = hash<int>()(s);
@@ -182,17 +185,17 @@ struct hash<EncodedOperator> {
 class BaseTask {
    public:
     std::string name;
-    std::unordered_set<int> facts;
-    std::unordered_set<int> initial_state;
-    std::unordered_set<int> goals;
+    flat_hash_set<int> facts;
+    flat_hash_set<int> initial_state;
+    flat_hash_set<int> goals;
     std::vector<EncodedOperator> operators;
     std::unordered_map<std::string, int> encoding_map;
     std::unordered_map<int, std::string> reverse_encoding_map;
     std::unordered_map<int, std::string> action_id2name;
 
-    virtual bool goal_reached(std::unordered_set<int>& state) = 0;
-    virtual std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
-    get_successor_states(std::unordered_set<int>& state, size_t hash_val) = 0;
+    virtual bool goal_reached(flat_hash_set<int>& state) = 0;
+    virtual std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
+    get_successor_states(flat_hash_set<int>& state, size_t hash_val) = 0;
 };
 
 class Task : public BaseTask {
@@ -203,8 +206,8 @@ class Task : public BaseTask {
     SetTrie<int, EncodedOperator*> settrie;
 
     Task() {}
-    Task(std::string name, std::unordered_set<int>& facts,
-         std::unordered_set<int>& initial_state, std::unordered_set<int>& goals,
+    Task(std::string name, flat_hash_set<int>& facts,
+         flat_hash_set<int>& initial_state, flat_hash_set<int>& goals,
          std::vector<EncodedOperator> operators)
         : settrie(SetTrie<int, EncodedOperator*>()) {
         this->name = name;
@@ -221,7 +224,7 @@ class Task : public BaseTask {
         }
     }
 
-    bool goal_reached(std::unordered_set<int>& state) override {
+    bool goal_reached(flat_hash_set<int>& state) override {
         /*
         The goal has been reached if all facts that are true in "goals"
         are true in "state".
@@ -236,9 +239,8 @@ class Task : public BaseTask {
         // return state == goals;
     }
 
-    std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
-    get_successor_states(std::unordered_set<int>& state,
-                         size_t hash_val) override {
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
+    get_successor_states(flat_hash_set<int>& state, size_t hash_val) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied
@@ -247,7 +249,7 @@ class Task : public BaseTask {
         std::set<int> sorted_state(state.begin(), state.end());
         std::vector<EncodedOperator*> applicable_operators =
             settrie.subsets(sorted_state);
-        std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
+        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
             successors;
         successors.reserve(applicable_operators.size());
         for (EncodedOperator* op : applicable_operators) {

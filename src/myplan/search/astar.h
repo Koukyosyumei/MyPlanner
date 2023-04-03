@@ -28,7 +28,7 @@ inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
     queue.push({-1.0 * (h + (float)nodes[0].g), -h, 0});
 
     std::unordered_map<size_t, int> state_cost = {{nodes[0].hash_value, 0}};
-    std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
         successors;
     tuple<float, float, int> front_status;
     int node_idx, old_succ_g;

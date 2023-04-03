@@ -18,8 +18,8 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
     nodes.push_back(make_root_node(planning_task.initial_state));
     queue.push(0);
 
-    std::unordered_set<size_t> closed = {nodes[0].hash_value};
-    std::vector<std::pair<int, pair<size_t, std::unordered_set<int>>>>
+    flat_hash_set<size_t> closed = {nodes[0].hash_value};
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
         successors;
     while (!queue.empty()) {
         ++iteration;

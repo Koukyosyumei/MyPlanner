@@ -10,7 +10,12 @@
 #include <unordered_set>
 #include <vector>
 
-inline size_t hash_unordered_set(const std::unordered_set<int>& ss) {
+#include "../parallel_hashmap/phmap.h"
+
+using phmap::flat_hash_map;
+using phmap::flat_hash_set;
+
+inline size_t hash_unordered_set(const flat_hash_set<int>& ss) {
     size_t seed = 0;
     for (int x : ss) {
         seed ^= std::hash<std::string>{}(std::to_string(x));
@@ -22,7 +27,7 @@ class SearchNode {
    public:
     // Constructo
     // SearchNode() {}
-    SearchNode(std::unordered_set<int>& state, int parent_id, int action, int g,
+    SearchNode(flat_hash_set<int>& state, int parent_id, int action, int g,
                size_t hash_value)
         : state(state),
           parent_id(parent_id),
@@ -30,8 +35,8 @@ class SearchNode {
           g(g),
           hash_value(hash_value) {}
 
-    std::unordered_set<int> state;
-    std::unordered_set<int> unreached;
+    flat_hash_set<int> state;
+    flat_hash_set<int> unreached;
     int parent_id;
     int action;
     int g;
@@ -53,14 +58,14 @@ inline std::vector<int> extract_solution(int this_id,
 }
 
 // Construct an initial search node
-inline SearchNode make_root_node(std::unordered_set<int>& initial_state) {
+inline SearchNode make_root_node(flat_hash_set<int>& initial_state) {
     return SearchNode(initial_state, -1, -1, 0,
                       hash_unordered_set(initial_state));
 }
 
 // Construct a new search node linked to a parent node
 inline SearchNode make_child_node(int parent_id, int parent_g, int action,
-                                  std::unordered_set<int>& state,
+                                  flat_hash_set<int>& state,
                                   size_t hash_val) {
     return SearchNode(state, parent_id, action, parent_g + 1, hash_val);
 }

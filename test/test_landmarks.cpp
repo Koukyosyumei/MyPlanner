@@ -23,13 +23,13 @@ TEST(LandmarkHeuristic, ComputeLandmarkCosts) {
     EncodedOperator op1(4, v1, v2, v1);
     EncodedOperator op2(5, v1, v3, v1);
     EncodedOperator op3(6, v1, v4, v1);
-    std::unordered_set<int> facts = {};
-    std::unordered_set<int> init = {};
-    std::unordered_set<int> goals = {};
+    flat_hash_set<int> facts = {};
+    flat_hash_set<int> init = {};
+    flat_hash_set<int> goals = {};
     std::vector<EncodedOperator> operators = {op1, op2, op3};
     Task task1("task1", facts, init, goals, operators);
 
-    std::unordered_set<int> landmarks = {0, 2, 3};
+    flat_hash_set<int> landmarks = {0, 2, 3};
     std::unordered_map<int, float> costs =
         compute_landmark_costs(task1, landmarks);
 
@@ -42,7 +42,7 @@ TEST(LandmarkHeuristic, RelaxedTask) {
     std::vector<int> v1 = {0};
     std::vector<int> v2 = {0, 2};
     std::vector<int> v3 = {1, 2};
-    std::unordered_set<int> v4 = {};
+    flat_hash_set<int> v4 = {};
 
     EncodedOperator op1(4, v1, v2, v3);
     std::vector<EncodedOperator> operators = {op1};
@@ -52,12 +52,12 @@ TEST(LandmarkHeuristic, RelaxedTask) {
 }
 
 TEST(LandmarkHeuristic, LandmarksGoal) {
-    std::unordered_set<int> s1 = {};
-    std::unordered_set<int> s2 = {0};
+    flat_hash_set<int> s1 = {};
+    flat_hash_set<int> s2 = {0};
     std::vector<EncodedOperator> operators;
 
     Task task = Task("task1", s1, s1, s2, operators);
-    std::unordered_set<int> test_result = {0};
+    flat_hash_set<int> test_result = {0};
     ASSERT_EQ(get_landmarks(task), test_result);
 }
 
@@ -68,21 +68,21 @@ TEST(LandmarkHeuristic, Landmarks) {
     EncodedOperator op1(4, v1, v2, v1);
     EncodedOperator op2(5, v2, v3, v1);
 
-    std::unordered_set<int> v4 = {0, 1};
-    std::unordered_set<int> v5 = {};
-    std::unordered_set<int> v6 = {1};
+    flat_hash_set<int> v4 = {0, 1};
+    flat_hash_set<int> v5 = {};
+    flat_hash_set<int> v6 = {1};
 
     std::vector<EncodedOperator> operators = {op1, op2};
     Task task = Task("task1", v4, v5, v6, operators);
-    std::unordered_set<int> test_result = {0, 1};
+    flat_hash_set<int> test_result = {0, 1};
     ASSERT_EQ(get_landmarks(task), test_result);
 }
 
 TEST(LandmarkHeuristic, Heuristics) {
-    std::unordered_set<int> s_abc = {0, 1, 2};
-    std::unordered_set<int> s_a = {0};
-    std::unordered_set<int> s_ab = {0, 1};
-    std::unordered_set<int> s_cb = {2, 1};
+    flat_hash_set<int> s_abc = {0, 1, 2};
+    flat_hash_set<int> s_a = {0};
+    flat_hash_set<int> s_ab = {0, 1};
+    flat_hash_set<int> s_cb = {2, 1};
     std::vector<int> v_a = {0};
     std::vector<int> v_b = {1};
     std::vector<int> v_c = {2};
@@ -102,7 +102,7 @@ TEST(LandmarkHeuristic, Heuristics) {
 
     LandmarkHeuristic heuristic1(task1);
     vector<SearchNode> nodes1 = {make_root_node(task1.initial_state)};
-    std::unordered_set<int> expected_landmark1 = {1, 2};
+    flat_hash_set<int> expected_landmark1 = {1, 2};
     std::unordered_map<int, float> expected_lmc1 = {{1, 1}, {2, 1}};
     ASSERT_EQ(get_landmarks(task1), expected_landmark1);
     ASSERT_EQ(compute_landmark_costs(task1, expected_landmark1), expected_lmc1);
@@ -116,7 +116,7 @@ TEST(LandmarkHeuristic, Heuristics) {
 
     LandmarkHeuristic heuristic4(task4);
     vector<SearchNode> nodes4 = {make_root_node(task4.initial_state)};
-    std::unordered_set<int> expected_landmark4 = {1, 2};
+    flat_hash_set<int> expected_landmark4 = {1, 2};
     std::unordered_map<int, float> expected_lmc4 = {{1, 0.5}, {2, 0.5}};
     ASSERT_EQ(get_landmarks(task4), expected_landmark4);
     ASSERT_EQ(compute_landmark_costs(task4, expected_landmark4), expected_lmc4);

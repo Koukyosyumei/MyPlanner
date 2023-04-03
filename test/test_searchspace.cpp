@@ -6,11 +6,11 @@
 
 #include "myplan/search/searchspace.h"
 
-std::unordered_set<int> state1 = {1};
-std::unordered_set<int> state2 = {2};
-std::unordered_set<int> state3 = {3};
-std::unordered_set<int> state4 = {4};
-std::unordered_set<int> state5 = {5};
+flat_hash_set<int> state1 = {1};
+flat_hash_set<int> state2 = {2};
+flat_hash_set<int> state3 = {3};
+flat_hash_set<int> state4 = {4};
+flat_hash_set<int> state5 = {5};
 SearchNode root = make_root_node(state1);
 SearchNode child1 = make_child_node(0, root.g, 6, state2, root.hash_value);
 SearchNode child2 = make_child_node(0, root.g, 7, state3, root.hash_value);
