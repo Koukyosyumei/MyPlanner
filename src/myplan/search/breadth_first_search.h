@@ -19,8 +19,7 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
     queue.push(0);
 
     flat_hash_set<size_t> closed = {nodes[0].hash_value};
-    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-        successors;
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> successors;
     while (!queue.empty()) {
         ++iteration;
 
@@ -32,8 +31,9 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
             std::cout << iteration << " Nodes expanded" << std::endl;
             return extract_solution(node_idx, nodes);
         }
-        successors = planning_task.get_successor_states(
-            nodes[node_idx].state, nodes[node_idx].hash_value);
+        successors.clear();
+        planning_task.get_successor_states(nodes[node_idx].state, successors,
+                                           nodes[node_idx].hash_value);
         for (auto& opss : successors) {
             if (closed.find(opss.second.first) == closed.end()) {
                 nodes.emplace_back(

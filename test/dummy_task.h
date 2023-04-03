@@ -22,11 +22,11 @@ class DummyTask : public BaseTask {
         return true;
     }
 
-    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-    get_successor_states(flat_hash_set<int>& state,
-                         size_t hash_val) override {
-        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-            succesors;
+    void get_successor_states(
+        flat_hash_set<int>& state,
+        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>&
+            successors,
+        size_t hash_val) override {
         std::vector<int> emp_vec;
         EncodedOperator* sub1 =
             new EncodedOperator(0, emp_vec, emp_vec, emp_vec);

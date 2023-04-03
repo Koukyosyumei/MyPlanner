@@ -194,8 +194,11 @@ class BaseTask {
     std::unordered_map<int, std::string> action_id2name;
 
     virtual bool goal_reached(flat_hash_set<int>& state) = 0;
-    virtual std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-    get_successor_states(flat_hash_set<int>& state, size_t hash_val) = 0;
+    virtual void get_successor_states(
+        flat_hash_set<int>& state,
+        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>&
+            successors,
+        size_t hash_val) = 0;
 };
 
 class Task : public BaseTask {
@@ -239,8 +242,11 @@ class Task : public BaseTask {
         // return state == goals;
     }
 
-    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-    get_successor_states(flat_hash_set<int>& state, size_t hash_val) override {
+    void get_successor_states(
+        flat_hash_set<int>& state,
+        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>&
+            successors,
+        size_t hash_val) override {
         /*
         @return A vector with (op, new_state) pairs where "op" is the applicable
         operator and "new_state" the state that results when "op" is applied
@@ -249,14 +255,10 @@ class Task : public BaseTask {
         std::set<int> sorted_state(state.begin(), state.end());
         std::vector<EncodedOperator*> applicable_operators =
             settrie.subsets(sorted_state);
-        std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-            successors;
         successors.reserve(applicable_operators.size());
         for (EncodedOperator* op : applicable_operators) {
             successors.push_back(
                 make_pair(op->name, op->apply(state, hash_val)));
         }
-
-        return successors;
     }
 };

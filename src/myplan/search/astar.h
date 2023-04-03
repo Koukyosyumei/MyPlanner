@@ -28,8 +28,7 @@ inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
     queue.push({-1.0 * (h + (float)nodes[0].g), -h, 0});
 
     std::unordered_map<size_t, int> state_cost = {{nodes[0].hash_value, 0}};
-    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>
-        successors;
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> successors;
     tuple<float, float, int> front_status;
     int node_idx, old_succ_g;
 
@@ -47,8 +46,9 @@ inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
                 return extract_solution(node_idx, nodes);
             }
 
-            successors = planning_task.get_successor_states(
-                nodes[node_idx].state, nodes[node_idx].hash_value);
+            successors.clear();
+            planning_task.get_successor_states(
+                nodes[node_idx].state, successors, nodes[node_idx].hash_value);
             for (auto& opss : successors) {
                 SearchNode succ_node =
                     make_child_node(node_idx, nodes[node_idx].g, opss.first,
