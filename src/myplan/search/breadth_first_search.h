@@ -20,10 +20,11 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
 
     flat_hash_set<size_t> closed = {nodes[0].hash_value};
     std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> successors;
+    int node_idx;
     while (!queue.empty()) {
         ++iteration;
 
-        int node_idx = queue.front();
+        node_idx = queue.front();
 
         queue.pop();
 
@@ -47,5 +48,5 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
 
     std::cout << iteration << " Nodes expanded" << std::endl;
     std::cerr << "No solution found" << std::endl;
-    return {};  // No solution found
+    return {};
 }

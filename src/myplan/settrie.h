@@ -9,12 +9,12 @@
 template <typename KeyType, typename ValueType>
 class SetTrie {
    public:
+    std::vector<std::vector<ValueType>> nested_result;
     struct Node {
         std::vector<Node*> children;
         bool flag_last = false;
         KeyType data;
         std::vector<ValueType> values;
-
         Node(KeyType data = KeyType(),
              std::vector<ValueType> values = std::vector<ValueType>())
             : data(data), values(values) {}
@@ -46,7 +46,6 @@ class SetTrie {
 
     std::vector<ValueType> subsets(std::set<KeyType>& keyset) {
         std::vector<ValueType> result;
-        std::vector<std::vector<ValueType>> nested_result;
         std::vector<KeyType> path;
 
         subsetsHelper(root, keyset, path, nested_result);
@@ -56,6 +55,7 @@ class SetTrie {
                 result.push_back(nested_result[i][j]);
             }
         }
+        nested_result.clear();
         return result;
     }
 
