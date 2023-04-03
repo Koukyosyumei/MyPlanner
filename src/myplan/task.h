@@ -82,13 +82,19 @@ class EncodedOperator {
     set<int> preconditions;
     set<int> add_effects;
     set<int> del_effects;
+    vector<int> preconditions_vec;
+    vector<int> add_effects_vec;
+    vector<int> del_effects_vec;
 
     EncodedOperator(int name, vector<int>& preconditions,
                     vector<int>& add_effects, vector<int>& del_effects) {
         this->name = name;
+        this->preconditions_vec = preconditions;
         this->preconditions =
             set<int>(preconditions.begin(), preconditions.end());
+        this->add_effects_vec = add_effects;
         this->add_effects = set<int>(add_effects.begin(), add_effects.end());
+        this->del_effects_vec = del_effects;
         this->del_effects = set<int>(del_effects.begin(), del_effects.end());
     }
 
@@ -97,12 +103,15 @@ class EncodedOperator {
         this->name = encoding_map[op.name];
         for (std::string s : op.preconditions) {
             preconditions.emplace(encoding_map[s]);
+            preconditions_vec.emplace_back(encoding_map[s]);
         }
         for (std::string s : op.add_effects) {
             add_effects.emplace(encoding_map[s]);
+            add_effects_vec.emplace_back(encoding_map[s]);
         }
         for (std::string s : op.del_effects) {
             del_effects.emplace(encoding_map[s]);
+            del_effects_vec.emplace_back(encoding_map[s]);
         }
     }
 
@@ -136,12 +145,12 @@ class EncodedOperator {
                pair<size_t, flat_hash_set<int>>& result, size_t hash_val) {
         // assert(applicable(state));
         result.second = state;
-        for (const int& fact : del_effects) {
+        for (const int fact : del_effects_vec) {
             if (result.second.erase(fact)) {
                 hash_val ^= std::hash<std::string>{}(std::to_string(fact));
             }
         }
-        for (const int& fact : add_effects) {
+        for (const int fact : add_effects_vec) {
             if (result.second.insert(fact).second) {
                 hash_val ^= std::hash<std::string>{}(std::to_string(fact));
             }
