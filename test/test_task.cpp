@@ -50,16 +50,18 @@ TEST(EncodedOperatorTest, Successors) {
     std::vector<EncodedOperator> operators = {op1, op2, op3};
     Task task1("task1", facts, init, goals, operators);
 
-    std::vector<std::pair<EncodedOperator*, flat_hash_set<int>>> test_ss =
-        {{&op1, {1, 2}}, {&op2, {1}}};
-    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> ss =
-        task1.get_successor_states(init, 1);
+    std::vector<std::pair<EncodedOperator*, flat_hash_set<int>>> test_ss = {
+        {&op1, {1, 2}}, {&op2, {1}}};
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> ss;
+    task1.get_successor_states(init, ss, 1);
     ASSERT_EQ(ss[0].first, test_ss[0].first->name);
     ASSERT_EQ(ss[1].first, test_ss[1].first->name);
     ASSERT_EQ(ss[0].second.second, test_ss[0].second);
     ASSERT_EQ(ss[1].second.second, test_ss[1].second);
     flat_hash_set<int> test_v3 = {3};
-    ASSERT_EQ(task1.get_successor_states(test_v3, 0).size(), 0);
+    ss.clear();
+    task1.get_successor_states(test_v3, ss, 0);
+    ASSERT_EQ(ss.size(), 0);
 
     ASSERT_FALSE(task1.goal_reached(init));
     flat_hash_set<int> test_goal = {1, 2};

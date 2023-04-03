@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
     printf("Grounding end: %s \n", problem.name.c_str());
     printf("%d Variables created \n", (int)task.facts.size());
     printf("%d Operators created \n", (int)task.operators.size());
+    printf("%d Keys registered \n", (int)task.encoding_map.size());
 
     printf("Search start: %s \n", task.name.c_str());
     chrono::system_clock::time_point start, end;

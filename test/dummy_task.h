@@ -25,7 +25,7 @@ class DummyTask : public BaseTask {
     void get_successor_states(
         flat_hash_set<int>& state,
         std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>>&
-            successors,
+            succesors,
         size_t hash_val) override {
         std::vector<int> emp_vec;
         EncodedOperator* sub1 =
@@ -51,7 +51,6 @@ class DummyTask : public BaseTask {
                     std::make_pair(add1->name, make_pair(s + 1, tmp_u)));
             }
         }
-        return succesors;
     }
 };
 
