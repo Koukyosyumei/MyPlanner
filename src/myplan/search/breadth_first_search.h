@@ -1,5 +1,6 @@
 #pragma once
 #include <any>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <queue>
@@ -11,51 +12,41 @@
 #include "../task.h"
 #include "searchspace.h"
 
-struct hash_unordered_set {
-    size_t operator()(const std::unordered_set<std::string>& s) const {
-        size_t result = 0;
-        for (const auto& str : s) {
-            result ^= std::hash<std::string>{}(str);
-        }
-        return result;
-    }
-};
-
-inline std::vector<std::string> breadth_first_search(BaseTask& planning_task) {
+inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
     int iteration = 0;
     std::queue<int> queue;
     std::vector<SearchNode> nodes;
     nodes.push_back(make_root_node(planning_task.initial_state));
     queue.push(0);
 
-    std::unordered_set<std::unordered_set<std::string>, hash_unordered_set>
-        closed = {planning_task.initial_state};
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-        successors;
+    flat_hash_set<size_t> closed = {nodes[0].hash_value};
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> successors;
+    int node_idx;
     while (!queue.empty()) {
         ++iteration;
 
-        int node_idx = queue.front();
-
+        node_idx = queue.front();
         queue.pop();
 
         if (planning_task.goal_reached(nodes[node_idx].state)) {
             std::cout << iteration << " Nodes expanded" << std::endl;
             return extract_solution(node_idx, nodes);
         }
-        successors = planning_task.get_successor_states(nodes[node_idx].state);
+        successors.clear();
+        planning_task.get_successor_states(nodes[node_idx].state, successors,
+                                           nodes[node_idx].hash_value);
         for (auto& opss : successors) {
-            if (closed.find(opss.second) == closed.end()) {
-                nodes.emplace_back(make_child_node(node_idx, nodes[node_idx].g,
-                                                   opss.first->name,
-                                                   opss.second));
+            if (closed.find(opss.second.first) == closed.end()) {
+                nodes.emplace_back(
+                    make_child_node(node_idx, nodes[node_idx].g, opss.first,
+                                    opss.second.second, opss.second.first));
                 queue.push(nodes.size() - 1);
-                closed.emplace(opss.second);
+                closed.emplace(opss.second.first);
             }
         }
     }
 
     std::cout << iteration << " Nodes expanded" << std::endl;
     std::cerr << "No solution found" << std::endl;
-    return {};  // No solution found
+    return {};
 }

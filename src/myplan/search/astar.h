@@ -18,8 +18,7 @@
 
 const int INF = std::numeric_limits<int>::max();
 
-inline std::vector<std::string> astar(BaseTask& planning_task,
-                                      Heuristic& heuristic) {
+inline std::vector<int> astar(BaseTask& planning_task, Heuristic& heuristic) {
     int iteration = 0;
     int expansions = 0;
     std::priority_queue<tuple<float, float, int>> queue;
@@ -28,10 +27,8 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
     float h = heuristic.calculate_h(0, nodes);
     queue.push({-1.0 * (h + (float)nodes[0].g), -h, 0});
 
-    std::unordered_map<std::unordered_set<std::string>, int, hash_unordered_set>
-        state_cost = {{nodes[0].state, 0}};
-    std::vector<std::pair<Operator*, std::unordered_set<std::string>>>
-        successors;
+    std::unordered_map<size_t, int> state_cost = {{nodes[0].hash_value, 0}};
+    std::vector<std::pair<int, pair<size_t, flat_hash_set<int>>>> successors;
     tuple<float, float, int> front_status;
     int node_idx, old_succ_g;
 
@@ -42,28 +39,30 @@ inline std::vector<std::string> astar(BaseTask& planning_task,
         node_idx = get<2>(front_status);
         queue.pop();
 
-        if (state_cost[nodes[node_idx].state] == nodes[node_idx].g) {
+        if (state_cost[nodes[node_idx].hash_value] == nodes[node_idx].g) {
             expansions++;
             if (planning_task.goal_reached(nodes[node_idx].state)) {
                 std::cout << iteration << " Nodes expanded" << std::endl;
                 return extract_solution(node_idx, nodes);
             }
 
-            successors =
-                planning_task.get_successor_states(nodes[node_idx].state);
+            successors.clear();
+            planning_task.get_successor_states(
+                nodes[node_idx].state, successors, nodes[node_idx].hash_value);
             for (auto& opss : successors) {
-                SearchNode succ_node = make_child_node(
-                    node_idx, nodes[node_idx].g, opss.first->name, opss.second);
+                SearchNode succ_node =
+                    make_child_node(node_idx, nodes[node_idx].g, opss.first,
+                                    opss.second.second, opss.second.first);
                 nodes.emplace_back(succ_node);
                 h = heuristic.calculate_h(nodes.size() - 1, nodes);
                 old_succ_g = INF;
-                if (state_cost.find(opss.second) != state_cost.end()) {
-                    old_succ_g = state_cost[opss.second];
+                if (state_cost.find(opss.second.first) != state_cost.end()) {
+                    old_succ_g = state_cost[opss.second.first];
                 }
                 if (succ_node.g < old_succ_g) {
                     queue.push(
                         {-1 * (h + (float)succ_node.g), -h, nodes.size() - 1});
-                    state_cost.emplace(opss.second, succ_node.g);
+                    state_cost.emplace(opss.second.first, succ_node.g);
                 }
             }
         }

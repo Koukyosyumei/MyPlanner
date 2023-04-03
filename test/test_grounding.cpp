@@ -142,7 +142,7 @@ TEST(grounding, Facts) {
     Operator op2 = Operator("op2", pre2, ade2, dee2);
     Operator op3 = Operator("op3", pre3, ade3, dee3);
     std::vector<Operator> ops = {op1, op2, op3};
-    std::unordered_set<std::string> test_facts = {"var1", "var2", "var3",
+    flat_hash_set<std::string> test_facts = {"var1", "var2", "var3",
                                                   "var4"};
     ASSERT_EQ(test_facts, _collect_facts(ops));
 }
@@ -172,8 +172,8 @@ bool starts_with(const std::string& str, const std::string& prefix) {
     return true;
 }
 
-bool compare_operators(const std::vector<Operator>& operators1,
-                       const std::vector<Operator>& operators2) {
+bool compare_operators(const std::vector<EncodedOperator>& operators1,
+                       const std::vector<EncodedOperator>& operators2) {
     for (const auto& op1 : operators1) {
         bool found_match = false;
         for (const auto& op2 : operators2) {
@@ -314,7 +314,7 @@ TEST(grounding, Operators) {
     std::unordered_map<std::string, std::vector<std::string>> type_map =
         _create_type_map(objects);
 
-    std::unordered_set<std::string> grounded_initial_state =
+    flat_hash_set<std::string> grounded_initial_state =
         _get_partial_state(initial_state);
 
     std::vector<Operator> grounded_drive_car =
@@ -364,19 +364,22 @@ TEST(grounding, Operators) {
 
     task = ground(standard_problem);
 
-    for (std::string var : task.facts) {
-        ASSERT_FALSE(starts_with(var, "car_color"));
+    for (int var : task.facts) {
+        ASSERT_FALSE(starts_with(task.reverse_encoding_map[var], "car_color"));
     }
 
-    for (Operator op : task.operators) {
-        for (std::string pre : op.preconditions) {
-            ASSERT_FALSE(starts_with(pre, "car_color"));
+    for (EncodedOperator op : task.operators) {
+        for (int pre : op.preconditions) {
+            ASSERT_FALSE(
+                starts_with(task.reverse_encoding_map[pre], "car_color"));
         }
-        for (std::string add : op.add_effects) {
-            ASSERT_FALSE(starts_with(add, "car_color"));
+        for (int add : op.add_effects) {
+            ASSERT_FALSE(
+                starts_with(task.reverse_encoding_map[add], "car_color"));
         }
-        for (std::string dee : op.del_effects) {
-            ASSERT_FALSE(starts_with(dee, "car_color"));
+        for (int dee : op.del_effects) {
+            ASSERT_FALSE(
+                starts_with(task.reverse_encoding_map[dee], "car_color"));
         }
     }
 
@@ -451,10 +454,10 @@ TEST(grounding, Operators) {
     Task parsed_task7 = ground(parsed_problem7);
     Task parsed_task8 = ground(parsed_problem8);
 
-    std::vector<std::vector<Operator>> operators1 = {
+    std::vector<std::vector<EncodedOperator>> operators1 = {
         parsed_task5.operators, parsed_task6.operators, parsed_task5.operators,
         parsed_task5.operators, parsed_task5.operators};
-    std::vector<std::vector<Operator>> operators2 = {
+    std::vector<std::vector<EncodedOperator>> operators2 = {
         coded_task5.operators, coded_task6.operators, coded_task6.operators,
         parsed_task7.operators, parsed_task8.operators};
     std::vector<bool> expected_results = {true, true, false, false, true};
@@ -510,7 +513,7 @@ TEST(grounding, Operators) {
         std::vector<std::string> statics =
             _get_statics(predicates_vec, actions);
         type_map = _create_type_map(objects);
-        std::unordered_set<std::string> init = _get_partial_state(problem.init);
+        flat_hash_set<std::string> init = _get_partial_state(problem.init);
 
         std::vector<Operator> operators =
             _ground_actions(actions, type_map, statics, init);
