@@ -30,6 +30,8 @@ inline std::vector<int> breadth_first_search(BaseTask& planning_task) {
 
         if (planning_task.goal_reached(nodes[node_idx].state)) {
             std::cout << iteration << " Nodes expanded" << std::endl;
+            std::cout << closed.size() << " States within Closed List"
+                      << std::endl;
             return extract_solution(node_idx, nodes);
         }
         successors.clear();

@@ -270,8 +270,8 @@ class Task : public BaseTask {
         in state "state".
         */
         std::set<int> sorted_state(state.begin(), state.end());
-        std::vector<EncodedOperator*> applicable_operators =
-            settrie.subsets(sorted_state);
+        std::vector<EncodedOperator*> applicable_operators;
+        settrie.subsets(sorted_state, applicable_operators);
         successors.resize(applicable_operators.size());
         size_t i = 0;
         for (EncodedOperator* op : applicable_operators) {

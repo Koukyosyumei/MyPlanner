@@ -46,17 +46,12 @@ class SetTrie {
 
     std::vector<ValueType> subsets(std::set<KeyType>& keyset) {
         std::vector<ValueType> result;
-        std::vector<KeyType> path;
-
-        subsetsHelper(root, keyset, path, result);
-
-        // for (int i = 0; i < nested_result.size(); i++) {
-        //     for (int j = 0; j < nested_result[i].size(); j++) {
-        //         result.push_back(nested_result[i][j]);
-        //     }
-        // }
-        // nested_result.clear();
+        subsetsHelper(root, keyset, result);
         return result;
+    }
+
+    void subsets(std::set<KeyType>& keyset, std::vector<ValueType>& result) {
+        subsetsHelper(root, keyset, result);
     }
 
    private:
@@ -97,9 +92,8 @@ class SetTrie {
     }
 
     void subsetsHelper(Node* node, std::set<KeyType>& keyset,
-                       std::vector<KeyType>& path,
                        std::vector<ValueType>& result) {
-        path.push_back(node->data);
+        // path.push_back(node->data);
 
         if (node->flag_last) {
             result.insert(result.end(), node->values.begin(),
@@ -109,10 +103,10 @@ class SetTrie {
 
         for (Node* child : node->children) {
             if (keyset.find(child->data) != keyset.end()) {
-                subsetsHelper(child, keyset, path, result);
+                subsetsHelper(child, keyset, result);
             }
         }
 
-        path.pop_back();
+        // path.pop_back();
     }
 };
