@@ -16,6 +16,7 @@
 #include "myplan/grounding.h"
 #include "myplan/heuristic/base.h"
 #include "myplan/heuristic/landmarks.h"
+#include "myplan/heuristic/relaxation.h"
 #include "myplan/pddl/parser.h"
 #include "myplan/search/astar.h"
 #include "myplan/search/breadth_first_search.h"
@@ -93,6 +94,11 @@ int main(int argc, char* argv[]) {
             solution = astar(task, heuristic);
         } else if (heuristic_type == "landmark") {
             LandmarkHeuristic heuristic(task);
+            start = chrono::system_clock::now();
+            solution = astar(task, heuristic);
+
+        } else if (heuristic_type == "hadd") {
+            hAddHeuristic heuristic(task);
             start = chrono::system_clock::now();
             solution = astar(task, heuristic);
         } else {
