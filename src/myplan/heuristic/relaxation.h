@@ -57,7 +57,7 @@ struct _RelaxationHeuristic : Heuristic {
             facts.emplace(fact, RelaxedFact(fact));
         }
 
-        for (EncodedOperator op : task.operators) {
+        for (EncodedOperator& op : task.operators) {
             operators.emplace_back(RelaxedOperator(
                 op.name, op.preconditions_vec, op.add_effects_vec));
 
@@ -66,7 +66,7 @@ struct _RelaxationHeuristic : Heuristic {
                     operators[operators.size() - 1]);
             }
 
-            if (op.preconditions_vec.size() != 0) {
+            if (op.preconditions_vec.size() == 0) {
                 start_state.precondition_of.emplace_back(
                     operators[operators.size() - 1]);
             }
@@ -138,7 +138,7 @@ struct _RelaxationHeuristic : Heuristic {
             for (int fact : goals) {
                 tmp_distances.emplace_back(facts[fact].distance);
             }
-            return -1*eval(tmp_distances);
+            return eval(tmp_distances);
         } else {
             return 0.0;
         }
@@ -146,7 +146,7 @@ struct _RelaxationHeuristic : Heuristic {
 
     bool finished(flat_hash_set<int>& achived_goals,
                   std::priority_queue<tuple<float, int, int>>& queue) {
-        return (achived_goals == goals) || (queue.size() == 0);
+        return (achived_goals == goals) || (queue.empty());
     }
 
     void dijkstra(std::priority_queue<tuple<float, int, int>>& queue,
@@ -155,7 +155,7 @@ struct _RelaxationHeuristic : Heuristic {
         tuple<float, int, int> front;
         float _dist, tmp_dist;
         int _tie, fact_idx;
-        RelaxedFact fact, neighbor;
+        RelaxedFact fact;
         while (!finished(achived_goals, queue)) {
             front = queue.top();
             queue.pop();
@@ -172,7 +172,7 @@ struct _RelaxationHeuristic : Heuristic {
                     op.counter--;
                     if (op.counter <= 0) {
                         for (int n : op.add_effects) {
-                            neighbor = facts[n];
+                            RelaxedFact neighbor = facts[n];
                             tmp_dist = get_cost(op, fact);
                             if (tmp_dist < neighbor.distance) {
                                 neighbor.distance = tmp_dist;
