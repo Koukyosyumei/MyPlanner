@@ -571,6 +571,9 @@ inline Task ground(Problem& problem,
     flat_hash_set<int> encoded_goals;
     std::vector<EncodedOperator> encoded_operators;
 
+    for (std::string s : facts) {
+        encoded_facts.emplace(encoding_map[s]);
+    }
     for (std::string s : init) {
         encoded_init.emplace(encoding_map[s]);
     }

@@ -30,7 +30,7 @@ TEST(LandmarkHeuristic, ComputeLandmarkCosts) {
     Task task1("task1", facts, init, goals, operators);
 
     flat_hash_set<int> landmarks = {0, 2, 3};
-    std::unordered_map<int, float> costs =
+    flat_hash_map<int, float> costs =
         compute_landmark_costs(task1, landmarks);
 
     ASSERT_EQ(costs[0], 0.5);
@@ -103,7 +103,7 @@ TEST(LandmarkHeuristic, Heuristics) {
     LandmarkHeuristic heuristic1(task1);
     vector<SearchNode> nodes1 = {make_root_node(task1.initial_state)};
     flat_hash_set<int> expected_landmark1 = {1, 2};
-    std::unordered_map<int, float> expected_lmc1 = {{1, 1}, {2, 1}};
+    flat_hash_map<int, float> expected_lmc1 = {{1, 1}, {2, 1}};
     ASSERT_EQ(get_landmarks(task1), expected_landmark1);
     ASSERT_EQ(compute_landmark_costs(task1, expected_landmark1), expected_lmc1);
     ASSERT_EQ(heuristic1.calculate_h(0, nodes1), 2);
@@ -117,7 +117,7 @@ TEST(LandmarkHeuristic, Heuristics) {
     LandmarkHeuristic heuristic4(task4);
     vector<SearchNode> nodes4 = {make_root_node(task4.initial_state)};
     flat_hash_set<int> expected_landmark4 = {1, 2};
-    std::unordered_map<int, float> expected_lmc4 = {{1, 0.5}, {2, 0.5}};
+    flat_hash_map<int, float> expected_lmc4 = {{1, 0.5}, {2, 0.5}};
     ASSERT_EQ(get_landmarks(task4), expected_landmark4);
     ASSERT_EQ(compute_landmark_costs(task4, expected_landmark4), expected_lmc4);
     ASSERT_EQ(heuristic4.calculate_h(0, nodes4), 1);
