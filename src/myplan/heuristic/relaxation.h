@@ -29,7 +29,7 @@ struct RelaxedOperator {
 
 struct RelaxedFact {
     int name;
-    std::vector<RelaxedOperator> precondition_of;
+    std::vector<int> precondition_of;
     bool expanded;
     float distance;
 
@@ -53,6 +53,7 @@ struct _RelaxationHeuristic : Heuristic {
           goals(task.goals),
           init(task.initial_state),
           start_state(RelaxedFact(-1)) {
+        facts.emplace(-1, start_state);
         for (int fact : task.facts) {
             facts.emplace(fact, RelaxedFact(fact));
         }
@@ -62,13 +63,11 @@ struct _RelaxationHeuristic : Heuristic {
                 op.name, op.preconditions_vec, op.add_effects_vec));
 
             for (int var : op.preconditions_vec) {
-                facts[var].precondition_of.emplace_back(
-                    operators[operators.size() - 1]);
+                facts[var].precondition_of.emplace_back(operators.size() - 1);
             }
 
             if (op.preconditions_vec.size() == 0) {
-                start_state.precondition_of.emplace_back(
-                    operators[operators.size() - 1]);
+                start_state.precondition_of.emplace_back(operators.size() - 1);
             }
         }
     }
@@ -76,26 +75,23 @@ struct _RelaxationHeuristic : Heuristic {
     virtual float eval(std::vector<float>& distances) = 0;
 
     float calculate_h(int this_id, std::vector<SearchNode>& nodes) {
-        flat_hash_set<int> state = nodes[this_id].state;
-        init_distance(state);
+        init_distance(nodes[this_id].state);
 
         std::priority_queue<tuple<float, int, int>> queue;
-        queue.push({0, -tie_breaker, 0});
-        std::vector<RelaxedFact> states = {start_state};
+        queue.push({0, -tie_breaker, start_state.name});
         tie_breaker++;
 
-        for (int fact : state) {
-            queue.push({-facts[fact].distance, -tie_breaker, states.size()});
-            states.emplace_back(facts[fact]);
+        for (int fact : nodes[this_id].state) {
+            queue.push({-facts[fact].distance, -tie_breaker, facts[fact].name});
             tie_breaker++;
         }
 
-        dijkstra(queue, states);
-
-        return calc_goal_h();
+        dijkstra(queue);
+        float h = calc_goal_h();
+        return h;
     }
 
-    void reset_fact(RelaxedFact& fact, flat_hash_set<int>& state) {
+    void reset_fact(RelaxedFact& fact, const flat_hash_set<int>& state) {
         fact.expanded = false;
         if (state.find(fact.name) != state.end()) {
             fact.distance = 0;
@@ -104,7 +100,7 @@ struct _RelaxationHeuristic : Heuristic {
         }
     }
 
-    void init_distance(flat_hash_set<int>& state) {
+    void init_distance(const flat_hash_set<int>& state) {
         reset_fact(start_state, state);
 
         for (auto& item : facts) {
@@ -146,45 +142,52 @@ struct _RelaxationHeuristic : Heuristic {
 
     bool finished(flat_hash_set<int>& achived_goals,
                   std::priority_queue<tuple<float, int, int>>& queue) {
+        // bool flag = true;
+        // for (int i : goals) {
+        //    if (achived_goals.find(i) != achived_goals.end()) {
+        //        flag = false;
+        //        break;
+        //    }
+        // }
         return (achived_goals == goals) || (queue.empty());
     }
 
-    void dijkstra(std::priority_queue<tuple<float, int, int>>& queue,
-                  std::vector<RelaxedFact>& states) {
+    void dijkstra(std::priority_queue<tuple<float, int, int>>& queue) {
         flat_hash_set<int> achived_goals;
         tuple<float, int, int> front;
         float _dist, tmp_dist;
-        int _tie, fact_idx;
-        RelaxedFact fact;
+        int _tie, fact_idx, fact_id, num_precondition_of;
         while (!finished(achived_goals, queue)) {
             front = queue.top();
             queue.pop();
             _dist = -1 * get<0>(front);
             _tie = -1 * get<1>(front);
-            fact_idx = get<2>(front);
-            fact = states[fact_idx];
+            fact_id = get<2>(front);
 
-            if (goals.find(fact.name) != goals.end()) {
-                achived_goals.emplace(fact.name);
+            if (goals.find(facts[fact_id].name) != goals.end()) {
+                achived_goals.emplace(facts[fact_id].name);
             }
-            if (!fact.expanded) {
-                for (RelaxedOperator& op : fact.precondition_of) {
-                    op.counter--;
-                    if (op.counter <= 0) {
-                        for (int n : op.add_effects) {
-                            RelaxedFact neighbor = facts[n];
-                            tmp_dist = get_cost(op, fact);
-                            if (tmp_dist < neighbor.distance) {
-                                neighbor.distance = tmp_dist;
-                                queue.push(
-                                    {-tmp_dist, -tie_breaker, states.size()});
-                                states.emplace_back(neighbor);
+            if (!facts[fact_id].expanded) {
+                num_precondition_of = facts[fact_id].precondition_of.size();
+                for (int i = 0; i < num_precondition_of; i++) {
+                    operators[facts[fact_id].precondition_of[i]].counter--;
+                    if (operators[facts[fact_id].precondition_of[i]].counter <=
+                        0) {
+                        for (int n :
+                             operators[facts[fact_id].precondition_of[i]]
+                                 .add_effects) {
+                            tmp_dist = get_cost(
+                                operators[facts[fact_id].precondition_of[i]],
+                                facts[fact_id]);
+                            if (tmp_dist < facts[n].distance) {
+                                facts[n].distance = tmp_dist;
+                                queue.push({-tmp_dist, -tie_breaker, n});
                                 tie_breaker++;
                             }
                         }
                     }
                 }
-                fact.expanded = true;
+                facts[fact_id].expanded = true;
             }
         }
     }
