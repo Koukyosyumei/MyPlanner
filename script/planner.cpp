@@ -101,6 +101,10 @@ int main(int argc, char* argv[]) {
             hAddHeuristic heuristic(task);
             start = chrono::system_clock::now();
             solution = astar(task, heuristic);
+        } else if (heuristic_type == "hmax") {
+            hMaxHeuristic heuristic(task);
+            start = chrono::system_clock::now();
+            solution = astar(task, heuristic);
         } else {
             throw invalid_argument("given heuristic type is not supported");
         }

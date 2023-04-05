@@ -204,3 +204,17 @@ struct hAddHeuristic : _RelaxationHeuristic {
         return res;
     }
 };
+
+struct hMaxHeuristic : _RelaxationHeuristic {
+    using _RelaxationHeuristic::_RelaxationHeuristic;
+
+    float eval(std::vector<float>& distances) {
+        float res = 0;
+        for (float d : distances) {
+            if (d > res) {
+                res = d;
+            }
+        }
+        return res;
+    }
+};
