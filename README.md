@@ -19,7 +19,7 @@ myplan benchmarks/transport/domain.pddl benchmarks/transport/task01.pddl
 - options
 ```
 -s type of search algorithm (`bfs` | `astar`). Default to `bfs`.
--h type of heuristic function (`blind` | `goalcount` | `landmark` | `hadd` | `hmax`). Default to `blind`.
+-H type of heuristic function (`blind` | `goalcount` | `landmark` | `hadd` | `hmax`). Default to `blind`.
 -o path to output file. Default to `task.soln`.
 ```
 ## Test
