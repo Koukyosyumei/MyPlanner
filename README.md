@@ -27,3 +27,5 @@ myplan benchmarks/transport/domain.pddl benchmarks/transport/task01.pddl
 ```bash
 ./script/test.sh
 ```
+
+## Benchmark
