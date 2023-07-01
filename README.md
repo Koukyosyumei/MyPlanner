@@ -1,5 +1,7 @@
 # MyPlan
 
+PDDL Solver implemented in C++ from scratch
+
 ## Install
 
 ```bash
