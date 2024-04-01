@@ -1,6 +1,6 @@
 # MyPlan
 
-PDDL Solver implemented in C++ from scratch
+PDDL Solver implemented in C++ from scratch. This project is inspiered by [aibasel/pyperplan](https://github.com/aibasel/pyperplan).
 
 ## Install
 
@@ -29,5 +29,3 @@ myplan benchmarks/transport/domain.pddl benchmarks/transport/task01.pddl
 ```bash
 ./script/test.sh
 ```
-
-## Benchmark
